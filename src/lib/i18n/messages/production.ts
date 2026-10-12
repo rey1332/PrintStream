@@ -1,0 +1,145 @@
+import type { Entry } from './types';
+
+// Production module (/erp/production, src/app/erp/lib/productionService.ts).
+export const productionMessages = {
+  'erp.nav.production': { en: 'Production', id: 'Produksi', zh: '生产' },
+  'acc.src.production': { en: 'Production', id: 'Produksi', zh: '生产' },
+  'acc.src.production_reversal': {
+    en: 'Production reversed',
+    id: 'Produksi dibatalkan',
+    zh: '生产已冲销',
+  },
+
+  'prd.subtitle': {
+    en: 'What the plant made each day, into which stockpile, from what material, in how many hours.',
+    id: 'Apa yang dihasilkan pabrik tiap hari, ke stockpile mana, dari bahan apa, dalam berapa jam.',
+    zh: '每天的产量、入哪个料堆、使用了什么原料、运行了多少小时。',
+  },
+  'prd.record': { en: 'Record production', id: 'Catat produksi', zh: '记录生产' },
+  'prd.from': { en: 'From', id: 'Dari', zh: '从' },
+  'prd.to': { en: 'To', id: 'Sampai', zh: '至' },
+  'prd.runs': { en: 'Runs', id: 'Produksi', zh: '批次' },
+  'prd.hours': { en: 'Operating hours', id: 'Jam operasi', zh: '运行小时' },
+  'prd.downtime': { en: 'Downtime', id: 'Waktu henti', zh: '停机时间' },
+  'prd.hoursValue': { en: '{value} h', id: '{value} jam', zh: '{value} 小时' },
+  'prd.made': { en: 'Made', id: 'Dihasilkan', zh: '产出' },
+  'prd.used': { en: 'Material used', id: 'Bahan dipakai', zh: '消耗原料' },
+  'prd.perHour': { en: '{value} per hour', id: '{value} per jam', zh: '每小时 {value}' },
+  'prd.byDay': { en: 'Per day', id: 'Per hari', zh: '按日' },
+  'prd.list': { en: 'Production runs', id: 'Daftar produksi', zh: '生产记录' },
+  'prd.empty': {
+    en: 'No production recorded in this period.',
+    id: 'Belum ada produksi pada periode ini.',
+    zh: '此期间没有生产记录。',
+  },
+  'prd.col.run': { en: 'Run', id: 'No.', zh: '单号' },
+  'prd.col.date': { en: 'Date', id: 'Tanggal', zh: '日期' },
+  'prd.col.plant': { en: 'Plant / shift', id: 'Unit / shift', zh: '设备/班次' },
+  'prd.col.outputs': { en: 'Made', id: 'Hasil', zh: '产出' },
+  'prd.col.input': { en: 'Used', id: 'Bahan', zh: '原料' },
+  'prd.reversed': { en: 'Reversed', id: 'Dibatalkan', zh: '已冲销' },
+  'prd.reverse': { en: 'Reverse', id: 'Batalkan', zh: '冲销' },
+  'prd.reversePrompt': {
+    en: 'Why is {run} reversed? Its stock and book entries are taken back.',
+    id: 'Mengapa {run} dibatalkan? Stok dan jurnalnya akan dikembalikan.',
+    zh: '为什么冲销 {run}？其库存和账目将被撤回。',
+  },
+  'prd.reversedToast': { en: 'Production reversed', id: 'Produksi dibatalkan', zh: '生产已冲销' },
+
+  'prd.form.title': { en: 'Record production', id: 'Catat produksi', zh: '记录生产' },
+  'prd.form.date': { en: 'Date', id: 'Tanggal', zh: '日期' },
+  'prd.form.shift': { en: 'Shift', id: 'Shift', zh: '班次' },
+  'prd.form.plant': { en: 'Plant', id: 'Unit produksi', zh: '生产设备' },
+  'prd.form.plantHint': { en: 'e.g. Crusher 1', id: 'mis. Crusher 1', zh: '例如：破碎机 1' },
+  'prd.form.hours': { en: 'Operating hours', id: 'Jam operasi', zh: '运行小时' },
+  'prd.form.downtime': { en: 'Downtime (hours)', id: 'Waktu henti (jam)', zh: '停机（小时）' },
+  'prd.form.outputs': { en: 'Products made', id: 'Produk yang dihasilkan', zh: '产出产品' },
+  'prd.form.addOutput': { en: 'Add product', id: 'Tambah produk', zh: '添加产品' },
+  'prd.form.input': {
+    en: 'Material used (optional)',
+    id: 'Bahan yang dipakai (opsional)',
+    zh: '消耗原料（可选）',
+  },
+  'prd.form.inputHint': {
+    en: 'Taken from stock, e.g. boulders from the pit if they are kept as a product.',
+    id: 'Diambil dari stok, mis. batu belah dari tambang bila dicatat sebagai produk.',
+    zh: '从库存扣除，例如作为产品管理的矿坑原石。',
+  },
+  'prd.form.none': { en: 'None', id: 'Tidak ada', zh: '无' },
+  'prd.form.stockpile': { en: 'Stockpile', id: 'Stockpile', zh: '料堆' },
+  'prd.form.defaultStockpile': {
+    en: 'Default ({name})',
+    id: 'Bawaan ({name})',
+    zh: '默认（{name}）',
+  },
+  'prd.form.product': { en: 'Product', id: 'Produk', zh: '产品' },
+  'prd.form.note': { en: 'Note', id: 'Catatan', zh: '备注' },
+  'prd.form.costHint': {
+    en: 'Stock is valued at each product’s cost price; set it to the production cost per unit under Products.',
+    id: 'Stok dinilai dengan harga pokok tiap produk; isi dengan biaya produksi per satuan di Produk.',
+    zh: '库存按各产品的成本价计价；请在“产品”中将其设为单位生产成本。',
+  },
+  'prd.form.submit': { en: 'Save production', id: 'Simpan produksi', zh: '保存生产记录' },
+  'prd.form.saved': { en: 'Production saved', id: 'Produksi disimpan', zh: '生产记录已保存' },
+  'prd.form.noProducts': {
+    en: 'Add the products you make under Products first.',
+    id: 'Tambahkan dulu produk yang Anda hasilkan di Produk.',
+    zh: '请先在“产品”中添加您生产的产品。',
+  },
+
+  'prd.err.outputs': {
+    en: 'Enter at least one product made.',
+    id: 'Masukkan minimal satu produk yang dihasilkan.',
+    zh: '请至少填写一个产出产品。',
+  },
+  'prd.err.qty': {
+    en: 'Quantities must be greater than zero.',
+    id: 'Jumlah harus lebih dari nol.',
+    zh: '数量必须大于零。',
+  },
+  'prd.err.duplicate': {
+    en: 'Each product may appear only once.',
+    id: 'Setiap produk hanya boleh muncul sekali.',
+    zh: '每个产品只能出现一次。',
+  },
+  'prd.err.same': {
+    en: 'A product cannot be both made and used in the same run.',
+    id: 'Produk tidak boleh dihasilkan sekaligus dipakai dalam satu produksi.',
+    zh: '同一批次中产品不能既是产出又是原料。',
+  },
+  'prd.err.stock': {
+    en: 'Not enough of the material in stock.',
+    id: 'Stok bahan tidak cukup.',
+    zh: '原料库存不足。',
+  },
+  'prd.err.stockpile': {
+    en: 'Not enough of the material in that stockpile.',
+    id: 'Bahan di stockpile itu tidak cukup.',
+    zh: '该料堆中原料不足。',
+  },
+  'prd.err.future': {
+    en: 'The date cannot be in the future.',
+    id: 'Tanggal tidak boleh di masa depan.',
+    zh: '日期不能是将来。',
+  },
+  'prd.err.hours': {
+    en: 'Operating hours and downtime must add up to at most 24.',
+    id: 'Jam operasi dan waktu henti maksimal 24 jam bersama.',
+    zh: '运行小时与停机时间合计不得超过 24。',
+  },
+  'prd.err.reason': {
+    en: 'Give a reason (at least 3 characters).',
+    id: 'Berikan alasan (minimal 3 karakter).',
+    zh: '请填写理由（至少 3 个字符）。',
+  },
+  'prd.err.ownerOnly': {
+    en: 'Only the Owner or an Admin can reverse production.',
+    id: 'Hanya Pemilik atau Admin yang dapat membatalkan produksi.',
+    zh: '只有所有者或管理员可以冲销生产。',
+  },
+  'prd.err.failed': {
+    en: 'The production could not be saved.',
+    id: 'Produksi tidak dapat disimpan.',
+    zh: '无法保存生产记录。',
+  },
+} satisfies Record<string, Entry>;

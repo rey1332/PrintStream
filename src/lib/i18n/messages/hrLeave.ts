@@ -1,0 +1,268 @@
+import type { Entry } from './types';
+
+export const hrLeaveMessages = {
+  'erp.nav.leave': { en: 'Leave & holidays', id: 'Cuti & libur', zh: '休假与节假日' },
+
+  // ── Errors ──
+  'hr.err.noWorkDays': {
+    en: 'There are no working days in this period.',
+    id: 'Tidak ada hari kerja pada periode ini.',
+    zh: '此期间没有工作日。',
+  },
+  'hr.err.leaveOverlap': {
+    en: 'This employee already has leave in this period.',
+    id: 'Karyawan ini sudah punya cuti pada periode ini.',
+    zh: '该员工在此期间已有休假。',
+  },
+  'hr.err.quota': {
+    en: 'Not enough annual leave left for this employee.',
+    id: 'Sisa cuti tahunan karyawan ini tidak cukup.',
+    zh: '该员工剩余年假不足。',
+  },
+  'hr.err.decided': {
+    en: 'This leave was already decided.',
+    id: 'Cuti ini sudah diputuskan.',
+    zh: '此休假已处理。',
+  },
+  'hr.err.leavePeriod': {
+    en: 'Choose a leave of at most three months.',
+    id: 'Pilih cuti paling lama tiga bulan.',
+    zh: '休假最长三个月。',
+  },
+  'hr.err.negative': {
+    en: 'An employee’s deductions are larger than their pay. Check their deductions.',
+    id: 'Potongan seorang karyawan lebih besar dari gajinya. Periksa potongannya.',
+    zh: '某员工的扣款大于其工资，请检查扣款。',
+  },
+  'hr.err.itemAmount': {
+    en: 'Enter an amount, or a percentage between 0 and 100.',
+    id: 'Isi nominal, atau persentase antara 0 dan 100.',
+    zh: '请输入金额，或 0 到 100 之间的百分比。',
+  },
+  'hr.err.itemName': { en: 'Give it a name.', id: 'Beri nama.', zh: '请填写名称。' },
+  'hr.err.holiday': {
+    en: 'Enter the date and name of the holiday.',
+    id: 'Isi tanggal dan nama hari libur.',
+    zh: '请输入节假日的日期和名称。',
+  },
+  'hr.err.workDays': {
+    en: 'Choose at least one working day.',
+    id: 'Pilih minimal satu hari kerja.',
+    zh: '请至少选择一个工作日。',
+  },
+  'hr.err.quotaRange': {
+    en: 'Annual leave must be between 0 and 366 days.',
+    id: 'Jatah cuti tahunan harus antara 0 dan 366 hari.',
+    zh: '年假天数必须在 0 到 366 之间。',
+  },
+
+  // ── Leave ──
+  'hr.leave.subtitle': {
+    en: 'Leave requests, annual leave left, holidays and working days. Approved annual and sick leave and paid holidays are paid at normal hours × hourly rate.',
+    id: 'Pengajuan cuti, sisa cuti tahunan, hari libur, dan hari kerja. Cuti tahunan dan sakit yang disetujui serta hari libur berbayar dibayar sebesar jam normal × tarif per jam.',
+    zh: '休假申请、剩余年假、节假日和工作日。已批准的年假和病假以及带薪节假日按正常工时 × 时薪支付。',
+  },
+  'hr.leave.requests': { en: 'Leave requests', id: 'Pengajuan cuti', zh: '休假申请' },
+  'hr.leave.request': { en: 'Request leave', id: 'Ajukan cuti', zh: '申请休假' },
+  'hr.leave.employee': { en: 'Employee', id: 'Karyawan', zh: '员工' },
+  'hr.leave.type': { en: 'Type', id: 'Jenis', zh: '类型' },
+  'hr.leave.type.annual': { en: 'Annual leave', id: 'Cuti tahunan', zh: '年假' },
+  'hr.leave.type.sick': { en: 'Sick leave', id: 'Sakit', zh: '病假' },
+  'hr.leave.type.unpaid': { en: 'Unpaid leave', id: 'Izin tanpa gaji', zh: '无薪假' },
+  'hr.leave.from': { en: 'From', id: 'Dari', zh: '从' },
+  'hr.leave.to': { en: 'To', id: 'Sampai', zh: '至' },
+  'hr.leave.reason': { en: 'Reason (optional)', id: 'Alasan (opsional)', zh: '原因（可选）' },
+  'hr.leave.days': { en: '{n} working days', id: '{n} hari kerja', zh: '{n} 个工作日' },
+  'hr.leave.submit': { en: 'Submit', id: 'Ajukan', zh: '提交' },
+  'hr.leave.requested': {
+    en: 'Leave requested; an Owner or Admin approves it.',
+    id: 'Cuti diajukan; Owner atau Admin yang menyetujui.',
+    zh: '已提交休假申请，由所有者或管理员审批。',
+  },
+  'hr.leave.empty': {
+    en: 'No leave in this period.',
+    id: 'Tidak ada cuti pada periode ini.',
+    zh: '此期间没有休假。',
+  },
+  'hr.leave.status.pending': { en: 'Waiting', id: 'Menunggu', zh: '待审批' },
+  'hr.leave.status.approved': { en: 'Approved', id: 'Disetujui', zh: '已批准' },
+  'hr.leave.status.rejected': { en: 'Rejected', id: 'Ditolak', zh: '已拒绝' },
+  'hr.leave.status.cancelled': { en: 'Cancelled', id: 'Dibatalkan', zh: '已取消' },
+  'hr.leave.approve': { en: 'Approve', id: 'Setujui', zh: '批准' },
+  'hr.leave.reject': { en: 'Reject', id: 'Tolak', zh: '拒绝' },
+  'hr.leave.cancel': { en: 'Cancel leave', id: 'Batalkan cuti', zh: '取消休假' },
+  'hr.leave.approvedToast': { en: 'Leave approved', id: 'Cuti disetujui', zh: '已批准休假' },
+  'hr.leave.rejectedToast': { en: 'Leave rejected', id: 'Cuti ditolak', zh: '已拒绝休假' },
+  'hr.leave.cancelledToast': { en: 'Leave cancelled', id: 'Cuti dibatalkan', zh: '已取消休假' },
+  'hr.leave.note': { en: 'Note (optional)', id: 'Catatan (opsional)', zh: '备注（可选）' },
+  'hr.leave.decideTitle': {
+    en: '{action}: {name}',
+    id: '{action}: {name}',
+    zh: '{action}：{name}',
+  },
+  'hr.leave.paidDays': {
+    en: '{n} days already paid',
+    id: '{n} hari sudah dibayar',
+    zh: '已支付 {n} 天',
+  },
+  'hr.leave.by': { en: 'by {email}', id: 'oleh {email}', zh: '由 {email}' },
+  'hr.leave.balances': {
+    en: 'Annual leave left in {year}',
+    id: 'Sisa cuti tahunan {year}',
+    zh: '{year} 年剩余年假',
+  },
+  'hr.leave.quota': { en: 'Allowed', id: 'Jatah', zh: '额度' },
+  'hr.leave.used': { en: 'Used', id: 'Terpakai', zh: '已用' },
+  'hr.leave.remaining': { en: 'Left', id: 'Sisa', zh: '剩余' },
+  'hr.leave.quotaLabel': {
+    en: 'Annual leave (days a year)',
+    id: 'Jatah cuti tahunan (hari per tahun)',
+    zh: '年假（每年天数）',
+  },
+  'hr.leave.quotaSaved': { en: 'Annual leave saved', id: 'Jatah cuti disimpan', zh: '年假已保存' },
+
+  // ── Holidays and working days ──
+  'hr.hol.title': { en: 'Holidays {year}', id: 'Hari libur {year}', zh: '{year} 年节假日' },
+  'hr.hol.add': { en: 'Add holiday', id: 'Tambah hari libur', zh: '添加节假日' },
+  'hr.hol.date': { en: 'Date', id: 'Tanggal', zh: '日期' },
+  'hr.hol.name': { en: 'Name', id: 'Nama', zh: '名称' },
+  'hr.hol.paid': { en: 'Paid', id: 'Dibayar', zh: '带薪' },
+  'hr.hol.paidHint': {
+    en: 'Active employees get their normal hours for this day in the next payroll.',
+    id: 'Karyawan aktif mendapat jam normal untuk hari ini di penggajian berikutnya.',
+    zh: '在职员工将在下次发薪时获得当天的正常工时工资。',
+  },
+  'hr.hol.unpaid': { en: 'Not paid', id: 'Tidak dibayar', zh: '无薪' },
+  'hr.hol.paidOut': { en: 'Already paid', id: 'Sudah dibayar', zh: '已支付' },
+  'hr.hol.empty': {
+    en: 'No holidays this year.',
+    id: 'Belum ada hari libur tahun ini.',
+    zh: '今年没有节假日。',
+  },
+  'hr.hol.saved': { en: 'Holiday saved', id: 'Hari libur disimpan', zh: '节假日已保存' },
+  'hr.hol.deleted': { en: 'Holiday removed', id: 'Hari libur dihapus', zh: '节假日已删除' },
+  'hr.work.title': { en: 'Working days', id: 'Hari kerja', zh: '工作日' },
+  'hr.work.hint': {
+    en: 'Leave counts only these days (holidays excluded).',
+    id: 'Cuti hanya menghitung hari-hari ini (hari libur tidak dihitung).',
+    zh: '休假只计算这些日子（不含节假日）。',
+  },
+  'hr.work.saved': { en: 'Working days saved', id: 'Hari kerja disimpan', zh: '工作日已保存' },
+  'hr.day.1': { en: 'Mon', id: 'Sen', zh: '周一' },
+  'hr.day.2': { en: 'Tue', id: 'Sel', zh: '周二' },
+  'hr.day.3': { en: 'Wed', id: 'Rab', zh: '周三' },
+  'hr.day.4': { en: 'Thu', id: 'Kam', zh: '周四' },
+  'hr.day.5': { en: 'Fri', id: 'Jum', zh: '周五' },
+  'hr.day.6': { en: 'Sat', id: 'Sab', zh: '周六' },
+  'hr.day.7': { en: 'Sun', id: 'Min', zh: '周日' },
+
+  // ── Allowances and deductions ──
+  'hr.items.open': { en: 'Allowances & deductions', id: 'Tunjangan & potongan', zh: '津贴与扣款' },
+  'hr.items.title': {
+    en: 'Pay of {name}',
+    id: 'Gaji {name}',
+    zh: '{name} 的工资',
+  },
+  'hr.taxWarning': {
+    en: 'With the basic payroll rules PrintStream does not calculate PPh 21 (TER) or the BPJS wage caps; percentages are of the whole gross pay. Choose the Indonesian rules under Payroll → Payroll rules to have PPh 21, BPJS, overtime and THR calculated — then do not also add BPJS or PPh 21 as pay items.',
+    id: 'Dengan aturan penggajian dasar, PrintStream tidak menghitung PPh 21 (TER) maupun batas upah BPJS; persen dihitung dari seluruh gaji bruto. Pilih aturan Indonesia di Penggajian → Aturan penggajian agar PPh 21, BPJS, lembur, dan THR dihitung — lalu jangan menambahkan BPJS atau PPh 21 sebagai item gaji.',
+    zh: '使用基础工资规则时，PrintStream 不计算 PPh 21（TER）和 BPJS 工资上限；百分比按全部总工资计算。在“工资 → 工资规则”中选择印尼规则即可计算 PPh 21、BPJS、加班费和 THR——此后请勿再将 BPJS 或 PPh 21 添加为薪酬项目。',
+  },
+
+  'hr.items.hint': {
+    en: 'Allowances are added to the pay (a percentage is of the base pay: attendance, leave and holidays). Deductions are withheld from the pay and employer contributions are a company cost; their percentages are of the gross pay.',
+    id: 'Tunjangan ditambahkan ke gaji (persen dihitung dari gaji dasar: absensi, cuti, dan libur). Potongan dipotong dari gaji, dan iuran perusahaan menjadi beban perusahaan; persennya dihitung dari gaji bruto.',
+    zh: '津贴加到工资中（百分比按基本工资计算：考勤、休假和节假日）。扣款从工资中扣除，雇主缴费为公司成本；其百分比按总工资计算。',
+  },
+  'hr.items.kind.allowance': { en: 'Allowance', id: 'Tunjangan', zh: '津贴' },
+  'hr.items.kind.deduction': { en: 'Deduction', id: 'Potongan', zh: '扣款' },
+  'hr.items.kind.employer': { en: 'Employer contribution', id: 'Iuran perusahaan', zh: '雇主缴费' },
+  'hr.items.method.fixed': { en: 'Fixed amount', id: 'Nominal tetap', zh: '固定金额' },
+  'hr.items.method.percent': { en: 'Percentage', id: 'Persen', zh: '百分比' },
+  'hr.items.name': { en: 'Name', id: 'Nama', zh: '名称' },
+  'hr.items.amount': { en: 'Amount or %', id: 'Nominal atau %', zh: '金额或 %' },
+  'hr.items.add': { en: 'Add', id: 'Tambah', zh: '添加' },
+  'hr.items.empty': {
+    en: 'No allowances or deductions.',
+    id: 'Belum ada tunjangan atau potongan.',
+    zh: '暂无津贴或扣款。',
+  },
+  'hr.items.presets': { en: 'Quick add', id: 'Isi cepat', zh: '快速添加' },
+  'hr.items.saved': { en: 'Saved', id: 'Tersimpan', zh: '已保存' },
+
+  // ── Payroll breakdown ──
+  'hr.pay.leave': { en: 'Paid leave', id: 'Cuti dibayar', zh: '带薪休假' },
+  'hr.pay.holiday': { en: 'Holidays', id: 'Hari libur', zh: '节假日' },
+  'hr.pay.allowances': { en: 'Allowances', id: 'Tunjangan', zh: '津贴' },
+  'hr.pay.deductions': { en: 'Deductions', id: 'Potongan', zh: '扣款' },
+  'hr.pay.employer': { en: 'Employer contributions', id: 'Iuran perusahaan', zh: '雇主缴费' },
+  'hr.pay.gross': { en: 'Gross pay', id: 'Gaji bruto', zh: '总工资' },
+  'hr.pay.net': { en: 'Net pay', id: 'Gaji bersih', zh: '实发工资' },
+  'hr.pay.lines': { en: 'Per employee', id: 'Per karyawan', zh: '按员工' },
+  'hr.pay.payslips': { en: 'Payslips', id: 'Slip gaji', zh: '工资单' },
+
+  // ── Payslips ──
+  'print.payslip': { en: 'Payslip', id: 'Slip gaji', zh: '工资单' },
+  'print.period': { en: 'Period', id: 'Periode', zh: '期间' },
+  'print.payDate': { en: 'Pay date', id: 'Tanggal bayar', zh: '发薪日期' },
+  'print.employee': { en: 'Employee', id: 'Karyawan', zh: '员工' },
+  'print.earnings': { en: 'Earnings', id: 'Pendapatan', zh: '收入' },
+  'print.deductionsHead': { en: 'Deductions', id: 'Potongan', zh: '扣款' },
+  'print.regularPay': {
+    en: 'Regular pay ({hours} h)',
+    id: 'Gaji pokok ({hours} jam)',
+    zh: '正常工资（{hours} 小时）',
+  },
+  'print.overtimePay': {
+    en: 'Overtime ({hours} h)',
+    id: 'Lembur ({hours} jam)',
+    zh: '加班（{hours} 小时）',
+  },
+  'print.leavePay': {
+    en: 'Paid leave ({days} days)',
+    id: 'Cuti dibayar ({days} hari)',
+    zh: '带薪休假（{days} 天）',
+  },
+  'print.holidayPay': {
+    en: 'Holidays ({days} days)',
+    id: 'Hari libur ({days} hari)',
+    zh: '节假日（{days} 天）',
+  },
+  'print.grossPay': { en: 'Total earnings', id: 'Total pendapatan', zh: '收入合计' },
+  'print.totalDeductions': { en: 'Total deductions', id: 'Total potongan', zh: '扣款合计' },
+  'print.netPay': { en: 'Net pay', id: 'Gaji bersih', zh: '实发工资' },
+  'print.employerNote': {
+    en: 'Paid by the company (not deducted): {items}',
+    id: 'Dibayar perusahaan (tidak dipotong): {items}',
+    zh: '由公司支付（不从工资中扣除）：{items}',
+  },
+  'print.employeeSign': { en: 'Employee', id: 'Karyawan', zh: '员工' },
+  'print.reversed': { en: 'reversed', id: 'dibatalkan', zh: '已冲销' },
+
+  // ── Workspace audit trail ──
+  'audit.hr.work_days_changed': {
+    en: 'Working days changed',
+    id: 'Hari kerja diubah',
+    zh: '工作日已更改',
+  },
+  'audit.hr.holiday_saved': { en: 'Holiday saved', id: 'Hari libur disimpan', zh: '节假日已保存' },
+  'audit.hr.holiday_deleted': {
+    en: 'Holiday removed',
+    id: 'Hari libur dihapus',
+    zh: '节假日已删除',
+  },
+  'audit.hr.leave_requested': { en: 'Leave requested', id: 'Cuti diajukan', zh: '已申请休假' },
+  'audit.hr.leave_approved': { en: 'Leave approved', id: 'Cuti disetujui', zh: '已批准休假' },
+  'audit.hr.leave_rejected': { en: 'Leave rejected', id: 'Cuti ditolak', zh: '已拒绝休假' },
+  'audit.hr.leave_cancelled': { en: 'Leave cancelled', id: 'Cuti dibatalkan', zh: '已取消休假' },
+  'audit.hr.leave_quota_changed': {
+    en: 'Annual leave changed',
+    id: 'Jatah cuti diubah',
+    zh: '年假额度已更改',
+  },
+  'audit.hr.pay_items_changed': {
+    en: 'Allowances or deductions changed',
+    id: 'Tunjangan atau potongan diubah',
+    zh: '津贴或扣款已更改',
+  },
+} satisfies Record<string, Entry>;

@@ -1,0 +1,300 @@
+import type { Entry } from './types';
+
+// The internal admin panel (/admin), for ETNA's platform admins.
+export const platformAdminMessages = {
+  'padmin.title': { en: 'ETNA admin', id: 'Admin ETNA', zh: 'ETNA 管理' },
+  'padmin.nav.overview': { en: 'Overview', id: 'Ringkasan', zh: '概览' },
+  'padmin.nav.securityLog': { en: 'Security log', id: 'Log keamanan', zh: '安全日志' },
+  'padmin.nav.admins': { en: 'Admins', id: 'Admin', zh: '管理员' },
+  'padmin.backToErp': { en: 'Back to ERP', id: 'Kembali ke ERP', zh: '返回 ERP' },
+
+  'padmin.role.super_admin': { en: 'Super admin', id: 'Super admin', zh: '超级管理员' },
+  'padmin.role.support': { en: 'Support', id: 'Dukungan', zh: '支持' },
+  'padmin.role.auditor': { en: 'Auditor', id: 'Auditor', zh: '审计员' },
+  'padmin.roleDesc.super_admin': {
+    en: 'Everything in this panel, including who is an admin.',
+    id: 'Semua di panel ini, termasuk siapa yang menjadi admin.',
+    zh: '可使用本面板的全部功能，包括管理管理员。',
+  },
+  'padmin.roleDesc.support': {
+    en: 'Helps users with their accounts and reads the security log.',
+    id: 'Membantu pengguna dengan akun mereka dan membaca log keamanan.',
+    zh: '协助用户处理账户问题，并可查看安全日志。',
+  },
+  'padmin.roleDesc.auditor': {
+    en: 'Reads the security log. Changes nothing.',
+    id: 'Membaca log keamanan. Tidak mengubah apa pun.',
+    zh: '只读安全日志，不做任何更改。',
+  },
+  'padmin.needsTwoFactor': {
+    en: 'The admin panel needs two-factor verification. Turn on two-factor under ERP → Settings and verify a code, then come back.',
+    id: 'Panel admin memerlukan verifikasi dua langkah. Aktifkan dua langkah di ERP → Pengaturan dan verifikasi kode, lalu kembali.',
+    zh: '管理面板需要两步验证。请在 ERP → 设置 中启用两步验证并验证一个验证码，然后返回。',
+  },
+  'padmin.openSettings': { en: 'Open settings', id: 'Buka pengaturan', zh: '打开设置' },
+
+  'padmin.overview.yourRole': { en: 'Your role', id: 'Peran Anda', zh: '您的角色' },
+  'padmin.overview.recent': {
+    en: 'Latest security events',
+    id: 'Peristiwa keamanan terbaru',
+    zh: '最新安全事件',
+  },
+  'padmin.overview.viewAll': {
+    en: 'Open the security log',
+    id: 'Buka log keamanan',
+    zh: '打开安全日志',
+  },
+
+  'padmin.log.subtitle': {
+    en: 'Sign-ins, account changes and admin actions. Entries cannot be changed or deleted.',
+    id: 'Proses masuk, perubahan akun, dan tindakan admin. Entri tidak dapat diubah atau dihapus.',
+    zh: '登录、账户变更和管理员操作。条目无法修改或删除。',
+  },
+  'padmin.log.search': {
+    en: 'E-mail or IP address',
+    id: 'E-mail atau alamat IP',
+    zh: '电子邮件或 IP 地址',
+  },
+  'padmin.log.allEvents': { en: 'All events', id: 'Semua peristiwa', zh: '全部事件' },
+  'padmin.log.allOutcomes': { en: 'All results', id: 'Semua hasil', zh: '全部结果' },
+  'padmin.log.outcome.success': { en: 'Succeeded', id: 'Berhasil', zh: '成功' },
+  'padmin.log.outcome.failure': { en: 'Failed', id: 'Gagal', zh: '失败' },
+  'padmin.log.from': { en: 'From', id: 'Dari', zh: '从' },
+  'padmin.log.to': { en: 'Until', id: 'Sampai', zh: '至' },
+  'padmin.log.apply': { en: 'Apply', id: 'Terapkan', zh: '应用' },
+  'padmin.log.clear': { en: 'Clear', id: 'Hapus filter', zh: '清除' },
+  'padmin.log.col.time': { en: 'Time', id: 'Waktu', zh: '时间' },
+  'padmin.log.col.event': { en: 'Event', id: 'Peristiwa', zh: '事件' },
+  'padmin.log.col.actor': { en: 'By', id: 'Oleh', zh: '操作者' },
+  'padmin.log.col.target': { en: 'Account', id: 'Akun', zh: '账户' },
+  'padmin.log.col.ip': { en: 'IP address', id: 'Alamat IP', zh: 'IP 地址' },
+  'padmin.log.loadMore': { en: 'Load more', id: 'Muat lebih banyak', zh: '加载更多' },
+  'padmin.log.loadFailed': {
+    en: 'The log could not be loaded.',
+    id: 'Log tidak dapat dimuat.',
+    zh: '无法加载日志。',
+  },
+  'padmin.log.session': { en: 'Session', id: 'Sesi', zh: '会话' },
+  'padmin.log.device': { en: 'Browser', id: 'Peramban', zh: '浏览器' },
+  'padmin.log.workspace': { en: 'Workspace', id: 'Ruang kerja', zh: '工作区' },
+  'padmin.log.details': { en: 'Details', id: 'Detail', zh: '详情' },
+  'padmin.log.actorKind.user': { en: 'User', id: 'Pengguna', zh: '用户' },
+  'padmin.log.actorKind.admin': { en: 'Admin', id: 'Admin', zh: '管理员' },
+  'padmin.log.actorKind.cli': { en: 'Command line', id: 'Baris perintah', zh: '命令行' },
+  'padmin.log.actorKind.system': { en: 'PrintStream', id: 'PrintStream', zh: 'PrintStream' },
+
+  'padmin.event.LOGIN_SUCCEEDED': { en: 'Signed in', id: 'Masuk', zh: '已登录' },
+  'padmin.event.LOGIN_FAILED': { en: 'Sign-in failed', id: 'Gagal masuk', zh: '登录失败' },
+  'padmin.event.LOGIN_RATE_LIMITED': {
+    en: 'Sign-in blocked (too many attempts)',
+    id: 'Masuk diblokir (terlalu banyak percobaan)',
+    zh: '登录被阻止（尝试次数过多）',
+  },
+  'padmin.event.LOGOUT': { en: 'Signed out', id: 'Keluar', zh: '已退出' },
+  'padmin.event.PASSWORD_CHANGED': {
+    en: 'Password changed',
+    id: 'Kata sandi diubah',
+    zh: '密码已更改',
+  },
+  'padmin.event.PASSWORD_CHANGE_FAILED': {
+    en: 'Password change failed',
+    id: 'Gagal mengubah kata sandi',
+    zh: '更改密码失败',
+  },
+  'padmin.event.PASSWORD_CHECK_FAILED': {
+    en: 'Password confirmation failed',
+    id: 'Konfirmasi kata sandi gagal',
+    zh: '密码确认失败',
+  },
+  'padmin.event.MFA_FACTOR_ADDED': {
+    en: 'Two-factor device added',
+    id: 'Perangkat dua langkah ditambahkan',
+    zh: '已添加两步验证设备',
+  },
+  'padmin.event.MFA_FACTOR_REMOVED': {
+    en: 'Two-factor device removed',
+    id: 'Perangkat dua langkah dihapus',
+    zh: '已移除两步验证设备',
+  },
+  'padmin.event.MFA_CHALLENGE_SUCCEEDED': {
+    en: 'Two-factor code accepted',
+    id: 'Kode dua langkah diterima',
+    zh: '两步验证码已通过',
+  },
+  'padmin.event.MFA_CHALLENGE_FAILED': {
+    en: 'Two-factor code rejected',
+    id: 'Kode dua langkah ditolak',
+    zh: '两步验证码被拒绝',
+  },
+  'padmin.event.MFA_RATE_LIMITED': {
+    en: 'Two-factor blocked (too many attempts)',
+    id: 'Dua langkah diblokir (terlalu banyak percobaan)',
+    zh: '两步验证被阻止（尝试次数过多）',
+  },
+  'padmin.event.ADMIN_REAUTHENTICATED': {
+    en: 'Admin confirmed with two-factor',
+    id: 'Admin dikonfirmasi dengan dua langkah',
+    zh: '管理员已通过两步验证确认',
+  },
+  'padmin.event.ADMIN_REAUTH_FAILED': {
+    en: 'Admin two-factor confirmation failed',
+    id: 'Konfirmasi dua langkah admin gagal',
+    zh: '管理员两步验证确认失败',
+  },
+  'padmin.event.ADMIN_ROLE_GRANTED': {
+    en: 'Admin role granted',
+    id: 'Peran admin diberikan',
+    zh: '已授予管理员角色',
+  },
+  'padmin.event.ADMIN_ROLE_CHANGED': {
+    en: 'Admin role changed',
+    id: 'Peran admin diubah',
+    zh: '管理员角色已更改',
+  },
+  'padmin.event.ADMIN_ROLE_REVOKED': {
+    en: 'Admin role removed',
+    id: 'Peran admin dicabut',
+    zh: '已移除管理员角色',
+  },
+  'padmin.event.USER_CREATED': { en: 'Account created', id: 'Akun dibuat', zh: '账户已创建' },
+  'padmin.event.ADMIN_PASSWORD_SET': {
+    en: 'Password set by an administrator',
+    id: 'Kata sandi diatur oleh administrator',
+    zh: '管理员设置了密码',
+  },
+  'padmin.event.SESSIONS_REVOKED': {
+    en: 'Sessions ended',
+    id: 'Sesi diakhiri',
+    zh: '会话已结束',
+  },
+  'padmin.event.MFA_RESET': {
+    en: 'Two-factor reset',
+    id: 'Dua langkah diatur ulang',
+    zh: '两步验证已重置',
+  },
+  'padmin.event.USER_DISABLED': {
+    en: 'Account disabled',
+    id: 'Akun dinonaktifkan',
+    zh: '账户已停用',
+  },
+  'padmin.event.USER_ENABLED': { en: 'Account enabled', id: 'Akun diaktifkan', zh: '账户已启用' },
+  'padmin.event.SECURITY_LOG_RETENTION_CHANGED': {
+    en: 'Log retention changed',
+    id: 'Masa simpan log diubah',
+    zh: '日志保留期已更改',
+  },
+  'padmin.event.SECURITY_LOG_PURGED': {
+    en: 'Old log entries removed',
+    id: 'Entri log lama dihapus',
+    zh: '已删除旧日志条目',
+  },
+
+  'padmin.admins.subtitle': {
+    en: 'People who can open this panel. Only super admins change this, and every change is recorded in the security log.',
+    id: 'Orang yang dapat membuka panel ini. Hanya super admin yang dapat mengubahnya, dan setiap perubahan dicatat di log keamanan.',
+    zh: '可以打开本面板的人员。只有超级管理员可以更改，所有更改都会记录在安全日志中。',
+  },
+  'padmin.admins.col.account': { en: 'Account', id: 'Akun', zh: '账户' },
+  'padmin.admins.col.role': { en: 'Role', id: 'Peran', zh: '角色' },
+  'padmin.admins.col.twoFactor': { en: 'Two-factor', id: 'Dua langkah', zh: '两步验证' },
+  'padmin.admins.col.lastSignIn': { en: 'Last sign-in', id: 'Terakhir masuk', zh: '上次登录' },
+  'padmin.admins.col.grantedBy': { en: 'Granted by', id: 'Diberikan oleh', zh: '授予人' },
+  'padmin.admins.commandLine': { en: 'Command line', id: 'Baris perintah', zh: '命令行' },
+  'padmin.admins.twoFactorOn': { en: 'On', id: 'Aktif', zh: '已启用' },
+  'padmin.admins.twoFactorOff': {
+    en: 'Off: cannot use the panel yet',
+    id: 'Nonaktif: belum dapat memakai panel',
+    zh: '未启用：暂不能使用面板',
+  },
+  'padmin.admins.you': { en: 'you', id: 'Anda', zh: '您' },
+  'padmin.admins.formTitle': {
+    en: 'Add an admin or change a role',
+    id: 'Tambah admin atau ubah peran',
+    zh: '添加管理员或更改角色',
+  },
+  'padmin.admins.email': {
+    en: 'E-mail address of an existing account',
+    id: 'Alamat e-mail akun yang sudah ada',
+    zh: '现有账户的电子邮件地址',
+  },
+  'padmin.admins.role': { en: 'Role', id: 'Peran', zh: '角色' },
+  'padmin.admins.save': { en: 'Save role', id: 'Simpan peran', zh: '保存角色' },
+  'padmin.admins.remove': { en: 'Remove', id: 'Hapus', zh: '移除' },
+  'padmin.admins.confirmRemove': {
+    en: 'Remove the admin role of {email}? Their account itself stays.',
+    id: 'Cabut peran admin {email}? Akunnya sendiri tetap ada.',
+    zh: '要移除 {email} 的管理员角色吗？该账户本身会保留。',
+  },
+  'padmin.admins.saved': { en: 'Role saved.', id: 'Peran disimpan.', zh: '角色已保存。' },
+  'padmin.admins.removed': {
+    en: 'Admin role removed.',
+    id: 'Peran admin dicabut.',
+    zh: '已移除管理员角色。',
+  },
+  'padmin.admins.readOnly': {
+    en: 'Only super admins can change admins.',
+    id: 'Hanya super admin yang dapat mengubah admin.',
+    zh: '只有超级管理员可以更改管理员。',
+  },
+
+  'padmin.err.not_allowed': {
+    en: 'Your role does not allow this.',
+    id: 'Peran Anda tidak mengizinkan ini.',
+    zh: '您的角色不允许此操作。',
+  },
+  'padmin.err.mfa_required': {
+    en: 'Two-factor verification is needed first.',
+    id: 'Verifikasi dua langkah diperlukan terlebih dahulu.',
+    zh: '需要先完成两步验证。',
+  },
+  'padmin.err.self': {
+    en: 'You cannot do this to your own account or admin role.',
+    id: 'Anda tidak dapat melakukan ini pada akun atau peran admin Anda sendiri.',
+    zh: '您不能对自己的账户或管理员角色执行此操作。',
+  },
+  'padmin.err.not_found': {
+    en: 'No such account, or it is not an admin.',
+    id: 'Akun tidak ditemukan, atau bukan admin.',
+    zh: '账户不存在，或该账户不是管理员。',
+  },
+  'padmin.err.invalid': {
+    en: 'Check the e-mail address and the role.',
+    id: 'Periksa alamat e-mail dan perannya.',
+    zh: '请检查电子邮件地址和角色。',
+  },
+  'padmin.err.failed': {
+    en: 'That did not work. Please try again.',
+    id: 'Gagal. Silakan coba lagi.',
+    zh: '操作失败，请重试。',
+  },
+
+  'padmin.reauth.title': {
+    en: 'Confirm it is you',
+    id: 'Konfirmasi bahwa ini Anda',
+    zh: '确认身份',
+  },
+  'padmin.reauth.body': {
+    en: 'Enter a code from your authenticator app. It allows admin changes for 10 minutes.',
+    id: 'Masukkan kode dari aplikasi autentikator Anda. Kode ini mengizinkan perubahan admin selama 10 menit.',
+    zh: '请输入身份验证器应用中的验证码。验证后 10 分钟内可进行管理更改。',
+  },
+  'padmin.reauth.device': { en: 'Device', id: 'Perangkat', zh: '设备' },
+  'padmin.reauth.code': { en: 'Six-digit code', id: 'Kode enam digit', zh: '六位验证码' },
+  'padmin.reauth.confirm': { en: 'Confirm', id: 'Konfirmasi', zh: '确认' },
+  'padmin.reauth.cancel': { en: 'Cancel', id: 'Batal', zh: '取消' },
+  'padmin.reauth.wrong': {
+    en: 'That code is not right.',
+    id: 'Kode itu tidak benar.',
+    zh: '验证码不正确。',
+  },
+  'padmin.reauth.rateLimited': {
+    en: 'Too many wrong codes. Please wait 15 minutes.',
+    id: 'Terlalu banyak kode salah. Silakan tunggu 15 menit.',
+    zh: '错误次数过多，请等待 15 分钟。',
+  },
+  'padmin.reauth.noDevice': {
+    en: 'This account has no verified authenticator.',
+    id: 'Akun ini tidak memiliki autentikator yang terverifikasi.',
+    zh: '此账户没有已验证的身份验证器。',
+  },
+} satisfies Record<string, Entry>;

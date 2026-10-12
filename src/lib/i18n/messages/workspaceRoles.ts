@@ -1,0 +1,218 @@
+import type { Entry } from './types';
+
+// Custom roles, permissions and e-mail invitations (ERP → Workspace).
+export const workspaceRoleMessages = {
+  'permGroup.erp': { en: 'ERP modules', id: 'Modul ERP', zh: 'ERP 模块' },
+  'permGroup.workspace': { en: 'Workspace', id: 'Ruang kerja', zh: '工作区' },
+  'permGroup.integrations': { en: 'Integrations', id: 'Integrasi', zh: '集成' },
+  'permGroup.datasets': { en: 'TERMINAL datasets', id: 'Dataset TERMINAL', zh: 'TERMINAL 数据集' },
+  'permGroup.pipelines': { en: 'TERMINAL pipelines', id: 'Pipeline TERMINAL', zh: 'TERMINAL 管道' },
+  'permGroup.approvals': { en: 'Approvals', id: 'Persetujuan', zh: '审批' },
+
+  'perm.read': { en: 'Read all ERP data', id: 'Membaca semua data ERP', zh: '读取所有 ERP 数据' },
+  'perm.customers': { en: 'Customers', id: 'Pelanggan', zh: '客户' },
+  'perm.suppliers': { en: 'Suppliers', id: 'Pemasok', zh: '供应商' },
+  'perm.products': { en: 'Products', id: 'Produk', zh: '产品' },
+  'perm.inventory': { en: 'Stock', id: 'Stok', zh: '库存' },
+  'perm.sales': { en: 'Sales orders', id: 'Pesanan penjualan', zh: '销售订单' },
+  'perm.invoicing': { en: 'Invoices', id: 'Faktur', zh: '发票' },
+  'perm.fulfillment': { en: 'Deliveries', id: 'Pengiriman', zh: '发货' },
+  'perm.purchasing': { en: 'Purchase orders', id: 'Pesanan pembelian', zh: '采购订单' },
+  'perm.receiving': { en: 'Goods receipts', id: 'Penerimaan barang', zh: '收货' },
+  'perm.payments': { en: 'Payments', id: 'Pembayaran', zh: '付款' },
+  'perm.members': {
+    en: 'Invite and manage members',
+    id: 'Mengundang dan mengelola anggota',
+    zh: '邀请和管理成员',
+  },
+  'perm.audit': {
+    en: 'See workspace activity',
+    id: 'Melihat aktivitas ruang kerja',
+    zh: '查看工作区活动',
+  },
+  'perm.roles.manage': {
+    en: 'Create and edit roles',
+    id: 'Membuat dan mengubah peran',
+    zh: '创建和编辑角色',
+  },
+  'perm.policies.manage': {
+    en: 'Set policies (AI data, approvals)',
+    id: 'Mengatur kebijakan (data AI, persetujuan)',
+    zh: '设置策略（AI 数据、审批）',
+  },
+  'perm.storage.view': {
+    en: 'See storage use',
+    id: 'Melihat pemakaian penyimpanan',
+    zh: '查看存储用量',
+  },
+  'perm.integrations.manage': {
+    en: 'Add connectors and credentials',
+    id: 'Menambah konektor dan kredensial',
+    zh: '添加连接器和凭据',
+  },
+  'perm.integrations.use': {
+    en: 'Use approved connectors',
+    id: 'Memakai konektor yang disetujui',
+    zh: '使用已批准的连接器',
+  },
+  'perm.datasets.view': { en: 'Open datasets', id: 'Membuka dataset', zh: '打开数据集' },
+  'perm.datasets.query': {
+    en: 'Query and filter datasets',
+    id: 'Menyaring dan mengkueri dataset',
+    zh: '查询和筛选数据集',
+  },
+  'perm.datasets.import': { en: 'Import files', id: 'Mengimpor file', zh: '导入文件' },
+  'perm.datasets.edit': { en: 'Edit rows', id: 'Mengubah baris', zh: '编辑行' },
+  'perm.datasets.schema': { en: 'Change columns', id: 'Mengubah kolom', zh: '更改列' },
+  'perm.datasets.export': { en: 'Export data', id: 'Mengekspor data', zh: '导出数据' },
+  'perm.datasets.share': {
+    en: 'Share and restrict datasets',
+    id: 'Membagikan dan membatasi dataset',
+    zh: '共享和限制数据集',
+  },
+  'perm.datasets.delete': { en: 'Delete datasets', id: 'Menghapus dataset', zh: '删除数据集' },
+  'perm.data.sensitive': {
+    en: 'See sensitive fields unmasked',
+    id: 'Melihat kolom sensitif tanpa sensor',
+    zh: '查看未遮蔽的敏感字段',
+  },
+  'perm.pipelines.view': {
+    en: 'Open pipelines and runs',
+    id: 'Membuka pipeline dan run',
+    zh: '打开管道和运行记录',
+  },
+  'perm.pipelines.create': { en: 'Create pipelines', id: 'Membuat pipeline', zh: '创建管道' },
+  'perm.pipelines.edit': { en: 'Edit pipelines', id: 'Mengubah pipeline', zh: '编辑管道' },
+  'perm.pipelines.run': { en: 'Run pipelines', id: 'Menjalankan pipeline', zh: '运行管道' },
+  'perm.pipelines.schedule': {
+    en: 'Schedule pipelines',
+    id: 'Menjadwalkan pipeline',
+    zh: '调度管道',
+  },
+  'perm.pipelines.publish': {
+    en: 'Publish pipeline versions',
+    id: 'Menerbitkan versi pipeline',
+    zh: '发布管道版本',
+  },
+  'perm.pipelines.disable': {
+    en: 'Disable pipelines',
+    id: 'Menonaktifkan pipeline',
+    zh: '停用管道',
+  },
+  'perm.pipelines.delete': { en: 'Delete pipelines', id: 'Menghapus pipeline', zh: '删除管道' },
+  'perm.approvals.decide': {
+    en: 'Approve high-impact actions',
+    id: 'Menyetujui tindakan berdampak besar',
+    zh: '审批高影响操作',
+  },
+
+  'roles.manage': { en: 'Manage roles', id: 'Kelola peran', zh: '管理角色' },
+  'roles.title': { en: 'Roles', id: 'Peran', zh: '角色' },
+  'roles.intro': {
+    en: 'Built-in roles are fixed. A custom role is any set of permissions; nobody can give a permission they do not have.',
+    id: 'Peran bawaan tidak dapat diubah. Peran khusus adalah kumpulan izin apa pun; tidak ada yang bisa memberi izin yang tidak dimilikinya.',
+    zh: '内置角色不可更改。自定义角色可以是任意权限组合；任何人都不能授予自己没有的权限。',
+  },
+  'roles.builtIn': { en: 'Built-in', id: 'Bawaan', zh: '内置' },
+  'roles.custom': { en: 'Custom roles', id: 'Peran khusus', zh: '自定义角色' },
+  'roles.none': {
+    en: 'No custom roles yet.',
+    id: 'Belum ada peran khusus.',
+    zh: '尚无自定义角色。',
+  },
+  'roles.new': { en: 'New role', id: 'Peran baru', zh: '新建角色' },
+  'roles.edit': { en: 'Edit', id: 'Ubah', zh: '编辑' },
+  'roles.delete': { en: 'Delete', id: 'Hapus', zh: '删除' },
+  'roles.name': { en: 'Name', id: 'Nama', zh: '名称' },
+  'roles.description': { en: 'Description', id: 'Deskripsi', zh: '描述' },
+  'roles.requiresMfa': {
+    en: 'Requires two-factor in ERPs other people use',
+    id: 'Wajib two-factor di ERP yang dipakai orang lain',
+    zh: '在他人使用的 ERP 中需要双重验证',
+  },
+  'roles.mfaForced': {
+    en: 'Required because of the permissions chosen.',
+    id: 'Wajib karena izin yang dipilih.',
+    zh: '由于所选权限而必需。',
+  },
+  'roles.save': { en: 'Save role', id: 'Simpan peran', zh: '保存角色' },
+  'roles.saved': { en: 'Role saved.', id: 'Peran disimpan.', zh: '角色已保存。' },
+  'roles.deleted': { en: 'Role deleted.', id: 'Peran dihapus.', zh: '角色已删除。' },
+  'roles.members': { en: '{count} member(s)', id: '{count} anggota', zh: '{count} 名成员' },
+  'roles.permissionsCount': {
+    en: '{count} permission(s)',
+    id: '{count} izin',
+    zh: '{count} 项权限',
+  },
+  'roles.deleteBody': {
+    en: 'Delete the role {name}? Pending invitations with it are cancelled. A role that members still have cannot be deleted.',
+    id: 'Hapus peran {name}? Undangan yang tertunda dengan peran ini dibatalkan. Peran yang masih dimiliki anggota tidak dapat dihapus.',
+    zh: '删除角色 {name}？使用此角色的待处理邀请将被取消。仍有成员使用的角色不能删除。',
+  },
+  'roles.notYours': {
+    en: 'You can only include permissions you have yourself.',
+    id: 'Anda hanya bisa memasukkan izin yang Anda miliki sendiri.',
+    zh: '您只能包含自己拥有的权限。',
+  },
+  'roleDesc.custom': {
+    en: 'A role defined for this workspace',
+    id: 'Peran yang ditentukan untuk ruang kerja ini',
+    zh: '为此工作区定义的角色',
+  },
+
+  'workspace.inviteEmail': {
+    en: 'E-mail (optional)',
+    id: 'E-mail (opsional)',
+    zh: '电子邮件（可选）',
+  },
+  'workspace.inviteEmailHint': {
+    en: 'With an e-mail address, the code is sent there; a new address also gets an account and a link to choose a password.',
+    id: 'Dengan alamat e-mail, kode dikirim ke sana; alamat baru juga mendapat akun dan tautan untuk membuat kata sandi.',
+    zh: '填写电子邮件后，代码会发送到该地址；新地址还会获得账户和设置密码的链接。',
+  },
+  'workspace.sendInvite': { en: 'Send invitation', id: 'Kirim undangan', zh: '发送邀请' },
+  'workspace.inviteSent': {
+    en: 'Invitation sent to {email}.',
+    id: 'Undangan dikirim ke {email}.',
+    zh: '邀请已发送至 {email}。',
+  },
+  'workspace.inviteNotSent': {
+    en: 'The e-mail could not be sent. Pass the code (and the password link) on yourself.',
+    id: 'E-mail tidak dapat dikirim. Berikan kode (dan tautan kata sandi) secara langsung.',
+    zh: '电子邮件无法发送。请自行转交代码（以及密码链接）。',
+  },
+  'workspace.inviteMailOff': {
+    en: 'E-mail is not set up on this server. Pass the code (and the password link) on yourself.',
+    id: 'E-mail belum diatur di server ini. Berikan kode (dan tautan kata sandi) secara langsung.',
+    zh: '此服务器未设置电子邮件。请自行转交代码（以及密码链接）。',
+  },
+  'workspace.passwordLink': {
+    en: 'Password link for the new account (shown once):',
+    id: 'Tautan kata sandi untuk akun baru (ditampilkan sekali):',
+    zh: '新账户的密码链接（仅显示一次）：',
+  },
+  'workspace.joinPending': {
+    en: 'An invitation code from a link is filled in below.',
+    id: 'Kode undangan dari tautan sudah diisi di bawah.',
+    zh: '来自链接的邀请代码已填写在下方。',
+  },
+
+  'audit.role.created': { en: 'Role created', id: 'Peran dibuat', zh: '已创建角色' },
+  'audit.role.changed': { en: 'Role changed', id: 'Peran diubah', zh: '已更改角色' },
+  'audit.role.deleted': { en: 'Role deleted', id: 'Peran dihapus', zh: '已删除角色' },
+  'audit.invitation.emailed': {
+    en: 'Invitation e-mailed',
+    id: 'Undangan dikirim lewat e-mail',
+    zh: '已通过电子邮件发送邀请',
+  },
+  'audit.invitation.mail_sent': {
+    en: 'Invitation e-mail delivered',
+    id: 'E-mail undangan terkirim',
+    zh: '邀请邮件已送达',
+  },
+  'audit.invitation.mail_failed': {
+    en: 'Invitation e-mail failed',
+    id: 'E-mail undangan gagal',
+    zh: '邀请邮件发送失败',
+  },
+} satisfies Record<string, Entry>;

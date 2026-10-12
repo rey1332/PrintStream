@@ -1,0 +1,18 @@
+# Caddy reverse proxy for ETNA staging (docs/INSTALL-SERVER.md, langkah 9).
+# Copy to C:\caddy\Caddyfile and replace staging.example.com with your name.
+#
+# Caddy obtains and renews the HTTPS certificate by itself: the DNS record must
+# point at this server (Cloudflare: "DNS only", grey cloud) and ports 80 and 443
+# must be reachable from the internet. Caddy replaces any X-Forwarded-For sent
+# by the client, so ETNA staging runs with TRUST_PROXY=1.
+#
+# Only this hostname is proxied. Production (127.0.0.1:4028) stays reachable
+# only through the Cloudflare Tunnel.
+
+staging.example.com {
+	# Optional: only allow your office network (uncomment, use your range).
+	# @outside not remote_ip 203.0.113.0/24
+	# respond @outside 403
+
+	reverse_proxy 127.0.0.1:4029
+}
