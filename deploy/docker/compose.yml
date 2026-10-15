@@ -1,0 +1,101 @@
+# ETNA with Docker Compose on Linux (docs/INSTALL-LINUX.md, part B):
+#
+#   cd deploy/docker
+#   cp .env.example .env        # then set the two passwords
+#   docker compose up -d --build
+#
+# Services:
+#   db      PostgreSQL 18; creates the schema owner etna_owner and the database
+#           etna on first start (initdb/)
+#   setup   runs once per start: the first time it prepares the database and
+#           writes /config/etna.env (app connections and keys); later it
+#           applies new migrations
+#   app     ETNA on 127.0.0.1:${ETNA_PORT} of this machine
+#   worker  the TERMINAL worker (background jobs)
+#   caddy   optional HTTPS in front of the app: docker compose --profile https up -d
+
+name: etna
+
+x-build: &build
+  context: ../..
+  dockerfile: Dockerfile
+
+x-etna: &etna
+  image: etna:local
+  build: *build
+  restart: unless-stopped
+  depends_on:
+    setup:
+      condition: service_completed_successfully
+  volumes:
+    - config:/config:ro
+    - data:/data
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/docker/.env}
+      ETNA_OWNER_PASSWORD: ${ETNA_OWNER_PASSWORD:?set ETNA_OWNER_PASSWORD in deploy/docker/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "etna"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  setup:
+    image: etna:local
+    build: *build
+    command: ["sh", "deploy/docker/setup.sh"]
+    restart: "no"
+    environment:
+      MIGRATION_DATABASE_URL: postgres://etna_owner@db:5432/etna
+      PGPASSWORD: ${ETNA_OWNER_PASSWORD}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      ETNA_PUBLIC_URL: ${ETNA_PUBLIC_URL:-}
+    volumes:
+      - config:/config
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    <<: *etna
+    ports:
+      - "127.0.0.1:${ETNA_PORT:-4028}:4028"
+
+  worker:
+    <<: *etna
+    command: ["node", "scripts/server/env-run.mjs", "/config/etna.env", "worker"]
+    # The worker has no web port; the image's health check is for the app.
+    healthcheck:
+      disable: true
+    stop_grace_period: 40s
+
+  caddy:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      ETNA_DOMAIN: ${ETNA_DOMAIN:?set ETNA_DOMAIN in deploy/docker/.env for the https profile}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  config:
+  data:
+  caddy_data:
+  caddy_config:

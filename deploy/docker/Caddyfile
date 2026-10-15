@@ -1,0 +1,8 @@
+# HTTPS in front of ETNA (docker compose --profile https up -d). Caddy obtains
+# and renews the certificate for ETNA_DOMAIN itself: its DNS record must point
+# at this machine and ports 80 and 443 must be reachable. Set TRUST_PROXY=1
+# and ETNA_PUBLIC_URL=https://<ETNA_DOMAIN> in deploy/docker/.env as well.
+
+{$ETNA_DOMAIN} {
+	reverse_proxy app:4028
+}
