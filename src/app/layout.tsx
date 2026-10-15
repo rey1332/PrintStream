@@ -34,8 +34,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} />
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: UI_BOOT_SCRIPT }} />
+        {/* Browsers hide a nonce from the page once loaded (nonce=""), so React
+            would report a mismatch here on every load. */}
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }}
+        />
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: UI_BOOT_SCRIPT }}
+        />
       </head>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider
