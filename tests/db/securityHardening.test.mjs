@@ -87,6 +87,15 @@ test('anonymous visitors can call only the pre-request check; trigger functions 
   await expectError(run(db, user, `select erp_delete_all_transactions($1)`, [user.id]), /permission denied/);
 });
 
+test('every SECURITY DEFINER function has a fixed search_path', async () => {
+  const rows = await admin(db, `select n.nspname || '.' || p.proname as name
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where p.prosecdef and n.nspname not in ('pg_catalog', 'information_schema')
+      and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')
+    order by 1`);
+  assert.deepEqual(rows.map((r) => r.name), []);
+});
+
 test('functions created later are not callable until a migration grants them', async () => {
   const d = await createDb();
   await d.exec(`create function public.test_new_helper() returns int language sql as 'select 1'`);
