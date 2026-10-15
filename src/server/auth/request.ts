@@ -1,7 +1,7 @@
 // Session cookies on requests and responses (plain-PostgreSQL backend).
 
 import type { NextRequest, NextResponse } from 'next/server';
-import { HINT_COOKIE, SESSION_COOKIE, signHint } from '@/lib/auth/hint';
+import { HINT_COOKIE, SESSION_COOKIE, sessionTag, signHint } from '@/lib/auth/hint';
 import type { RequestIdentity } from '@/server/db/execute';
 import { getAuthDeps, hintSecret } from '@/server/config';
 import { resolveSession, SESSION_MAX_MS, type SessionInfo } from './service';
@@ -40,15 +40,19 @@ export async function setSessionCookies(
     path: '/',
     maxAge,
   });
-  await refreshHintCookie(response, session);
+  await refreshHintCookie(response, token, session);
 }
 
 export async function refreshHintCookie(
   response: NextResponse,
+  token: string,
   session: SessionInfo
 ): Promise<void> {
   const exp = Math.floor(new Date(session.expiresAt).getTime() / 1000);
-  const value = await signHint({ aal: session.aal, next: session.nextLevel, exp }, hintSecret());
+  const value = await signHint(
+    { aal: session.aal, next: session.nextLevel, exp, sid: await sessionTag(token) },
+    hintSecret()
+  );
   response.cookies.set(HINT_COOKIE, value, {
     httpOnly: true,
     secure,

@@ -112,7 +112,14 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
 
   if (request.method === 'GET') {
     const session = await sessionFromCookies(request.cookies);
-    if (action === 'session') return json(sessionBody(session));
+    if (action === 'session') {
+      // A fresh hint with every check, so pages open again for a session that
+      // outlived its hint (or carries one from before hints named their session).
+      const response = json(sessionBody(session));
+      const token = sessionToken(request.cookies);
+      if (session && token) await refreshHintCookie(response, token, session);
+      return response;
+    }
     // The current Terms & Conditions (anyone may read them) and, when signed
     // in, whether this account still has to accept them.
     // Status only, for the check on every page (no text).
@@ -229,7 +236,7 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
     }
     case 'refresh': {
       const response = json(sessionBody(session));
-      await refreshHintCookie(response, session);
+      await refreshHintCookie(response, sessionToken(request.cookies)!, session);
       return response;
     }
     case 'verify-password': {
@@ -302,9 +309,10 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
       const factorId = str(body.factorId, 64);
       if (!UUID.test(factorId)) return fail(400, 'Invalid factor', 'validation_failed');
       await unenrollFactor(deps, session, factorId, meta);
-      const updated = await resolveSession(deps, sessionToken(request.cookies));
+      const token = sessionToken(request.cookies)!;
+      const updated = await resolveSession(deps, token);
       const response = json({ id: factorId });
-      if (updated) await refreshHintCookie(response, updated);
+      if (updated) await refreshHintCookie(response, token, updated);
       return response;
     }
     default:

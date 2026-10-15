@@ -5,6 +5,8 @@ export interface SessionHint {
   aal: 'aal1' | 'aal2';
   next: 'aal1' | 'aal2';
   exp: number;
+  /** Ties the hint to one session cookie (sessionTag of its token). */
+  sid: string;
 }
 
 const encoder = new TextEncoder();
@@ -32,6 +34,12 @@ async function hmac(secret: string, payload: string): Promise<Uint8Array> {
   return new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(payload)));
 }
 
+/** A short digest of a session token: the hint names its session without carrying the token. */
+export async function sessionTag(token: string): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(token)));
+  return toBase64Url(digest.slice(0, 16));
+}
+
 export async function signHint(hint: SessionHint, secret: string): Promise<string> {
   const payload = toBase64Url(encoder.encode(JSON.stringify(hint)));
   return `${payload}.${toBase64Url(await hmac(secret, payload))}`;
@@ -40,7 +48,13 @@ export async function signHint(hint: SessionHint, secret: string): Promise<strin
 export async function readHint(
   value: string | undefined,
   secret: string,
-  nowSeconds = Math.floor(Date.now() / 1000)
+  nowSeconds = Math.floor(Date.now() / 1000),
+  options: {
+    /** The session cookie this request carries: a hint made for another session is refused. */
+    sessionToken?: string;
+    /** Signature and session only (API routes check the session's expiry themselves). */
+    ignoreExpiry?: boolean;
+  } = {}
 ): Promise<SessionHint | null> {
   if (!value || !secret) return null;
   const [payload, signature] = value.split('.');
@@ -59,7 +73,11 @@ export async function readHint(
   if (diff !== 0) return null;
   try {
     const hint = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as SessionHint;
-    if (typeof hint.exp !== 'number' || hint.exp <= nowSeconds) return null;
+    if (typeof hint.exp !== 'number' || (!options.ignoreExpiry && hint.exp <= nowSeconds))
+      return null;
+    if (typeof hint.sid !== 'string') return null;
+    if (options.sessionToken !== undefined && hint.sid !== (await sessionTag(options.sessionToken)))
+      return null;
     if (
       (hint.aal !== 'aal1' && hint.aal !== 'aal2') ||
       (hint.next !== 'aal1' && hint.next !== 'aal2')

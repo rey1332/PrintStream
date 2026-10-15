@@ -1,23 +1,33 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { HINT_COOKIE, SESSION_COOKIE, readHint } from '@/lib/auth/hint';
-
-const PUBLIC_PATHS = ['/login', '/erp/login', '/reset-password', '/terms', '/api/health'];
+import { isPublicPath } from '@/lib/auth/public-paths';
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next({ request });
   }
 
+  // The hint is signed by the server for this session cookie, so a made-up
+  // cookie gets no further. Routes still check the session itself.
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const readFor = (ignoreExpiry: boolean) =>
+    token
+      ? readHint(
+          request.cookies.get(HINT_COOKIE)?.value,
+          process.env.SESSION_HINT_SECRET ?? '',
+          undefined,
+          { sessionToken: token, ignoreExpiry }
+        )
+      : Promise.resolve(null);
+
   if (pathname.startsWith('/api/')) {
-    if (pathname.startsWith('/api/auth/') || request.cookies.has(SESSION_COOKIE))
+    if (pathname.startsWith('/api/auth/') || (await readFor(true)))
       return NextResponse.next({ request });
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const hint = request.cookies.has(SESSION_COOKIE)
-    ? await readHint(request.cookies.get(HINT_COOKIE)?.value, process.env.SESSION_HINT_SECRET ?? '')
-    : null;
+  const hint = await readFor(false);
   if (!hint) return redirectTo(request, pathname.startsWith('/erp') ? '/erp/login' : '/login');
 
   // Two-factor: a user with a verified authenticator completes it first.
@@ -51,6 +61,6 @@ function redirectTo(request: NextRequest, path: string) {
 export const config = {
   matcher: [
     // Everything except static files, images and the sign-in pages.
-    '/((?!_next/static|_next/image|favicon.ico|login|erp/login|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|(?:erp/)?login(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

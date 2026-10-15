@@ -11,7 +11,7 @@ import {
 } from '../../src/server/auth/service.ts';
 import { base32Decode, currentStep, hotp, verifyTotp, base32Encode } from '../../src/server/auth/totp.ts';
 import { openSecret, sealSecret, parseKey } from '../../src/server/auth/secret-box.ts';
-import { readHint, signHint } from '../../src/lib/auth/hint.ts';
+import { readHint, sessionTag, signHint } from '../../src/lib/auth/hint.ts';
 import { createSlots } from '../../src/server/slots.ts';
 import { executeSpec } from '../../src/server/db/execute.ts';
 import { RestClient } from '../../src/lib/db/rest-client.ts';
@@ -290,15 +290,25 @@ test('recovery code from a password-only session clears devices; the session the
   assert.equal(after.nextLevel, 'aal1');
 });
 
-test('signed session hints: valid, expired, tampered, wrong secret', async () => {
+test('signed session hints: valid, expired, tampered, wrong secret, other session', async () => {
   const secret = 'hint-secret';
   const exp = Math.floor(Date.now() / 1000) + 60;
-  const value = await signHint({ aal: 'aal1', next: 'aal2', exp }, secret);
-  assert.deepEqual(await readHint(value, secret), { aal: 'aal1', next: 'aal2', exp });
+  const sid = await sessionTag('token-a');
+  const value = await signHint({ aal: 'aal1', next: 'aal2', exp, sid }, secret);
+  assert.deepEqual(await readHint(value, secret), { aal: 'aal1', next: 'aal2', exp, sid });
   assert.equal(await readHint(value, 'other'), null);
   assert.equal(await readHint(value.replace(/^./, (c) => (c === 'e' ? 'f' : 'e')), secret), null);
-  assert.equal(await readHint(await signHint({ aal: 'aal2', next: 'aal2', exp: 1 }, secret), secret), null);
+  const expired = await signHint({ aal: 'aal2', next: 'aal2', exp: 1, sid }, secret);
+  assert.equal(await readHint(expired, secret), null);
   assert.equal(await readHint(undefined, secret), null);
+  // Bound to its session cookie: another token (or a made-up cookie) does not match.
+  assert.ok(await readHint(value, secret, undefined, { sessionToken: 'token-a' }));
+  assert.equal(await readHint(value, secret, undefined, { sessionToken: 'token-b' }), null);
+  // API routes: signature and session only, expiry is the route's to check.
+  assert.ok(await readHint(expired, secret, undefined, { sessionToken: 'token-a', ignoreExpiry: true }));
+  assert.equal(await readHint(expired, secret, undefined, { sessionToken: 'token-b', ignoreExpiry: true }), null);
+  // Hints from before they named their session are refused.
+  assert.equal(await readHint(await signHint({ aal: 'aal1', next: 'aal1', exp }, secret), secret), null);
 });
 
 // ─── Password change ────────────────────────────────────────────────────────
