@@ -58,6 +58,17 @@ test('the network guard refuses internal targets unless ETNA allows them', async
   await assert.rejects(checkTarget(new URL('https://127.0.0.1/x')), /hostBlocked/);
   await assert.rejects(checkTarget(new URL('http://169.254.169.254/latest/meta-data')), /hostBlocked/);
   await assert.rejects(checkTarget(new URL('https://[::ffff:127.0.0.1]/')), /hostBlocked/);
+  // IPv6 forms that carry an internal IPv4 address, and IPv4 tunnels.
+  await assert.rejects(checkTarget(new URL('https://[::127.0.0.1]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[64:ff9b::127.0.0.1]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[64:ff9b::a9fe:a9fe]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[64:ff9b::10.0.0.5]/')), /hostPrivate/);
+  await assert.rejects(checkTarget(new URL('https://[64:ff9b:1::1]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[2002:7f00:1::1]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[2001:0:4136:e378::1]/')), /hostBlocked/);
+  await assert.rejects(checkTarget(new URL('https://[fec0::1]/')), /hostBlocked/);
+  assert.equal((await checkTarget(new URL('https://[64:ff9b::5db8:d822]/'))).internal, false);
+  assert.equal((await checkTarget(new URL('https://[2606:4700::1111]/'))).internal, false);
   await assert.rejects(checkTarget(new URL('https://10.0.0.5:50000/b1s/v1')), /hostPrivate/);
   const ok = await checkTarget(new URL('https://10.0.0.5:50000/b1s/v1'), ['10.0.0.0/8']);
   assert.deepEqual([ok.address, ok.internal], ['10.0.0.5', true]);

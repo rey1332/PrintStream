@@ -72,7 +72,12 @@ for (const [net6, bits] of [
   ['::', 128],
   ['::1', 128],
   ['fe80::', 10],
+  ['fec0::', 10], // site-local (deprecated, internal)
   ['ff00::', 8],
+  ['100::', 64], // discard
+  ['2001::', 32], // Teredo: tunnels to an IPv4 address
+  ['2002::', 16], // 6to4: tunnels to an IPv4 address
+  ['64:ff9b:1::', 48], // local-use NAT64
 ] as const)
   ALWAYS_BLOCKED.addSubnet(net6, bits, 'ipv6');
 
@@ -89,10 +94,38 @@ PRIVATE.addSubnet('fc00::', 7, 'ipv6');
 
 const family = (ip: string) => (net.isIPv6(ip) ? 'ipv6' : 'ipv4');
 
-/** IPv4-mapped IPv6 (::ffff:10.0.0.1) is checked as IPv4. */
+/** The eight 16-bit groups of an IPv6 address (null when it is not one). */
+function ipv6Groups(ip: string): number[] | null {
+  if (!net.isIPv6(ip)) return null;
+  let text = ip.replace(/%.*$/, '');
+  const v4 = /(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(text);
+  if (v4) {
+    const [a, b, c, d] = v4.slice(1).map(Number);
+    text = `${text.slice(0, v4.index)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const [head, tail] = text.split('::');
+  const part = (s: string | undefined) => (s ? s.split(':').map((g) => parseInt(g, 16)) : []);
+  const left = part(head);
+  const right = part(tail);
+  return tail === undefined
+    ? left
+    : [...left, ...Array(8 - left.length - right.length).fill(0), ...right];
+}
+
+/**
+ * IPv6 addresses that carry an IPv4 address are checked as that IPv4 address:
+ * IPv4-mapped (::ffff:10.0.0.1), IPv4-compatible (::10.0.0.1) and NAT64
+ * (64:ff9b::10.0.0.1), so none of them reaches an internal IPv4 host.
+ */
 function plain(ip: string): string {
-  const m = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
-  return m ? m[1] : ip;
+  const g = ipv6Groups(ip);
+  if (!g) return ip;
+  const zeros = (from: number, to: number) => g.slice(from, to).every((x) => x === 0);
+  const embedded =
+    (zeros(0, 5) && (g[5] === 0xffff || (g[5] === 0 && (g[6] !== 0 || g[7] > 1)))) ||
+    (g[0] === 0x64 && g[1] === 0xff9b && zeros(2, 6));
+  if (!embedded) return ip;
+  return [g[6] >> 8, g[6] & 0xff, g[7] >> 8, g[7] & 0xff].join('.');
 }
 
 /**
