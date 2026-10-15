@@ -89,7 +89,7 @@ async function setup() {
     ETNA_BACKUP_DIR: path.resolve(dir),
     ETNA_ADMIN_EMAILS: admins.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).join(','),
   });
-  console.log(`Saved the password in ${pgpass} (only for this Windows user).`);
+  console.log(`Saved the password in ${pgpass} (only for this ${process.platform === 'win32' ? 'Windows' : 'system'} user).`);
   console.log('Saved the connection (without password), folder and admins in .env.local.');
   console.log('Restart ETNA so the app sees the new settings. Migrations no longer need PGPASSWORD.');
 }

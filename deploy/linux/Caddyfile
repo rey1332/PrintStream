@@ -1,0 +1,16 @@
+# Caddy in front of ETNA on Linux (docs/INSTALL-LINUX.md). Copy to
+# /etc/caddy/Caddyfile, replace erp.example.com with your name and run
+# `systemctl reload caddy`.
+#
+# Caddy obtains and renews the HTTPS certificate itself: the DNS record must
+# point at this server and ports 80 and 443 must be reachable. Caddy replaces
+# any X-Forwarded-For sent by the client, so ETNA runs with TRUST_PROXY=1
+# (and ETNA_PUBLIC_URL=https://erp.example.com) in /etc/etna/etna.env.
+
+erp.example.com {
+	# Optional: only allow your office network (uncomment, use your range).
+	# @outside not remote_ip 203.0.113.0/24
+	# respond @outside 403
+
+	reverse_proxy 127.0.0.1:4028
+}

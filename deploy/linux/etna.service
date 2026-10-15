@@ -1,0 +1,44 @@
+# ETNA (the web app) on 127.0.0.1:4028, behind Caddy or a Cloudflare Tunnel.
+# Installed by deploy/linux/install.sh; docs/INSTALL-LINUX.md.
+
+[Unit]
+Description=ETNA app
+Documentation=file:///opt/etna/current/docs/INSTALL-LINUX.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=etna
+Group=etna
+WorkingDirectory=/opt/etna/current
+ExecStart=/usr/bin/env node /opt/etna/current/scripts/server/env-run.mjs /etc/etna/etna.env app
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+# Logs go to the journal: journalctl -u etna
+
+# Hardening: the service reads the app (read-only) and writes only its data folder.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/etna
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

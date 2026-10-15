@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+// Prepares a database for ETNA (migrations, new app role passwords) and
+// writes its settings: .env.local in the app folder, or the file given with
+// --env-file (a Linux server's /etc/etna/etna.env, a container's
+// /config/etna.env).
+//
+//   MIGRATION_DATABASE_URL=postgres://etna_owner@localhost:5432/etna node scripts/setup-local.mjs [--env-file <path>] [--force]
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,7 +13,12 @@ import pg from 'pg';
 import { newAppKeys, provision } from './db/provision.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const envFile = path.join(root, '.env.local');
+const at = process.argv.indexOf('--env-file');
+if (at > 0 && !process.argv[at + 1]) {
+  console.error('--env-file needs a path. Nothing was changed.');
+  process.exit(2);
+}
+const envFile = at > 0 ? path.resolve(process.argv[at + 1]) : path.join(root, '.env.local');
 const force = process.argv.includes('--force');
 
 const ownerUrl = process.env.MIGRATION_DATABASE_URL;
@@ -16,7 +27,7 @@ if (!ownerUrl) {
   process.exit(2);
 }
 if (fs.existsSync(envFile) && !force) {
-  console.error('.env.local already exists. Keep it (it holds MFA_ENCRYPTION_KEY) or rerun with --force. Nothing was changed.');
+  console.error(`${path.basename(envFile)} already exists. Keep it (it holds MFA_ENCRYPTION_KEY) or rerun with --force. Nothing was changed.`);
   process.exit(2);
 }
 
@@ -39,8 +50,9 @@ try {
     `SESSION_HINT_SECRET=${keys.SESSION_HINT_SECRET}`,
     '',
   ];
+  fs.mkdirSync(path.dirname(envFile), { recursive: true });
   fs.writeFileSync(envFile, lines.join('\n'), { mode: 0o600 });
-  console.log(`Wrote ${path.relative(process.cwd(), envFile) || '.env.local'} (app connections + new keys). Back it up in a password manager.`);
+  console.log(`Wrote ${envFile} (app connections + new keys). Back it up in a password manager.`);
   console.log('Next: create a user with scripts/admin/users.mjs, or import data with scripts/db/transfer.mjs, then npm run dev (and npm run worker for TERMINAL jobs).');
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));

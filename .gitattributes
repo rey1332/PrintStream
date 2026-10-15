@@ -5,3 +5,10 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 *.ps1 text eol=crlf
+
+# Linux deployment files must keep LF line endings (sh, systemd and Docker misread CRLF)
+*.sh text eol=lf
+*.service text eol=lf
+*.timer text eol=lf
+Dockerfile text eol=lf
+deploy/** text eol=lf
