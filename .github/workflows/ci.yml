@@ -1,7 +1,7 @@
 # Checks every push and pull request: types, tests (unit and database, on an
 # in-memory PostgreSQL), translations, formatting, lint, a production build
-# and the dependency audit (npm run verify). Nothing is deployed from here:
-# ETNA runs on its own server (docs/INSTALL-SERVER.md).
+# and the dependency audit (npm run verify), on Linux and on Windows: ETNA is
+# hosted on both. Nothing is deployed from here.
 
 name: CI
 
@@ -20,7 +20,12 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    name: verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       # Actions pinned to a commit (the tag in the comment), not a movable tag.

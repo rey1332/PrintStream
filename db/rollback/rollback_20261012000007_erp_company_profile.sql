@@ -7,7 +7,8 @@ BEGIN;
 -- Emptying an ERP without the profile (as in 20261012000004_erp_empty_own_erp.sql).
 DO $$
 BEGIN
-  EXECUTE replace(pg_get_functiondef('public.erp_empty_erp(uuid)'::regprocedure),
+  -- Line endings as in the files the function came from (CRLF on Windows checkouts).
+  EXECUTE replace(replace(pg_get_functiondef('public.erp_empty_erp(uuid)'::regprocedure), E'\r\n', E'\n'),
     E'\n  DELETE FROM public.erp_company_profiles x WHERE x.workspace_id = w.id;', '');
 END;
 $$;

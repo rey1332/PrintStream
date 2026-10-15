@@ -13,6 +13,8 @@ import { clusterPort, configureCluster, listenAddresses } from '../../scripts/se
 
 const here = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 const serverDir = path.resolve(here, '../../scripts/server');
+// Rules for Windows paths (drive letters, Program Files): etna.bat installs on Windows only.
+const windowsOnly = { skip: process.platform !== 'win32' && 'Windows paths: etna.bat runs on Windows' };
 
 test('env files: values are read as written, updates keep comments and never duplicate keys', () => {
   const text = '# ETNA\r\nA=1\r\nURL=postgres://u:p=q@h:5432/db?sslmode=verify-full&x=y\r\nB=2\r\nA=3\r\n';
@@ -23,7 +25,7 @@ test('env files: values are read as written, updates keep comments and never dup
   assert.equal(safeValue('base64+/=='), true);
 });
 
-test('data root: a real folder on a drive, never a drive, Windows or Program Files', () => {
+test('data root: a real folder on a drive, never a drive, Windows or Program Files', windowsOnly, () => {
   assert.equal(rootProblem('D:\\ETNA'), null);
   assert.equal(rootProblem('D:\\Company Data\\ETNA'), null);
   assert.equal(rootProblem('D:\\'), 'root_is_drive');
@@ -138,7 +140,7 @@ test('PostgreSQL settings: localhost and the port are appended once, the last se
   }
 });
 
-test('company folders: shared defaults, an assigned folder, and ETNA\'s own folders refused', async () => {
+test('company folders: shared defaults, an assigned folder, and ETNA\'s own folders refused', windowsOnly, async () => {
   const { companyLocations, folderName, companyFolderProblem } = await import('../../scripts/server/lib/companies.mjs');
   const ws = '11111111-2222-3333-4444-555555555555';
   const shared = companyLocations('D:\\ETNA', ws, null);

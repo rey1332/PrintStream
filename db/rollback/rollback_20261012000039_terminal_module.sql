@@ -11,7 +11,9 @@ BEGIN
   FOREACH def IN ARRAY ARRAY[
     pg_get_functiondef('public.ps_enqueue_job(uuid,text,jsonb,text,timestamptz)'::regprocedure),
     pg_get_functiondef('public.ps__writable(uuid,text)'::regprocedure)] LOOP
-    EXECUTE regexp_replace(def, E'\\n  IF NOT public\\.ps__terminal_on\\([a-z_.]+\\) THEN\\n[^\\n]*\\n  END IF;', '');
+    -- Line endings as in the files the functions came from (CRLF on Windows checkouts).
+    def := replace(def, E'\r\n', E'\n');
+    EXECUTE regexp_replace(def,E'\\n  IF NOT public\\.ps__terminal_on\\([a-z_.]+\\) THEN\\n[^\\n]*\\n  END IF;', '');
   END LOOP;
 END;
 $$;
