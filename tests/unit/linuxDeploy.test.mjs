@@ -27,16 +27,32 @@ test('env-run: usage, a missing settings file, and no worker without WORKER_DATA
   assert.match(worker.stderr, /WORKER_DATABASE_URL is not set/);
 });
 
-test('setup-local: --env-file needs a path and never overwrites an existing file', () => {
+test('setup-local: --settings needs a path and never overwrites an existing file', () => {
   const env = { MIGRATION_DATABASE_URL: 'postgres://etna_owner@127.0.0.1:1/etna' };
-  const missing = node(['scripts/setup-local.mjs', '--env-file'], env);
+  const missing = node(['scripts/setup-local.mjs', '--settings'], env);
   assert.equal(missing.status, 2);
-  assert.match(missing.stderr, /--env-file needs a path/);
+  assert.match(missing.stderr, /--settings needs a path/);
   const existing = tempEnv('MFA_ENCRYPTION_KEY=keep\n');
-  const kept = node(['scripts/setup-local.mjs', '--env-file', existing], env);
+  const kept = node(['scripts/setup-local.mjs', '--settings', existing], env);
   assert.equal(kept.status, 2);
   assert.match(kept.stderr, /etna\.env already exists/);
   assert.equal(fs.readFileSync(existing, 'utf8'), 'MFA_ENCRYPTION_KEY=keep\n');
+});
+
+test('setup-local: a settings file that does not exist yet reaches the script (a first install)', () => {
+  // Node.js itself takes --env-file wherever it appears and stops (exit 9) when the file is missing.
+  const target = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'etna-new-')), 'etna.env');
+  const r = node(['scripts/setup-local.mjs', '--settings', target], {
+    MIGRATION_DATABASE_URL: 'postgres://etna_owner@127.0.0.1:1/etna',
+  });
+  assert.equal(r.status, 1, r.stderr); // the script ran and could not reach the (absent) database
+  assert.match(r.stderr, /ECONNREFUSED|connect/);
+  assert.equal(fs.existsSync(target), false, 'nothing is written when the database is not reached');
+});
+
+test('install scripts never pass --env-file to a Node.js script', () => {
+  for (const file of ['deploy/linux/install.sh', 'deploy/docker/setup.sh'])
+    assert.ok(!fs.readFileSync(path.join(root, file), 'utf8').includes('--env-file'), file);
 });
 
 const deployFiles = (dir) =>

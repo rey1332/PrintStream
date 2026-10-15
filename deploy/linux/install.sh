@@ -91,7 +91,7 @@ ln -s "$DATA_ROOT/cache/next" "$RELEASE/.next/cache"
 if [ ! -f "$ENV_FILE" ]; then
   [ -n "${MIGRATION_DATABASE_URL:-}" ] || die "$ENV_FILE does not exist yet. Prepare the database (docs/INSTALL-LINUX.md, step 2) and run again with MIGRATION_DATABASE_URL and PGPASSWORD set."
   say "Preparing the database and writing $ENV_FILE"
-  (cd "$RELEASE" && "$NODE" scripts/setup-local.mjs --env-file "$ENV_FILE")
+  (cd "$RELEASE" && "$NODE" scripts/setup-local.mjs --settings "$ENV_FILE")
   {
     echo ''
     echo '# Where the app keeps uploaded documents and company folders.'

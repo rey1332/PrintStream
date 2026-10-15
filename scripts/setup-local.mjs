@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // Prepares a database for ETNA (migrations, new app role passwords) and
 // writes its settings: .env.local in the app folder, or the file given with
-// --env-file (a Linux server's /etc/etna/etna.env, a container's
+// --settings (a Linux server's /etc/etna/etna.env, a container's
 // /config/etna.env).
 //
-//   MIGRATION_DATABASE_URL=postgres://etna_owner@localhost:5432/etna node scripts/setup-local.mjs [--env-file <path>] [--force]
+//   MIGRATION_DATABASE_URL=postgres://etna_owner@localhost:5432/etna node scripts/setup-local.mjs [--settings <path>] [--force]
+//
+// Not --env-file: Node.js reads that option itself wherever it appears, also
+// after the script name, and stops when the file does not exist yet.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,9 +16,9 @@ import pg from 'pg';
 import { newAppKeys, provision } from './db/provision.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const at = process.argv.indexOf('--env-file');
+const at = process.argv.indexOf('--settings');
 if (at > 0 && !process.argv[at + 1]) {
-  console.error('--env-file needs a path. Nothing was changed.');
+  console.error('--settings needs a path. Nothing was changed.');
   process.exit(2);
 }
 const envFile = at > 0 ? path.resolve(process.argv[at + 1]) : path.join(root, '.env.local');
