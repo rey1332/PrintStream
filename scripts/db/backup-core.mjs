@@ -198,9 +198,11 @@ export async function backupIfDue(cfg, now = Date.now()) {
   return backup(cfg, 'auto');
 }
 
-// The server's extensions, and the schema that holds pgcrypto, stay as they
-// are: dropping the schema fails while the extension is in it, and the
-// restore target is always a migrated ETNA database that has both.
+// The server's extensions and the schemas stay as they are: the restore
+// target is always a migrated ETNA database that has all of them, dropping
+// the schema that holds pgcrypto fails while the extension is in it, and
+// some schemas belong to another role (ps_data to etna_ddl), which the
+// schema owner may not drop. What is inside the schemas is restored.
 export function restoreList(toc) {
   return toc
     .split(/\r?\n/)
@@ -208,7 +210,7 @@ export function restoreList(toc) {
       (line) =>
         line &&
         !/^\d+;\s*\d+\s+\d+\s+(EXTENSION|COMMENT - EXTENSION)\s/.test(line) &&
-        !/^\d+;\s*\d+\s+\d+\s+SCHEMA - extensions\s/.test(line)
+        !/^\d+;\s*\d+\s+\d+\s+(SCHEMA - |COMMENT - SCHEMA )\S+\s/.test(line)
     )
     .join('\n');
 }

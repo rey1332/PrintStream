@@ -74,12 +74,14 @@ test('backups are listed newest first; only the newest 7 are kept', () => {
   }
 });
 
-test('a restore leaves the server’s extensions alone', () => {
+test('a restore leaves the server’s extensions and the schemas alone', () => {
   const toc = [
     ';',
     '; Archive created at 2026-10-02',
     '7; 2615 16408 SCHEMA - extensions etna_owner',
     '7417; 0 0 ACL - SCHEMA extensions etna_owner',
+    '8; 2615 16410 SCHEMA - ps_data etna_ddl',
+    '9; 0 0 COMMENT - SCHEMA ps_data etna_ddl',
     '5; 3079 16384 EXTENSION - pgcrypto',
     '4321; 0 0 COMMENT - EXTENSION pgcrypto',
     '230; 1259 16500 TABLE public erp_invoices etna_owner',
@@ -88,6 +90,8 @@ test('a restore leaves the server’s extensions alone', () => {
   const kept = restoreList(toc);
   assert.doesNotMatch(kept, /EXTENSION/);
   assert.doesNotMatch(kept, /SCHEMA - extensions/);
+  // Nor the schemas, some of which belong to another role (the target has them).
+  assert.doesNotMatch(kept, /SCHEMA - ps_data|COMMENT - SCHEMA/);
   assert.match(kept, /ACL - SCHEMA extensions/);
   assert.match(kept, /TABLE public erp_invoices/);
   assert.match(kept, /TABLE DATA public erp_invoices/);
