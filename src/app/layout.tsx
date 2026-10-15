@@ -11,6 +11,7 @@ import { UI_BOOT_SCRIPT } from '@/lib/ui/mode';
 import { UiModeProvider } from '@/lib/ui/UiModeProvider';
 import { ConsoleProvider } from '@/components/console/ConsoleHost';
 import { TermsGate } from '@/components/terms/TermsGate';
+import { SharedComputerGuard } from '@/components/auth/SharedComputerGuard';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -49,6 +50,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <AuthProvider>
               <UiModeProvider>
                 <TermsGate />
+                <SharedComputerGuard />
                 <ConsoleProvider>{children}</ConsoleProvider>
               </UiModeProvider>
             </AuthProvider>

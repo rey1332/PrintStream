@@ -8,6 +8,10 @@ import { newPasswordProblem, PASSWORD_MIN_LENGTH } from '@/lib/auth/password-pol
 import { createSlots, SlotsFullError, type Slots } from '@/server/slots';
 
 export const SESSION_IDLE_MS = 12 * 60 * 60 * 1000;
+// Owner, Admin, Finance, sensitive custom roles, platform admins (migration 20261012000052).
+export const PRIVILEGED_IDLE_MS = 8 * 60 * 60 * 1000;
+// A session opened as "This is a shared computer" (weighbridge, office PC).
+export const SHARED_IDLE_MS = 15 * 60 * 1000;
 export const SESSION_MAX_MS = 30 * 24 * 60 * 60 * 1000;
 const TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 const FAILURES_PER_EMAIL = 5;
@@ -40,6 +44,10 @@ export interface SessionInfo {
   expiresAt: string;
   /** Last time this session re-entered a two-factor code (admin actions). */
   reauthenticatedAt: string | null;
+  /** Opened as "This is a shared computer": signed out after SHARED_IDLE_MS without activity. */
+  shared: boolean;
+  /** How long this session may stay unused (by role, or shared). */
+  idleMs: number;
   user: {
     id: string;
     email: string;
@@ -228,7 +236,14 @@ export type SignInResult =
 
 export async function signIn(
   deps: AuthDeps,
-  input: { email: string; password: string; ip: string | null; userAgent: string | null }
+  input: {
+    email: string;
+    password: string;
+    ip: string | null;
+    userAgent: string | null;
+    /** "This is a shared computer": a short idle limit (SHARED_IDLE_MS). */
+    shared?: boolean;
+  }
 ): Promise<SignInResult> {
   const email = input.email.trim();
   if (!email || !input.password || email.length > 320 || input.password.length > 1024)
@@ -281,8 +296,15 @@ export async function signIn(
       await recordAttempt(tx, email, input.ip, true);
       const expires = new Date(nowMs(deps) + SESSION_MAX_MS).toISOString();
       const { rows: opened } = await tx.query(
-        `insert into auth.sessions (user_id, token_hash, aal, expires_at, ip, user_agent) values ($1, $2, 'aal1', $3, $4, $5) returning id`,
-        [user.id, hashToken(token), expires, input.ip, input.userAgent?.slice(0, 400) ?? null]
+        `insert into auth.sessions (user_id, token_hash, aal, expires_at, ip, user_agent, shared) values ($1, $2, 'aal1', $3, $4, $5, $6) returning id`,
+        [
+          user.id,
+          hashToken(token),
+          expires,
+          input.ip,
+          input.userAgent?.slice(0, 400) ?? null,
+          input.shared === true,
+        ]
       );
       await logEvent(tx, 'LOGIN_SUCCEEDED', account, String(opened[0].id), meta);
       return true;
@@ -304,7 +326,8 @@ export async function resolveSession(
   if (!token || token.length > 200) return null;
   return inTx(deps, async (tx) => {
     const { rows } = await tx.query(
-      `select s.id as session_id, s.aal, s.expires_at, s.last_seen_at, s.reauthenticated_at,
+      `select s.id as session_id, s.aal, s.expires_at, s.last_seen_at, s.reauthenticated_at, s.shared,
+              etna_platform.session_idle_class(u.id) as idle_class,
               u.id as user_id, u.email, u.email_confirmed_at, u.created_at, u.last_sign_in_at, u.raw_user_meta_data, coalesce(u.banned_until > now(), false) as banned,
               exists (select 1 from auth.mfa_factors f where f.user_id = u.id and f.status = 'verified') as has_factor
          from auth.sessions s
@@ -316,9 +339,16 @@ export async function resolveSession(
     if (!row) return null;
     const now = nowMs(deps);
     const lastSeen = new Date(row.last_seen_at).getTime();
-    if (new Date(row.expires_at).getTime() <= now || lastSeen + SESSION_IDLE_MS <= now) return null;
+    const idleMs =
+      row.shared === true
+        ? SHARED_IDLE_MS
+        : row.idle_class === 'privileged'
+          ? PRIVILEGED_IDLE_MS
+          : SESSION_IDLE_MS;
+    if (new Date(row.expires_at).getTime() <= now || lastSeen + idleMs <= now) return null;
     if (row.banned === true) return null;
-    if (now - lastSeen > TOUCH_INTERVAL_MS) {
+    // Often enough that a short limit is measured from recent activity.
+    if (now - lastSeen > Math.min(TOUCH_INTERVAL_MS, idleMs / 5)) {
       await tx.query('update auth.sessions set last_seen_at = now() where id = $1', [
         row.session_id,
       ]);
@@ -329,12 +359,12 @@ export async function resolveSession(
       email: row.email,
       aal: row.aal,
       nextLevel: row.has_factor ? 'aal2' : 'aal1',
-      expiresAt: new Date(
-        Math.min(new Date(row.expires_at).getTime(), now + SESSION_IDLE_MS)
-      ).toISOString(),
+      expiresAt: new Date(Math.min(new Date(row.expires_at).getTime(), now + idleMs)).toISOString(),
       reauthenticatedAt: row.reauthenticated_at
         ? new Date(row.reauthenticated_at).toISOString()
         : null,
+      shared: row.shared === true,
+      idleMs,
       user: {
         id: row.user_id,
         email: row.email,

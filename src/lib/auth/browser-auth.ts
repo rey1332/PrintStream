@@ -140,7 +140,8 @@ class BrowserAuth {
     };
   }
 
-  async signInWithPassword(credentials: { email: string; password: string }) {
+  /** `shared`: "This is a shared computer" (signed out after a short idle time). */
+  async signInWithPassword(credentials: { email: string; password: string; shared?: boolean }) {
     const { data, error } = await call<SessionPayload>('login', 'POST', credentials);
     if (error || !data) return { data: { user: null, session: null }, error };
     this.emit('SIGNED_IN', data.session);

@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [shared, setShared] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +36,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(email, password, shared);
       router.replace('/');
     } catch (err: any) {
       setError(err?.message ? translateServerMessage(err.message) : t('auth.invalidCredentials'));
@@ -148,6 +149,39 @@ export default function LoginPage() {
               onClick={() => setRememberMe(!rememberMe)}
             >
               {t('auth.rememberMe')}
+            </span>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={shared}
+              aria-describedby="shared-computer-hint"
+              onClick={() => setShared(!shared)}
+              className="mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all"
+              style={{
+                background: shared ? '#ffffff' : 'transparent',
+                borderColor: shared ? '#ffffff' : '#3a3a3a',
+              }}
+            >
+              {shared && (
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path
+                    d="M1 4L3.5 6.5L9 1"
+                    stroke="#000"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
+            <span className="select-none cursor-pointer" onClick={() => setShared(!shared)}>
+              <span className="block text-[0.78rem] text-white/40">{t('auth.sharedComputer')}</span>
+              <span id="shared-computer-hint" className="block text-[0.7rem] text-white/25">
+                {t('auth.sharedComputerHint')}
+              </span>
             </span>
           </div>
 

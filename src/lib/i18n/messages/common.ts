@@ -194,6 +194,16 @@ export const commonMessages = {
   'auth.password': { en: 'Password', id: 'Kata sandi', zh: '密码' },
   'auth.emailPlaceholder': { en: 'you@example.com', id: 'anda@contoh.com', zh: 'you@example.com' },
   'auth.rememberMe': { en: 'Remember me', id: 'Ingat saya', zh: '记住我' },
+  'auth.sharedComputer': {
+    en: 'This is a shared computer',
+    id: 'Ini komputer bersama',
+    zh: '这是一台共用电脑',
+  },
+  'auth.sharedComputerHint': {
+    en: 'Signs out after 15 minutes without activity.',
+    id: 'Keluar otomatis setelah 15 menit tanpa aktivitas.',
+    zh: '15 分钟无操作后自动退出。',
+  },
   'auth.signIn': { en: 'Sign In', id: 'Masuk', zh: '登录' },
   'auth.signingIn': { en: 'Signing in...', id: 'Sedang masuk...', zh: '正在登录...' },
   'auth.showPassword': { en: 'Show password', id: 'Tampilkan kata sandi', zh: '显示密码' },

@@ -50,10 +50,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // No sign-up: accounts are created by an administrator on request.
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, shared = false) => {
     const { data, error } = await db.auth.signInWithPassword({
       email,
       password,
+      shared,
     });
     if (error) throw error;
     if (data.session) {

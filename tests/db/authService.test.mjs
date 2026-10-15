@@ -8,6 +8,7 @@ import { migrate } from '../../scripts/db/migrator.mjs';
 import {
   AuthError, changePassword, enrollFactor, listFactors, resolveSession, revokeAllSessions, signIn, signOut,
   unenrollFactor, verifyFactor, verifyPassword, requestAllowed, SESSION_IDLE_MS,
+  PRIVILEGED_IDLE_MS, SHARED_IDLE_MS,
 } from '../../src/server/auth/service.ts';
 import { base32Decode, currentStep, hotp, verifyTotp, base32Encode } from '../../src/server/auth/totp.ts';
 import { openSecret, sealSecret, parseKey } from '../../src/server/auth/secret-box.ts';
@@ -330,6 +331,50 @@ test('signed session hints: valid, expired, tampered, wrong secret, other sessio
   assert.equal(await readHint(expired, secret, undefined, { sessionToken: 'token-b', ignoreExpiry: true }), null);
   // Hints from before they named their session are refused.
   assert.equal(await readHint(await signHint({ aal: 'aal1', next: 'aal1', exp }, secret), secret), null);
+});
+
+// ─── Idle limits by role and shared computers (20261012000052) ─────────────
+
+const at = (ms) => ({ ...deps, now: () => Date.now() + ms });
+const HOUR = 60 * 60 * 1000;
+
+test('idle limits: 12 hours, 8 for company owners / admin / finance, 15 minutes on a shared computer', async () => {
+  // Owning only the personal workspace (every account does) is not privileged.
+  const staff = await createUser();
+  const staffLogin = await login(staff);
+  assert.equal(staffLogin.session.idleMs, SESSION_IDLE_MS);
+  assert.ok(await resolveSession(at(9 * HOUR), staffLogin.token), 'standard: still signed in after 9 hours');
+  assert.equal(await resolveSession(at(SESSION_IDLE_MS + 60_000), staffLogin.token), null);
+
+  // A company ERP: its owner and its finance member get 8 hours.
+  const owner = await createUser();
+  const finance = await createUser();
+  const { rows: [ws] } = await db.query(
+    `insert into public.erp_workspaces (owner_id, name, is_personal) values ($1, 'PT Batu', false) returning id`,
+    [owner.id]
+  );
+  await db.query(
+    `insert into public.erp_workspace_members (workspace_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'finance')
+     on conflict do nothing`,
+    [ws.id, owner.id, finance.id]
+  );
+  for (const user of [owner, finance]) {
+    const { token, session } = await login(user);
+    assert.equal(session.idleMs, PRIVILEGED_IDLE_MS, user.email);
+    assert.ok(await resolveSession(at(7 * HOUR), token), 'still signed in after 7 hours');
+    assert.equal(await resolveSession(at(PRIVILEGED_IDLE_MS + 60_000), token), null, 'signed out after 8 hours');
+  }
+  // A removed member is standard again.
+  await db.query(`update public.erp_workspace_members set status = 'removed' where user_id = $1`, [finance.id]);
+  assert.equal((await login(finance)).session.idleMs, SESSION_IDLE_MS);
+
+  // "This is a shared computer": 15 minutes, whatever the role.
+  const shared = await signIn(deps, { email: owner.email, password: owner.password, ip: '198.51.100.7', userAgent: 'kiosk', shared: true });
+  assert.equal(shared.session.shared, true);
+  assert.equal(shared.session.idleMs, SHARED_IDLE_MS);
+  assert.ok(await resolveSession(at(10 * 60_000), shared.token), 'still signed in after 10 minutes');
+  assert.equal(await resolveSession(at(SHARED_IDLE_MS + 60_000), shared.token), null, 'signed out after 15 minutes');
+  assert.equal((await login(owner)).session.shared, false, 'other sessions are not shared');
 });
 
 // ─── Password change ────────────────────────────────────────────────────────

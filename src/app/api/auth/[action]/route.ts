@@ -63,6 +63,8 @@ function sessionBody(session: SessionInfo | null) {
       user: session.user,
     },
     aal: { currentLevel: session.aal, nextLevel: session.nextLevel },
+    // A shared computer: the page signs out after this long without activity too.
+    ...(session.shared ? { shared: { idleSeconds: Math.floor(session.idleMs / 1000) } } : {}),
     // Only for the server's administrators: nobody else learns these tools exist.
     ...(isListedAdmin(session.email) ? { serverAdmin: true } : {}),
   };
@@ -170,6 +172,7 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
       password: str(body.password, 1024),
       ip: meta.ip,
       userAgent: meta.userAgent,
+      shared: body.shared === true,
     });
     if (!result.ok) {
       return result.reason === 'rate_limited'

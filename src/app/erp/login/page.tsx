@@ -16,6 +16,7 @@ export default function ERPLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [shared, setShared] = useState(false);
 
   const inputCls =
     'w-full rounded-lg border px-3 py-2.5 text-[0.85rem] text-foreground placeholder:text-muted-foreground outline-none focus:border-foreground/40 transition-colors';
@@ -26,7 +27,7 @@ export default function ERPLoginPage() {
     setError('');
     setLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(email, password, shared);
       router.replace('/erp');
     } catch (err: any) {
       setError(err?.message ? translateServerMessage(err.message) : t('auth.failed'));
@@ -94,6 +95,23 @@ export default function ERPLoginPage() {
               </button>
             </div>
           </div>
+
+          <label className="flex items-start gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={shared}
+              onChange={(e) => setShared(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-primary"
+            />
+            <span>
+              <span className="block text-[0.8rem] text-foreground">
+                {t('auth.sharedComputer')}
+              </span>
+              <span className="block text-[0.72rem] text-muted-foreground">
+                {t('auth.sharedComputerHint')}
+              </span>
+            </span>
+          </label>
 
           {error && (
             <p className="text-[0.78rem] text-muted-foreground bg-muted rounded-lg px-3 py-2 border border-border">

@@ -239,7 +239,7 @@ These are design directions. They are **not implemented** in this repository.
 Mechanisms that exist:
 
 - No self sign-up. Accounts are created by administrators.
-- bcrypt password hashing; session tokens stored only as hashes; idle and absolute session limits.
+- bcrypt password hashing; session tokens stored only as hashes; idle and absolute session limits (12 hours idle, 8 for owners of a company ERP, admins and finance, 15 minutes when signed in as "This is a shared computer").
 - TOTP two-factor with replay protection, encrypted secrets (AES-256-GCM), and recovery codes. The database requires two-factor for sensitive roles.
 - Sign-in lockout per account and per address; one-time password links.
 - Row-level security on all application tables; a restrictive policy that blocks suspended workspaces; views that apply the caller's rights.

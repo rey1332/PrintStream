@@ -260,7 +260,7 @@ test('only the listed etna_platform functions are callable, and only by the righ
   ].sort());
   assert.deepEqual(await callable('etna_auth'), [
     'log_auth_event', 'password_link_check', 'password_link_use', 'password_links_revoke',
-    'terms_accept', 'terms_current', 'terms_status',
+    'session_idle_class', 'terms_accept', 'terms_current', 'terms_status',
   ]);
   assert.deepEqual(await callable('anon'), []);
   assert.deepEqual(await callable('etna_app'), [], 'etna_app acts only through anon/authenticated');

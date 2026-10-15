@@ -440,7 +440,7 @@ What to add or decide:
 | S4 | **Data-processing agreement** with the quarry: you host their data (UU PDP No. 27/2022). Covers what is stored, retention (the security log and kept ERP audit trails keep personal data forever by your choice), backups, access by your admins, breach notification within 3×24 hours | P0 |
 | S5 | **Off-site encrypted backups** of the database **and** the documents folder, and a **restore test** (quarterly). `.env.local` (especially `MFA_ENCRYPTION_KEY`) stored in a password manager | P0 |
 | S6 | **Weighbridge integrity**: no edit after print, gap-free numbers, photo evidence, tare checks, operator accountability (§3.2). Weighbridge fraud is the main money risk in a quarry | P0 with §3.2 |
-| S7 | Shorter sessions for admins and finance (e.g. 8 hours idle) and an automatic sign-out on shared PCs (weighbridge) | P1 |
+| S7 | ~~Shorter sessions for admins and finance (e.g. 8 hours idle) and an automatic sign-out on shared PCs (weighbridge)~~ Done (20261012000052): 8 hours idle for company owners, admins, finance and platform admins; "This is a shared computer" at sign-in signs out after 15 minutes | P1 |
 | S8 | Error alerts: send `[db]`, `[auth]`, `[admin]` and other error lines and `/api/health` failures to you (e-mail or Telegram / WhatsApp) | P1 |
 | S9 | Malware scan of uploaded documents (e.g. ClamAV) since staff will upload files from phones | P2 |
 | S10 | Remove the dead `origin` remote (`github.com/rey1332/ETNA`) or point it at the new backup location | P2 |
