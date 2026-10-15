@@ -101,9 +101,40 @@ jobs:
           test "$(readlink -f /opt/etna/current)" != "$before"
           test -d "$before"
           sh deploy/smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
+      - name: Off-site backup (the systemd unit) and a restore into a new database
+        run: |
+          # pg_dump 18 for a PostgreSQL 18 server (Ubuntu's own is older).
+          sudo apt-get install -y -qq postgresql-common >/dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq postgresql-client-18 >/dev/null
+          # A document, so the backup carries files.
+          sudo install -d -o etna -g etna /var/lib/etna/documents/ci
+          echo "invoice 42" | sudo -u etna tee /var/lib/etna/documents/ci/invoice.txt >/dev/null
+          # Keys, settings and password as docs/INSTALL-LINUX.md (A6) describes.
+          printf 'ci-offsite-passphrase' | sudo env "PATH=$PATH" node /opt/etna/current/scripts/db/offsite.mjs keys --dir /etc/etna
+          sudo chown etna:etna /etc/etna/offsite-key.pub.pem /etc/etna/offsite-key.enc.pem
+          printf 'OFFSITE_DATABASE_URL=postgres://etna_owner@127.0.0.1:5432/etna\nETNA_OFFSITE_DIR=/var/backups/etna-offsite\nETNA_OFFSITE_KEY=/etc/etna/offsite-key.pub.pem\n' | sudo install -m 0600 -o etna -g etna /dev/stdin /etc/etna/offsite.env
+          printf '127.0.0.1:5432:etna:etna_owner:ci-owner-password\n' | sudo install -m 0600 -o etna -g etna /dev/stdin /etc/etna/offsite.pgpass
+          sudo install -d -m 0700 -o etna -g etna /var/backups/etna-offsite
+          sudo systemd-analyze verify /etc/systemd/system/etna-offsite.service /etc/systemd/system/etna-offsite.timer
+          sudo systemctl start etna-offsite.service
+          backup=$(sudo ls /var/backups/etna-offsite | grep -E '^etna-offsite-.*\.etnabak$')
+          test -n "$backup"
+          # Opens and checks out; a wrong passphrase does not.
+          printf 'ci-offsite-passphrase' | sudo env "PATH=$PATH" node /opt/etna/current/scripts/db/offsite.mjs verify "/var/backups/etna-offsite/$backup"
+          if printf 'wrong-passphrase' | sudo env "PATH=$PATH" node /opt/etna/current/scripts/db/offsite.mjs verify "/var/backups/etna-offsite/$backup"; then exit 1; fi
+          # Restore into a new database prepared with this version, then compare.
+          PGPASSWORD=ci-postgres-password psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE etna_restore OWNER etna_owner"
+          (cd /opt/etna/current && MIGRATION_DATABASE_URL=postgres://etna_owner@127.0.0.1:5432/etna_restore node scripts/db/migrate.mjs)
+          printf 'ci-offsite-passphrase' | sudo env "PATH=$PATH" PGPASSWORD="$PGPASSWORD" node /opt/etna/current/scripts/db/offsite.mjs restore "/var/backups/etna-offsite/$backup" --to /tmp/etna-restored --database postgres://etna_owner@127.0.0.1:5432/etna_restore
+          count() { psql -h 127.0.0.1 -U etna_owner -d "$1" -tAc "select count(*) from auth.users"; }
+          test "$(count etna)" = "$(count etna_restore)"
+          test "$(count etna_restore)" -ge 1
+          sudo cmp /var/lib/etna/documents/ci/invoice.txt /tmp/etna-restored/files/documents/ci/invoice.txt
+          sudo test -f /tmp/etna-restored/settings/etna.env
       - name: Logs
         if: failure()
-        run: sudo journalctl -u etna -u etna-worker --no-pager -n 200
+        run: sudo journalctl -u etna -u etna-worker -u etna-offsite --no-pager -n 200
 
   # The container setup (deploy/docker/compose.yml): build, first start,
   # account, sign-in, then a second start (migrations path).
@@ -148,6 +179,18 @@ jobs:
           sh ../smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
       - name: Worker is running
         run: test "$(docker compose ps worker --format '{{.State}}')" = running
+      - name: Off-site backup (offsite profile) and its check
+        run: |
+          mkdir -p offsite offsite-keys
+          printf 'ci-offsite-passphrase' | node ../../scripts/db/offsite.mjs keys --dir offsite-keys
+          # The container user (uid 1000) reads the keys and writes the backups.
+          sudo chown -R 1000:1000 offsite offsite-keys
+          docker compose --profile offsite run --rm offsite
+          file=$(sudo ls offsite | grep -E '^etna-offsite-.*\.etnabak$')
+          test -n "$file"
+          printf 'ci-offsite-passphrase' | docker compose --profile offsite run --rm -T offsite node scripts/db/offsite.mjs verify "/offsite/$file"
+          # The in-app backup tools find pg_dump 18 in the image too.
+          docker compose run --rm -T --entrypoint pg_dump app --version | grep -q ' 18\.'
       - name: Logs
         if: failure()
         run: docker compose logs --no-color

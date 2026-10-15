@@ -139,10 +139,33 @@ Jika server database terpisah dari server aplikasi, salin
 `deploy/linux/etna-db-backup.sh` ke `/opt/etna/bin/` dan kedua file
 `etna-db-backup.*` ke `/etc/systemd/system/` di server database.
 
-Backup juga folder `/var/lib/etna` (dokumen) dan `/etc/etna/etna.env`, dan
-salin semuanya ke mesin lain. Memulihkan dump: `pg_restore --clean --if-exists
--d etna <file>.dump` sebagai `etna_owner`, saat `etna` dan `etna-worker`
-dihentikan.
+**Backup off-site terenkripsi** (database, dokumen, dan `etna.env` dalam
+satu file, ke disk lain, NAS, atau share jaringan; rinciannya di
+[OPERATIONS.md](OPERATIONS.md#off-site-backups)). Sekali saja, di server
+aplikasi:
+
+```bash
+cd /opt/etna/current
+sudo env PATH="$PATH" node scripts/db/offsite.mjs keys --dir /etc/etna   # passphrase: simpan di password manager
+sudo chown etna:etna /etc/etna/offsite-key.*
+sudo install -m 0600 -o etna -g etna /dev/null /etc/etna/offsite.env
+sudo install -m 0600 -o etna -g etna /dev/null /etc/etna/offsite.pgpass
+sudoedit /etc/etna/offsite.env
+#   OFFSITE_DATABASE_URL=postgres://etna_owner@localhost:5432/etna
+#   ETNA_OFFSITE_DIR=/mnt/backup/etna
+#   ETNA_OFFSITE_KEY=/etc/etna/offsite-key.pub.pem
+sudoedit /etc/etna/offsite.pgpass
+#   localhost:5432:etna:etna_owner:<password etna_owner>
+sudo systemctl edit etna-offsite      # [Service] ReadWritePaths=/mnt/backup/etna
+sudo systemctl enable --now etna-offsite.timer
+sudo systemctl start etna-offsite     # coba sekarang; lalu journalctl -u etna-offsite
+```
+
+Setiap malam pukul 03:15 satu file `etna-offsite-<waktu>.etnabak` dibuat;
+14 file terakhir disimpan. Periksa sebulan sekali dengan
+`node scripts/db/offsite.mjs verify <file>`, dan uji pemulihan ke staging
+setiap kuartal (`restore`, OPERATIONS.md). Gagal backup tercatat sebagai
+`[offsite] backup failed` dan dikirim lewat alert e-mail.
 
 ### A7. Memperbarui
 
@@ -237,18 +260,31 @@ Dengan Caddy, nginx atau Cloudflare Tunnel di mesin ini sendiri: arahkan ke
 
 ### B5. Backup dan pemulihan
 
+Backup off-site terenkripsi (database, dokumen, dan `etna.env` dalam satu
+file; rinciannya di [OPERATIONS.md](OPERATIONS.md#off-site-backups)). Sekali
+saja, di `deploy/docker`:
+
 ```bash
-# database (jadwalkan dengan cron)
-docker compose exec -T db pg_dump -U postgres -Fc etna > etna-$(date +%Y%m%d-%H%M%S).dump
-# kunci dan dokumen
-docker run --rm -v etna_config:/config -v etna_data:/data -v "$PWD":/out busybox \
-  tar czf /out/etna-files-$(date +%Y%m%d).tgz /config /data
+mkdir -p offsite offsite-keys
+sudo chown -R 1000:1000 offsite offsite-keys    # user di dalam container (uid 1000)
+docker compose run --rm --entrypoint node -v "$PWD/offsite-keys":/k setup \
+  scripts/db/offsite.mjs keys --dir /k      # ketik passphrase; simpan di password manager
 ```
 
-Pemulihan database: hentikan `app` dan `worker`
+Backup folder lain (NAS, share yang di-mount): isi `ETNA_OFFSITE_PATH` di
+`.env`. Jadwalkan setiap malam dengan cron:
+
+```
+15 3 * * * cd /path/to/etna-src/deploy/docker && docker compose --profile offsite run --rm offsite
+```
+
+Periksa satu backup:
+`docker compose --profile offsite run --rm offsite node scripts/db/offsite.mjs verify /offsite/<file>`.
+
+Pemulihan database dari dump biasa: hentikan `app` dan `worker`
 (`docker compose stop app worker`), lalu
 `docker compose exec -T db pg_restore -U postgres --clean --if-exists -d etna < file.dump`,
-lalu `docker compose start app worker`.
+lalu `docker compose start app worker`. Dari backup off-site: `restore` (OPERATIONS.md).
 
 ### B6. Memperbarui
 

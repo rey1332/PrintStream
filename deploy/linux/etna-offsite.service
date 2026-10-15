@@ -1,0 +1,40 @@
+# One encrypted off-site backup of ETNA (scripts/db/offsite.mjs): database,
+# documents and settings into ETNA_OFFSITE_DIR. Started nightly by
+# etna-offsite.timer; set up in docs/INSTALL-LINUX.md (A6).
+#
+# /etc/etna/offsite.env (etna:etna, 0600) holds:
+#   OFFSITE_DATABASE_URL=postgres://etna_owner@localhost:5432/etna
+#   ETNA_OFFSITE_DIR=/mnt/backup/etna
+#   ETNA_OFFSITE_KEY=/etc/etna/offsite-key.pub.pem
+# and /etc/etna/offsite.pgpass (etna:etna, 0600) the owner's password:
+#   localhost:5432:etna:etna_owner:<password>
+# The backup folder must be writable: `systemctl edit etna-offsite` and add
+#   [Service]
+#   ReadWritePaths=/mnt/backup/etna
+
+[Unit]
+Description=ETNA off-site backup
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=etna
+Group=etna
+WorkingDirectory=/opt/etna/current
+EnvironmentFile=/etc/etna/offsite.env
+Environment=PGPASSFILE=/etc/etna/offsite.pgpass
+ExecStart=/usr/bin/env node /opt/etna/current/scripts/db/offsite.mjs run --settings /etc/etna/etna.env
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/backups/etna-offsite
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+UMask=0077

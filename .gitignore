@@ -58,3 +58,7 @@ dist/
 # Offline installers for etna.bat (prereqs/README.txt says which)
 prereqs/*
 !prereqs/README.txt
+
+# Off-site backups and their keys (deploy/docker/compose.yml, offsite profile)
+deploy/docker/offsite/
+deploy/docker/offsite-keys/

@@ -66,7 +66,69 @@ Commands: docs/INSTALL-SERVER.md sections 14–15.
 - Back up `.env.local` / the production secrets in a password manager: without
   `MFA_ENCRYPTION_KEY` every user must enroll their authenticator again.
 - Test a restore into staging at least once per quarter; a backup that was
-  never restored is not a backup.
+  never restored is not a backup (the steps are below; CI runs the same cycle
+  on every change).
+
+### Off-site backups
+
+`scripts/db/offsite.mjs` writes one encrypted file per run to another disk, a
+NAS or a network share (`ETNA_OFFSITE_DIR`): the database dump, the uploaded
+documents and company folders, and the settings file (`etna.env`, with the
+two-factor key) when given with `--settings`. It needs no passphrase to make a
+backup, only to open one: the data is encrypted with a public key, and the
+private key, protected by your passphrase, travels inside every file. A
+backup file plus the passphrase is all a restore needs; anything changed in
+the file is refused.
+
+1. **Once:** make the keys, and keep the passphrase in a password manager:
+
+   ```bash
+   node scripts/db/offsite.mjs keys --dir /etc/etna         # Linux
+   node scripts\db\offsite.mjs keys --dir D:\ETNA\config    # Windows
+   ```
+
+2. **Every night:** with `OFFSITE_DATABASE_URL` (the schema owner; its
+   password from `PGPASSWORD` or the PostgreSQL password file),
+   `ETNA_OFFSITE_DIR`, `ETNA_OFFSITE_KEY` (the `.pub.pem` file) and
+   optionally `ETNA_OFFSITE_KEEP` (default 14):
+
+   ```bash
+   node scripts/db/offsite.mjs run --settings /etc/etna/etna.env
+   ```
+
+   - Linux: `etna-offsite.timer` (docs/INSTALL-LINUX.md, A6).
+   - Docker: `docker compose --profile offsite run --rm offsite` from cron
+     (docs/INSTALL-LINUX.md, B5).
+   - Windows: a Task Scheduler task at night running
+     `node <ETNA_DATA_ROOT>\app\current\scripts\db\offsite.mjs run --settings <ETNA_DATA_ROOT>\config\etna.env`
+     as an account that may read `<ETNA_DATA_ROOT>`, with the settings above
+     as its environment and the owner password in that account's
+     `%APPDATA%\postgresql\pgpass.conf`. A share (`\\nas\backup\etna`) works as
+     `ETNA_OFFSITE_DIR`.
+
+   A failed run logs `[offsite] backup failed`, which error alerts e-mail.
+
+3. **Check a backup** (monthly at least; opens it and checks every file, and
+   reads the dump's table of contents):
+
+   ```bash
+   node scripts/db/offsite.mjs list
+   node scripts/db/offsite.mjs verify etna-offsite-20261015-031500.etnabak
+   ```
+
+4. **Restore** (quarterly into staging; for real into production after an
+   incident). The database goes into a database prepared with the same ETNA
+   version (`scripts/setup-local.mjs` or `npm run db:migrate` on an empty
+   database owned by `etna_owner`); stop the app and the worker first:
+
+   ```bash
+   node scripts/db/offsite.mjs restore etna-offsite-20261015-031500.etnabak \
+     --to /tmp/etna-restored --database postgres://etna_owner@localhost:5432/etna_staging
+   ```
+
+   Then copy `files/documents` and `files/companies` from the folder into the
+   server's `ETNA_DATA_ROOT`, and use `settings/etna.env` (its
+   `MFA_ENCRYPTION_KEY` and `SESSION_HINT_SECRET`) for the restored server.
 - Financial records cannot be deleted through the app or API. The reset in
   Settings still can, for the active ERP only: the Owner, with the password
   checked on the server (sign-in lockout applies), the confirmation phrase and

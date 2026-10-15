@@ -62,7 +62,7 @@ test('deploy files: LF line endings, and the files they name exist', () => {
   const files = [...deployFiles(deploy), path.join(root, 'Dockerfile')];
   for (const file of files) assert.ok(!fs.readFileSync(file, 'utf8').includes('\r'), `${path.relative(root, file)} has CRLF`);
 
-  const units = ['etna.service', 'etna-worker.service', 'etna-db-backup.service', 'etna-db-backup.timer'];
+  const units = ['etna.service', 'etna-worker.service', 'etna-db-backup.service', 'etna-db-backup.timer', 'etna-offsite.service', 'etna-offsite.timer'];
   const install = fs.readFileSync(path.join(deploy, 'linux', 'install.sh'), 'utf8');
   for (const unit of units) {
     assert.ok(fs.existsSync(path.join(deploy, 'linux', unit)), unit);

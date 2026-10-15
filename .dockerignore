@@ -17,3 +17,5 @@ build
 .env.*
 !.env.example
 deploy/docker/.env
+deploy/docker/offsite
+deploy/docker/offsite-keys

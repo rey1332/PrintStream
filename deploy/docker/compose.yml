@@ -79,6 +79,30 @@ services:
       disable: true
     stop_grace_period: 40s
 
+  # One encrypted off-site backup (database, documents, settings) into
+  # ETNA_OFFSITE_PATH; run it nightly from cron:
+  #   docker compose --profile offsite run --rm offsite
+  offsite:
+    image: etna:local
+    build: *build
+    profiles: ["offsite"]
+    restart: "no"
+    command: ["node", "scripts/db/offsite.mjs", "run", "--settings", "/config/etna.env"]
+    environment:
+      OFFSITE_DATABASE_URL: postgres://etna_owner@db:5432/etna
+      PGPASSWORD: ${ETNA_OWNER_PASSWORD}
+      ETNA_OFFSITE_DIR: /offsite
+      ETNA_OFFSITE_KEY: /offsite-keys/offsite-key.pub.pem
+      ETNA_OFFSITE_KEEP: ${ETNA_OFFSITE_KEEP:-14}
+    volumes:
+      - config:/config:ro
+      - data:/data:ro
+      - ${ETNA_OFFSITE_PATH:-./offsite}:/offsite
+      - ./offsite-keys:/offsite-keys:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
   caddy:
     image: caddy:2
     profiles: ["https"]

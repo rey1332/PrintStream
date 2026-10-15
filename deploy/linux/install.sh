@@ -117,7 +117,7 @@ mv -T "$PREFIX/current.new" "$PREFIX/current"
 say "Now running $(basename "$RELEASE")"
 
 install -m 0755 "$SOURCE/deploy/linux/etna-db-backup.sh" "$PREFIX/bin/etna-db-backup.sh"
-for unit in etna.service etna-worker.service etna-db-backup.service etna-db-backup.timer; do
+for unit in etna.service etna-worker.service etna-db-backup.service etna-db-backup.timer etna-offsite.service etna-offsite.timer; do
   install -m 0644 "$SOURCE/deploy/linux/$unit" "$UNIT_DIR/$unit"
 done
 systemctl daemon-reload
