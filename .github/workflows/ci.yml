@@ -1,0 +1,40 @@
+# Checks every push and pull request: types, tests (unit and database, on an
+# in-memory PostgreSQL), translations, formatting, lint, a production build
+# and the dependency audit (npm run verify). Nothing is deployed from here:
+# ETNA runs on its own server (docs/INSTALL-SERVER.md).
+
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Actions pinned to a commit (the tag in the comment), not a movable tag.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # As installed on servers (scripts/server/bootstrap.ps1).
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Verify
+        run: npm run verify
