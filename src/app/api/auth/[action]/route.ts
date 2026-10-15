@@ -18,6 +18,8 @@ import {
   unenrollFactor,
   verifyFactor,
   verifyPassword,
+  requestAllowed,
+  type AuthDeps,
   type SessionInfo,
 } from '@/server/auth/service';
 import {
@@ -85,7 +87,23 @@ const LINK_ATTEMPTS = 60;
 const LINK_WINDOW_MS = 15 * 60_000;
 const linkAttempts = new Map<string, { count: number; resetAt: number }>();
 
-function allowLinkAttempt(ip: string | null): boolean {
+/** Counted in the database (every app server, across restarts); in memory only before migration 20261012000051. */
+async function allowLinkAttempt(deps: AuthDeps, ip: string | null): Promise<boolean> {
+  try {
+    return await requestAllowed(
+      deps,
+      'password_link',
+      ip ?? 'unknown',
+      LINK_ATTEMPTS,
+      LINK_WINDOW_MS / 1000
+    );
+  } catch (error) {
+    if ((error as { code?: string }).code !== '42P01') throw error;
+    return allowLinkAttemptInMemory(ip);
+  }
+}
+
+function allowLinkAttemptInMemory(ip: string | null): boolean {
   const now = Date.now();
   const key = ip ?? 'unknown';
   const entry = linkAttempts.get(key);
@@ -170,7 +188,7 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
   // One-time password links (no session needed). The token travels in the
   // body only, never in a URL the server sees.
   if (action === 'password-link' || action === 'set-password') {
-    if (!allowLinkAttempt(meta.ip)) {
+    if (!(await allowLinkAttempt(deps, meta.ip))) {
       return fail(
         429,
         'Too many attempts. Please wait 15 minutes and try again.',

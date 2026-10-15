@@ -7,7 +7,7 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 import { migrate } from '../../scripts/db/migrator.mjs';
 import {
   AuthError, changePassword, enrollFactor, listFactors, resolveSession, revokeAllSessions, signIn, signOut,
-  unenrollFactor, verifyFactor, verifyPassword, SESSION_IDLE_MS,
+  unenrollFactor, verifyFactor, verifyPassword, requestAllowed, SESSION_IDLE_MS,
 } from '../../src/server/auth/service.ts';
 import { base32Decode, currentStep, hotp, verifyTotp, base32Encode } from '../../src/server/auth/totp.ts';
 import { openSecret, sealSecret, parseKey } from '../../src/server/auth/secret-box.ts';
@@ -40,6 +40,27 @@ before(async () => {
   await migrate({ exec: (sql) => db.exec(sql), query: (sql, params) => db.query(sql, params) });
   const executor = { transaction: (fn) => db.transaction((tx) => fn({ query: (text, params) => tx.query(text, params) })) };
   deps = { executor, mfaKey, asRole: 'etna_auth' };
+});
+
+test('shared request limits: counted in the database per bucket and key, by the sign-in role', async () => {
+  const allowed = [];
+  for (let i = 0; i < 4; i += 1) allowed.push(await requestAllowed(deps, 'password_link', '203.0.113.5', 3, 900));
+  assert.deepEqual(allowed, [true, true, true, false]);
+  assert.equal(await requestAllowed(deps, 'password_link', '203.0.113.6', 3, 900), true, 'another address counts alone');
+  assert.equal(await requestAllowed(deps, 'other_bucket', '203.0.113.5', 3, 900), true, 'another bucket counts alone');
+  // Another app server (or this one after a restart) sees the same count.
+  const elsewhere = { ...deps, slots: undefined };
+  assert.equal(await requestAllowed(elsewhere, 'password_link', '203.0.113.5', 3, 900), false);
+  const { rows } = await db.query(`select hits from auth.request_limits where bucket = 'password_link' and key = '203.0.113.5'`);
+  assert.equal(rows[0].hits, 5);
+  // Not readable by the app's request roles.
+  await assert.rejects(
+    db.transaction(async (tx) => {
+      await tx.query('set local role authenticated');
+      await tx.query('select * from auth.request_limits');
+    }),
+    /permission denied/
+  );
 });
 
 test('TOTP matches RFC 6238 test vectors and tolerates one step of drift', () => {

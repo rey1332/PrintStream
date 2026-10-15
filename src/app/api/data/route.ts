@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateSpec, type RestResult } from '@/lib/db/spec';
 import { ConfigError, getAppExecutor } from '@/server/config';
-import { executeSpec } from '@/server/db/execute';
+import { executeSpec, type RequestIdentity } from '@/server/db/execute';
 import { identityOf, isSameOrigin, sessionFromCookies } from '@/server/auth/request';
 import { BodyTooLargeError, readLimitedText } from '@/server/http/body';
 import { keyedSlots, SlotsFullError } from '@/server/slots';
@@ -14,7 +14,24 @@ const REQUESTS_PER_MINUTE = 1200;
 const windows = new Map<string, { count: number; resetAt: number }>();
 const perUser = keyedSlots(3, 100);
 
-function allow(userId: string): boolean {
+/**
+ * Requests per minute for the signed-in user, counted in the database
+ * (api_rate_limit_hit: every app server, across restarts); in memory only when
+ * the database cannot count (an old schema).
+ */
+async function allow(identity: RequestIdentity): Promise<boolean> {
+  const counted = await executeSpec(getAppExecutor(), identity, {
+    kind: 'rpc',
+    fn: 'api_rate_limit_hit',
+    args: { p_bucket: 'data', p_limit: REQUESTS_PER_MINUTE, p_window_seconds: 60 },
+    filters: [],
+    order: [],
+  });
+  if (counted.error) return allowInMemory(identity.userId);
+  return counted.data === true;
+}
+
+function allowInMemory(userId: string): boolean {
   const now = Date.now();
   const entry = windows.get(userId);
   if (!entry || now > entry.resetAt) {
@@ -47,7 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await sessionFromCookies(request.cookies);
     if (!session) return reply(failure('JWT expired', 'PGRST301', 401), 401);
-    if (!allow(session.userId))
+    if (!(await allow(identityOf(session))))
       return reply(failure('Too many requests', 'rate_limited', 429), 429);
 
     let text: string;

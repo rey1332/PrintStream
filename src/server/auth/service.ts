@@ -138,6 +138,34 @@ async function recordAttempt(
   return String(rows[0].id);
 }
 
+/**
+ * Counts one request for `key` (e.g. a client address) in a fixed window of
+ * `windowSeconds`, in the database (auth.request_limits), so the limit holds
+ * across restarts and app servers. True while the count is within `limit`.
+ */
+export async function requestAllowed(
+  deps: AuthDeps,
+  bucket: string,
+  key: string,
+  limit: number,
+  windowSeconds: number
+): Promise<boolean> {
+  return inTx(deps, async (tx) => {
+    const { rows } = await tx.query(
+      `insert into auth.request_limits (bucket, key, window_start)
+       values ($1, $2, to_timestamp(floor(extract(epoch from clock_timestamp()) / $3) * $3))
+       on conflict (bucket, key, window_start) do update set hits = auth.request_limits.hits + 1
+       returning hits`,
+      [bucket.slice(0, 64), key.slice(0, 128) || 'unknown', windowSeconds]
+    );
+    if (Math.random() < 0.01)
+      await tx.query(
+        `delete from auth.request_limits where window_start < now() - interval '1 day'`
+      );
+    return Number(rows[0].hits) <= limit;
+  });
+}
+
 export interface RequestMeta {
   ip?: string | null;
   userAgent?: string | null;
