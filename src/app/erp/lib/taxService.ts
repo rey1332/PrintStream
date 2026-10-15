@@ -269,12 +269,19 @@ export const taxService = {
     return data as string;
   },
 
-  async payBill(id: string, amount: number, date: string, method: string) {
+  async payBill(
+    id: string,
+    amount: number,
+    date: string,
+    method: string,
+    cashAccountId?: string | null
+  ) {
     const { error } = await createClient().rpc('erp_supplier_bill_pay', {
       p_bill_id: id,
       p_amount: amount,
       p_date: date,
       p_method: method,
+      p_cash_account_id: cashAccountId || null,
     });
     if (error) fail(error);
   },

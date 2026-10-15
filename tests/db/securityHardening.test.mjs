@@ -58,6 +58,11 @@ const CALLABLE = [
   'ps_ai_budget', 'ps_start_decision', 'ps_finish_decision', 'ps_request_review', 'ps_review_decision', 'ps_set_dataset_entity',
   'erp_tax_faktur_list', 'erp_tax_faktur_export', 'erp_tax_faktur_set', 'erp_supplier_bill_create', 'erp_supplier_bill_pay',
   'erp_supplier_bill_void', 'erp_supplier_bill_bupot', 'erp_invoice_pph23_withheld', 'erp_tax_summary',
+  'erp_cash_account_list', 'erp_cash_account_create', 'erp_cash_account_update', 'erp_cash_transfer', 'erp_cash_transfer_list',
+  'erp_cash_transfer_void', 'erp_bank_statement_import', 'erp_bank_statement_delete', 'erp_bank_line_candidates',
+  'erp_bank_line_match', 'erp_bank_line_unmatch', 'erp_bank_line_ignore', 'erp_bank_line_post', 'erp_bank_auto_match',
+  'erp_bank_reconciliation', 'erp_bank_unmatched_ledger', 'erp_fixed_asset_create', 'erp_fixed_asset_void',
+  'erp_fixed_assets_depreciate', 'erp_fixed_asset_dispose', 'erp_fixed_asset_schedule',
 ].sort();
 
 let db;

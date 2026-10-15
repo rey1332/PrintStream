@@ -95,6 +95,15 @@ const JOURNAL_SOURCES = [
   'production_reversal',
   'fuel_issue',
   'fuel_issue_reversal',
+  'supplier_bill',
+  'supplier_bill_void',
+  'cash_transfer',
+  'cash_transfer_void',
+  'bank_line',
+  'asset_acquisition',
+  'asset_acquisition_void',
+  'depreciation',
+  'asset_disposal',
 ] as const;
 
 const id: CatalogField = { key: 'id', type: 'id', nullable: false };
@@ -495,6 +504,7 @@ const INTERNAL_COLUMNS: Record<string, 'owner' | 'actor' | 'link' | 'personal'> 
   system_key: 'link',
   fx_rate_id: 'link',
   supplier_bill_id: 'link',
+  cash_account_id: 'link',
   tax_id: 'personal',
   nitku: 'personal',
   tax_name: 'personal',

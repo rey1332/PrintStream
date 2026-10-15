@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { paymentService, listSummary } from '../lib/erpService';
+import { financeService, type CashAccount } from '../lib/financeService';
 import { useWorkspace } from '../lib/WorkspaceContext';
 import { ReasonDialog } from '../components/ReasonDialog';
 import { RecordPicker } from '../components/RecordPicker';
@@ -121,6 +122,20 @@ export default function PaymentsPage() {
       .then(setFigures)
       .catch(() => setFigures(null));
   const [showForm, setShowForm] = useState(false);
+  // Cash and bank accounts (Cash & bank); with only the default one, no choice is shown.
+  const [cashAccounts, setCashAccounts] = useState<CashAccount[]>([]);
+  const [cashAccountId, setCashAccountId] = useState('');
+  useEffect(() => {
+    if (!showForm) return;
+    financeService
+      .accounts()
+      .then((list) => {
+        const open = list.filter((a) => a.active);
+        setCashAccounts(open);
+        setCashAccountId((id) => id || (open.find((a) => a.isDefault) ?? open[0])?.id || '');
+      })
+      .catch(() => setCashAccounts([]));
+  }, [showForm]);
   const [form, setForm] = useState<Omit<Payment, 'id'>>(emptyPayment());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -251,6 +266,10 @@ export default function PaymentsPage() {
     try {
       await paymentService.create(user.id, {
         ...form,
+        cashAccountId:
+          cashAccounts.length > 1 && !cashAccounts.find((a) => a.id === cashAccountId)?.isDefault
+            ? cashAccountId
+            : undefined,
         fxRate: selectedCurrency && rate.mode === 'manual' ? Number(rate.rate) : undefined,
         fxRateSource: selectedCurrency
           ? rate.mode === 'manual'
@@ -739,6 +758,24 @@ export default function PaymentsPage() {
                     ))}
                   </select>
                 </div>
+                {cashAccounts.length > 1 && (
+                  <div>
+                    <label className="block text-[0.7rem] text-muted-foreground mb-1.5">
+                      {t(form.type === 'incoming' ? 'pay.cashAccountIn' : 'pay.cashAccountOut')}
+                    </label>
+                    <select
+                      className={inputCls}
+                      value={cashAccountId}
+                      onChange={(e) => setCashAccountId(e.target.value)}
+                    >
+                      {cashAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div>

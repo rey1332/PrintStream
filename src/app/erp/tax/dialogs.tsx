@@ -18,6 +18,7 @@ import {
   type FakturRow,
   type SupplierBill,
 } from '../lib/taxService';
+import { financeService, type CashAccount } from '../lib/financeService';
 
 // Object codes of PPh 23 most often met by a quarry (rental of equipment,
 // services, transport); any other code can be typed. Check the current list
@@ -443,15 +444,28 @@ export function PayBillDialog({
   const [amount, setAmount] = useState(String(open));
   const [date, setDate] = useState(todayIso());
   const [method, setMethod] = useState('transfer');
+  const [cashAccounts, setCashAccounts] = useState<CashAccount[]>([]);
+  const [cashAccountId, setCashAccountId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    financeService
+      .accounts()
+      .then((list) => {
+        const usable = list.filter((a) => a.active);
+        setCashAccounts(usable);
+        setCashAccountId((usable.find((a) => a.isDefault) ?? usable[0])?.id ?? '');
+      })
+      .catch(() => setCashAccounts([]));
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError('');
     try {
-      await taxService.payBill(bill.id, Number(amount), date, method);
+      await taxService.payBill(bill.id, Number(amount), date, method, cashAccountId || null);
       onSaved();
     } catch (err) {
       setError(t(errorKey(err, 'tax.err.failed')));
@@ -500,6 +514,21 @@ export function PayBillDialog({
             maxLength={40}
           />
         </Field>
+        {cashAccounts.length > 1 && (
+          <Field label={t('pay.cashAccountOut')} wide>
+            <select
+              className={inputCls}
+              value={cashAccountId}
+              onChange={(e) => setCashAccountId(e.target.value)}
+            >
+              {cashAccounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
       </div>
       <FormError text={error} />
       <DialogButtons busy={busy} label={t('tax.pay.save')} onCancel={onClose} />

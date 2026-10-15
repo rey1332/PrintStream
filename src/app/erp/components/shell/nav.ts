@@ -1,4 +1,6 @@
 import {
+  Banknote,
+  Building2,
   LayoutDashboard,
   Users,
   Truck,
@@ -112,7 +114,19 @@ export const ERP_NAV: ERPNavGroup[] = [
         href: '/erp/payments',
         requires: ['read', 'payments'],
       },
+      {
+        icon: Banknote,
+        label: 'erp.nav.cashBank',
+        href: '/erp/cash-bank',
+        requires: ['payments'],
+      },
       { icon: TrendingUp, label: 'erp.nav.cashFlow', href: '/erp/cash-flow', requires: ['read'] },
+      {
+        icon: Building2,
+        label: 'erp.nav.fixedAssets',
+        href: '/erp/fixed-assets',
+        requires: ['payments'],
+      },
       { icon: Landmark, label: 'erp.nav.accounting', href: '/erp/accounting', requires: ['read'] },
       {
         icon: ReceiptText,

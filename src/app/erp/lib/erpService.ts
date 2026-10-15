@@ -1298,6 +1298,7 @@ export const paymentService = {
     };
     if (record.invoiceId) payload.invoice_id = record.invoiceId;
     if (record.purchaseOrderId) payload.purchase_order_id = record.purchaseOrderId;
+    if (record.cashAccountId) payload.cash_account_id = record.cashAccountId;
     if (record.fxRateSource === 'manual' && Number(record.fxRate) > 0) {
       payload.fx_rate = Number(record.fxRate);
       payload.fx_rate_source = 'manual';
