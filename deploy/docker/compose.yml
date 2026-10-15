@@ -80,8 +80,11 @@ services:
     image: caddy:2
     profiles: ["https"]
     restart: unless-stopped
+    # Optional, not a required variable: compose checks required variables even
+    # for services whose profile is off, so `docker compose up` would fail
+    # without a domain. Caddy refuses to start with an empty site address instead.
     environment:
-      ETNA_DOMAIN: ${ETNA_DOMAIN:?set ETNA_DOMAIN in deploy/docker/.env for the https profile}
+      ETNA_DOMAIN: ${ETNA_DOMAIN:-}
     ports:
       - "80:80"
       - "443:443"

@@ -66,6 +66,9 @@ test('deploy files: LF line endings, and the files they name exist', () => {
   assert.match(compose, /deploy\/docker\/setup\.sh/);
   assert.match(compose, /env-run\.mjs", "\/config\/etna\.env", "worker"/);
   assert.match(compose, /"127\.0\.0\.1:\$\{ETNA_PORT:-4028\}:4028"/, 'the app port is published on localhost only');
+  // Compose checks ${VAR:?} in every service, profile or not: optional services must not require settings.
+  for (const block of compose.split(/\n(?=  [a-z][\w-]*:\n)/).filter((b) => /^\s+profiles:/m.test(b)))
+    assert.ok(!block.includes(':?'), `an optional service requires a setting:\n${block}`);
   assert.ok(fs.existsSync(path.join(deploy, 'docker', 'setup.sh')));
   assert.ok(fs.existsSync(path.join(deploy, 'docker', 'initdb', '01-etna-owner.sh')));
 });
