@@ -78,9 +78,30 @@ Commands: docs/INSTALL-SERVER.md sections 14–15.
 
 - **Uptime:** monitor `GET /api/health` every minute. `200` = app and database
   reachable; `503` = degraded.
-- **Errors:** alert on `[API Error]`, `[auth]`, `[data]`, `[analytics query]`,
-  `[analytics summary]`, `[ontology]`, `[currency]`, `[Export` and `[workspace]` in the server logs.
+- **Errors:** ETNA e-mails them itself (see *Error alerts* below). The tags
+  in the server log are `[API Error]`, `[auth]`, `[data]`, `[db]`,
+  `[analytics query]`, `[analytics summary]`, `[ontology]`, `[currency]`,
+  `[Export`, `[workspace]`, `[worker]` and `[health]`.
   Workflow runs are listed in `workflow_runs` (see docs/WORKFLOWS.md).
+
+### Error alerts
+
+With SMTP set up (`SMTP_HOST`, docs/CONFIGURATION.md) and
+`ETNA_ALERT_EMAILS=you@example.com,ops@example.com` in the settings (else the
+server admins in `ETNA_ADMIN_EMAILS` get them), the app and the TERMINAL
+worker e-mail every error they log:
+
+- the first e-mail a minute after the first error, then at most one every 15
+  minutes per process, each listing every kind of error with a count and the
+  time of the first and last;
+- only the tag and error codes, never error messages or values (they can
+  quote business data). The full lines stay in the server log;
+- the worker checks the app's `/api/health` every minute and reports when it
+  has not answered three times in a row (in Docker it checks
+  `ETNA_HEALTH_URL=http://app:4028/api/health`).
+
+A server that is down cannot send anything: keep an external uptime check on
+`/api/health` as well (any free uptime monitor).
 - **Database:** watch CPU, connections and slow queries; add an index before a
   query becomes slow, not after.
 - **Security:** review `erp_workspace_audit_log` (membership, two-factor,

@@ -57,6 +57,8 @@ passwords.
 | `SMTP_USER` | Mail account name (usually its address) | With most servers | `erp@example.co.id` | `src/server/mail/mailer.ts` | No |
 | `SMTP_PASSWORD` | Its password; for Gmail / Google Workspace an *app password* (two-step verification on, then Security → App passwords) | With `SMTP_USER` | 16 characters | `src/server/mail/mailer.ts` | **Yes** |
 | `SMTP_FROM` | Sender shown to recipients (default `SMTP_USER`) | No | `ETNA <erp@example.co.id>` | `src/server/mail/mailer.ts` | No |
+| `ETNA_ALERT_EMAILS` | Who gets error alerts by e-mail (docs/OPERATIONS.md, *Error alerts*), comma-separated. Needs `SMTP_HOST` | No (default `ETNA_ADMIN_EMAILS`; neither = no alerts) | `you@example.com,ops@example.com` | `src/server/alerts.ts` | No |
+| `ETNA_HEALTH_URL` | What the worker's watchdog checks every minute | No (default `http://127.0.0.1:<ETNA_PORT or 4028>/api/health`; Docker sets `http://app:4028/api/health`) | `http://127.0.0.1:4028/api/health` | `scripts/server/worker.mjs` | No |
 | `EXCHANGE_RATE_PROVIDER` | `frankfurter` (default) fetches rates on the server; `off` = manual rates only | No | `off` | `src/server/currency/frankfurter.ts` | No |
 | `FRANKFURTER_URL` | Frankfurter API address | No | `https://api.frankfurter.dev/v2` | `src/server/currency/frankfurter.ts` | No |
 | `FRANKFURTER_PROVIDERS` | Limit to one Frankfurter source instead of blended rates | No | `ECB` | `src/server/currency/frankfurter.ts` | No |

@@ -71,6 +71,9 @@ services:
   worker:
     <<: *etna
     command: ["node", "scripts/server/env-run.mjs", "/config/etna.env", "worker"]
+    environment:
+      # The worker's watchdog checks the app (error alerts when it stops answering).
+      ETNA_HEALTH_URL: http://app:4028/api/health
     # The worker has no web port; the image's health check is for the app.
     healthcheck:
       disable: true

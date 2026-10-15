@@ -57,21 +57,55 @@ if (!url) {
 register('./lib/ts-loader.mjs', import.meta.url);
 const { runWorker } = await import(pathToFileURL(fileURLToPath(new URL('../../src/server/terminal/worker.ts', import.meta.url))).href);
 const pkg = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+const { startAlerts } = await import(pathToFileURL(fileURLToPath(new URL('../../src/server/alerts-start.ts', import.meta.url))).href);
+// Error alerts by e-mail (src/server/alerts.ts); off without recipients or SMTP.
+startAlerts('worker');
+
+const stamp = () => `[${new Date().toISOString()}]`;
+// The worker's own trouble (its job loop, the database listener) is an error;
+// a job that fails on its data is not (the job shows why).
+const INFRASTRUCTURE = /^(loop|listen):/;
 
 const worker = await runWorker({
   databaseUrl: url,
   workerId: `${os.hostname()}:${process.pid}`.slice(0, 100),
   version: String(pkg.version ?? ''),
   concurrency: Number(process.env.ETNA_WORKER_CONCURRENCY) || 2,
-  log: (line) => console.log(`[${new Date().toISOString()}] [worker] ${line}`),
+  log: (line) => (INFRASTRUCTURE.test(line) ? console.error : console.log)(`${stamp()} [worker] ${line}`),
 });
-console.log(`[${new Date().toISOString()}] [worker] started`);
+console.log(`${stamp()} [worker] started`);
+
+// Watchdog: the app answers /api/health (the worker runs beside it, so it
+// notices when the app or its database does not). Three failed checks in a
+// row are an error line, which error alerts e-mail.
+const healthUrl = process.env.ETNA_HEALTH_URL || `http://127.0.0.1:${process.env.ETNA_PORT || 4028}/api/health`;
+let failedChecks = 0;
+const checkHealth = async () => {
+  let reason = null;
+  try {
+    const response = await fetch(healthUrl, { signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) reason = `status ${response.status}`;
+  } catch (error) {
+    reason = error?.cause?.code || error?.name || 'unreachable';
+  }
+  if (reason === null) {
+    if (failedChecks >= 3) console.log(`${stamp()} [health] the app answers again`);
+    failedChecks = 0;
+    return;
+  }
+  failedChecks += 1;
+  if (failedChecks === 3 || failedChecks % 30 === 0)
+    console.error(`${stamp()} [health] the app does not answer`, reason, `(${failedChecks} checks)`);
+};
+const watchdog = setInterval(checkHealth, 60_000);
+watchdog.unref();
 
 let stopping = false;
 const stop = async () => {
   if (stopping) return;
   stopping = true;
-  console.log(`[${new Date().toISOString()}] [worker] stopping`);
+  clearInterval(watchdog);
+  console.log(`${stamp()} [worker] stopping`);
   await worker.stop();
   process.exit(0);
 };
