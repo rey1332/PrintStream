@@ -12,6 +12,7 @@ import {
 import { WORKSPACES_ENABLED, readScope, rpcWorkspaceId, writeOwner } from './workspace';
 import { tr, translateServerMessage } from '@/lib/i18n/translate';
 import { isUnit, roundQty, type UnitCode } from '@/lib/units';
+import { partyTaxColumns, partyTaxFrom } from './taxService';
 
 interface DbError {
   code?: string;
@@ -214,8 +215,17 @@ function mapParty(r: any) {
     // Customers only (weighbridge module, 20261012000024); null = no limit.
     creditLimit:
       r.credit_limit === null || r.credit_limit === undefined ? null : Number(r.credit_limit),
+    // NPWP / NIK, NITKU, PKP (20261012000053).
+    tax: partyTaxFrom(r),
     createdAt: r.created_at as string,
   };
+}
+
+/** The database's check of NPWP / NIK / NITKU, as a message to show. */
+function taxDataError(error: DbError | null | undefined): Error | null {
+  return error?.code === '23514' && /_tax_check/.test(error.message ?? '')
+    ? new Error(tr('tax.err.taxData'))
+    : null;
 }
 
 function mapProduct(r: any) {
@@ -231,6 +241,8 @@ function mapProduct(r: any) {
     maxStock: Number(r.max_stock),
     unit: (isUnit(r.unit) ? r.unit : 'pcs') as UnitCode,
     density: r.density === null || r.density === undefined ? null : Number(r.density),
+    taxItemCode: (r.tax_item_code as string) ?? '000000',
+    taxItemKind: (r.tax_item_kind === 'service' ? 'service' : 'goods') as 'goods' | 'service',
   };
 }
 
@@ -289,6 +301,7 @@ export const customerService = {
       address: record.address,
       city: record.city,
       ...(record.creditLimit !== undefined ? { credit_limit: record.creditLimit } : {}),
+      ...(record.tax ? partyTaxColumns(record.tax) : {}),
     };
     if (record.id) {
       const { data, error } = await db
@@ -300,6 +313,8 @@ export const customerService = {
         .single();
       if (error) {
         logError('upsert customer', error);
+        const tax = taxDataError(error);
+        if (tax) throw tax;
         if (error.code === '42501' || error.code === '23503')
           throw customerWriteError(error, 'update');
         throw safeERPError('update customer', error);
@@ -309,6 +324,8 @@ export const customerService = {
     const { data, error } = await db.from('erp_customers').insert(payload).select().single();
     if (error) {
       logError('create customer', error);
+      const tax = taxDataError(error);
+      if (tax) throw tax;
       if (error.code === '42501' || error.code === '23503')
         throw customerWriteError(error, 'create');
       throw safeERPError('create customer', error);
@@ -398,6 +415,7 @@ export const supplierService = {
       phone: record.phone,
       address: record.address,
       city: record.city,
+      ...(record.tax ? partyTaxColumns(record.tax) : {}),
     };
     if (record.id) {
       const { data, error } = await scoped(
@@ -406,11 +424,11 @@ export const supplierService = {
       )
         .select()
         .single();
-      if (error) throw safeERPError('update supplier', error);
+      if (error) throw taxDataError(error) ?? safeERPError('update supplier', error);
       return data;
     }
     const { data, error } = await db.from('erp_suppliers').insert(payload).select().single();
-    if (error) throw safeERPError('create supplier', error);
+    if (error) throw taxDataError(error) ?? safeERPError('create supplier', error);
     return data;
   },
   async remove(userId: string, id: string) {
@@ -549,6 +567,10 @@ export const productService = {
       max_stock: record.maxStock,
       unit: isUnit(record.unit) ? record.unit : 'pcs',
       density: record.density && record.density > 0 ? record.density : null,
+      ...(record.taxItemCode !== undefined
+        ? { tax_item_code: /^d{6}$/.test(record.taxItemCode) ? record.taxItemCode : '000000' }
+        : {}),
+      ...(record.taxItemKind ? { tax_item_kind: record.taxItemKind } : {}),
     };
     if (record.id) {
       const { data, error } = await scoped(

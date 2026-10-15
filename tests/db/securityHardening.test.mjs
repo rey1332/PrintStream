@@ -56,6 +56,8 @@ const CALLABLE = [
   'ps_save_connection', 'ps_delete_connection', 'ps_create_sync', 'ps_set_sync', 'ps_delete_sync', 'ps_create_source_sync', 'ps_approve_mcp_tool',
   'ps_save_ai_provider', 'ps_delete_ai_provider', 'ps_set_ai_personal_key', 'ps_has_ai_personal_key', 'ps_set_ai_policy', 'ps_set_ai_settings',
   'ps_ai_budget', 'ps_start_decision', 'ps_finish_decision', 'ps_request_review', 'ps_review_decision', 'ps_set_dataset_entity',
+  'erp_tax_faktur_list', 'erp_tax_faktur_export', 'erp_tax_faktur_set', 'erp_supplier_bill_create', 'erp_supplier_bill_pay',
+  'erp_supplier_bill_void', 'erp_supplier_bill_bupot', 'erp_invoice_pph23_withheld', 'erp_tax_summary',
 ].sort();
 
 let db;

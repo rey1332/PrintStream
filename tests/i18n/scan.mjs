@@ -22,8 +22,9 @@ const KNOWN_EXCEPTIONS = [
 const VISIBLE_ATTRIBUTES = new Set(['placeholder', 'title', 'aria-label', 'alt', 'label', 'description', 'confirmLabel', 'message']);
 const MESSAGE_CALLS = /^(toast(\.\w+)?|set\w*(Error|Message)|alert|confirm)$/;
 
-// Tokens that are the same in every language (brands, codes, units, symbols).
-const ALLOWED = /^(ETNA|ERP|CSV|RMB|Del|ms|JSON|XLSX|PDF|SKU|ID|USD|OK|KDE|QQ|R²|VaR|CVaR|ETNA-XXXXX-XXXXX-XXXXX-XXXXX|MB|RESTORE|RESEND_API_KEY|EMAIL_FROM|••••••••|admin@business\.com|finance@business\.com\\nmanager@business\.com)$/;
+// Tokens that are the same in every language (brands, codes, units, symbols;
+// NPWP, NIK and NITKU are the names of Indonesian tax identifiers).
+const ALLOWED = /^(ETNA|ERP|CSV|RMB|Del|ms|JSON|XLSX|PDF|SKU|ID|USD|OK|KDE|QQ|R²|VaR|CVaR|ETNA-XXXXX-XXXXX-XXXXX-XXXXX|MB|NPWP|NIK|NITKU|RESTORE|RESEND_API_KEY|EMAIL_FROM|••••••••|admin@business\.com|finance@business\.com\\nmanager@business\.com)$/;
 
 function looksLikeText(value) {
   const text = value.replace(/\s+/g, ' ').trim();

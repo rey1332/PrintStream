@@ -12,6 +12,8 @@ export interface CompanyProfile {
   email: string;
   website: string;
   tax_id: string;
+  /** The seller's NITKU for e-Faktur (20261012000053): 22 digits. */
+  nitku: string;
   bank_details: string;
   footer_note: string;
   logo: string | null;
@@ -25,6 +27,7 @@ export const EMPTY_PROFILE: CompanyProfile = {
   email: '',
   website: '',
   tax_id: '',
+  nitku: '',
   bank_details: '',
   footer_note: '',
   logo: null,

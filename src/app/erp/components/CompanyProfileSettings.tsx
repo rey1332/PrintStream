@@ -13,6 +13,7 @@ const FIELDS: { key: Exclude<keyof CompanyProfile, 'logo'>; label: MessageKey; w
   [
     { key: 'legal_name', label: 'company.legalName' },
     { key: 'tax_id', label: 'company.taxId' },
+    { key: 'nitku', label: 'company.nitku' },
     { key: 'address', label: 'company.address', wide: true },
     { key: 'city', label: 'company.city' },
     { key: 'phone', label: 'company.phone' },
@@ -104,7 +105,13 @@ export function CompanyProfileSettings({ inputClassName }: { inputClassName: str
       });
       if (saveError) {
         setError(
-          t(/e-mail/.test(saveError.message ?? '') ? 'company.emailInvalid' : 'company.saveFailed')
+          t(
+            /e-mail/.test(saveError.message ?? '')
+              ? 'company.emailInvalid'
+              : /NITKU/.test(saveError.message ?? '')
+                ? 'tax.err.nitku'
+                : 'company.saveFailed'
+          )
         );
         return;
       }

@@ -109,6 +109,14 @@ const partyFields: CatalogField[] = [
   { key: 'address', type: 'text', nullable: false },
   { key: 'city', type: 'text', nullable: false },
   { key: 'balance', type: 'money', nullable: false },
+  // Tax data (20261012000053); the identifiers themselves are personal data, not catalogued.
+  {
+    key: 'tax_id_type',
+    type: 'enum',
+    nullable: true,
+    enumValues: ['npwp', 'nik', 'passport', 'other'],
+  },
+  { key: 'is_pkp', type: 'boolean', nullable: false },
   createdAt,
   updatedAt,
 ];
@@ -170,6 +178,8 @@ export const CATALOG: Record<EntityKey, CatalogEntity> = {
       { key: 'unit', type: 'enum', nullable: false, enumValues: UNIT_CODES },
       { key: 'density', type: 'number', nullable: true },
       { key: 'avg_cost', type: 'money', nullable: false },
+      { key: 'tax_item_code', type: 'text', nullable: false },
+      { key: 'tax_item_kind', type: 'enum', nullable: false, enumValues: ['goods', 'service'] },
       createdAt,
       updatedAt,
     ],
@@ -315,6 +325,17 @@ export const CATALOG: Record<EntityKey, CatalogEntity> = {
       updatedAt,
       { key: 'voided_at', type: 'datetime', nullable: true },
       { key: 'void_reason', type: 'text', nullable: false },
+      // e-Faktur (20261012000053).
+      { key: 'tax_trx_code', type: 'text', nullable: true },
+      {
+        key: 'faktur_status',
+        type: 'enum',
+        nullable: false,
+        enumValues: ['none', 'exported', 'approved'],
+      },
+      { key: 'faktur_number', type: 'text', nullable: true },
+      { key: 'faktur_date', type: 'date', nullable: true },
+      { key: 'faktur_exported_at', type: 'datetime', nullable: true },
     ],
     relations: [
       { key: 'customer', target: 'customers', column: 'customer_id' },
@@ -458,7 +479,9 @@ export const CATALOG: Record<EntityKey, CatalogEntity> = {
   },
 };
 
-const INTERNAL_COLUMNS: Record<string, 'owner' | 'actor' | 'link'> = {
+// Why a column is not in the catalog. 'personal': tax identifiers (NIK is
+// personal data under UU PDP; NPWP / NITKU and the tax name and address go with it).
+const INTERNAL_COLUMNS: Record<string, 'owner' | 'actor' | 'link' | 'personal'> = {
   user_id: 'owner',
   workspace_id: 'owner',
   created_by: 'actor',
@@ -471,12 +494,17 @@ const INTERNAL_COLUMNS: Record<string, 'owner' | 'actor' | 'link'> = {
   source_key: 'link',
   system_key: 'link',
   fx_rate_id: 'link',
+  supplier_bill_id: 'link',
+  tax_id: 'personal',
+  nitku: 'personal',
+  tax_name: 'personal',
+  tax_address: 'personal',
 };
 
 export function excludedFieldReason(
   entity: EntityKey,
   column: string
-): 'owner' | 'actor' | 'link' | 'unknown' | null {
+): 'owner' | 'actor' | 'link' | 'personal' | 'unknown' | null {
   if (CATALOG[entity].fields.some((f) => f.key === column)) return null;
   return INTERNAL_COLUMNS[column] ?? 'unknown';
 }

@@ -50,6 +50,7 @@ import { terminalRestMessages } from './terminalRest';
 import { terminalWebMessages } from './terminalWeb';
 import { terminalMcpMessages } from './terminalMcp';
 import { terminalAiMessages } from './terminalAi';
+import { taxMessages } from './tax';
 
 export const messages = {
   ...commonMessages,
@@ -86,6 +87,7 @@ export const messages = {
   ...weighbridgeMessages,
   ...productionMessages,
   ...equipmentMessages,
+  ...taxMessages,
   ...payrollIdMessages,
   ...workspaceRoleMessages,
   ...workspaceGovernanceMessages,

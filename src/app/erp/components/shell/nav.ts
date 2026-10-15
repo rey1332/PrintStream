@@ -24,6 +24,7 @@ import {
   Scale,
   Factory,
   Fuel,
+  ReceiptText,
 } from 'lucide-react';
 import type { ElementType } from 'react';
 import type { MessageKey } from '@/lib/i18n/messages';
@@ -113,6 +114,12 @@ export const ERP_NAV: ERPNavGroup[] = [
       },
       { icon: TrendingUp, label: 'erp.nav.cashFlow', href: '/erp/cash-flow', requires: ['read'] },
       { icon: Landmark, label: 'erp.nav.accounting', href: '/erp/accounting', requires: ['read'] },
+      {
+        icon: ReceiptText,
+        label: 'erp.nav.tax',
+        href: '/erp/tax',
+        requires: ['read', 'invoicing', 'purchasing', 'payments'],
+      },
       { icon: BarChart3, label: 'erp.nav.reports', href: '/erp/reports', requires: ['read'] },
     ],
   },

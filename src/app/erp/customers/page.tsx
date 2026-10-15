@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n/I18nProvider';
 import { tr } from '@/lib/i18n/translate';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { Pagination, useServerPage } from '../components/Pagination';
+import { PartyTaxFields, emptyPartyTax, type PartyTax } from '../components/PartyTaxFields';
 
 interface Customer {
   id?: string;
@@ -19,6 +20,7 @@ interface Customer {
   address: string;
   city: string;
   creditLimit?: number | null;
+  tax?: PartyTax;
   createdAt?: string;
 }
 
@@ -753,6 +755,10 @@ export default function CustomersPage() {
                 </div>
               )}
             </div>
+            <PartyTaxFields
+              value={modal.data.tax ?? emptyPartyTax()}
+              onChange={(tax) => setModal({ ...modal, data: { ...modal.data, tax } })}
+            />
             {error && (
               <p className="text-[0.78rem] text-zinc-500 dark:text-muted-foreground bg-zinc-100 dark:bg-surface-3 rounded-lg px-3 py-2 border border-zinc-200 dark:border-border">
                 {error}

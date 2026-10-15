@@ -38,6 +38,9 @@ interface Product {
   unit: UnitCode;
   /** Ton per m³, for converting between weight and volume. */
   density: number | null;
+  /** e-Faktur (20261012000053): the Coretax goods / services code and kind. */
+  taxItemCode?: string;
+  taxItemKind?: 'goods' | 'service';
 }
 
 const emptyProduct = (): Omit<Product, 'id'> => ({
@@ -681,6 +684,45 @@ export default function ProductsPage() {
               </div>
               <p className="col-span-2 -mt-1 text-[0.68rem] text-muted-foreground">
                 {t('unit.densityHelp')}
+              </p>
+              <div>
+                <label className="block text-[0.7rem] text-muted-foreground mb-1">
+                  {t('cat.f.tax_item_code')}
+                </label>
+                <input
+                  className={inputCls}
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={modal.data.taxItemCode ?? '000000'}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      data: { ...modal.data, taxItemCode: e.target.value.replace(/D/g, '') },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-[0.7rem] text-muted-foreground mb-1">
+                  {t('cat.f.tax_item_kind')}
+                </label>
+                <select
+                  className={inputCls}
+                  value={modal.data.taxItemKind ?? 'goods'}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      data: { ...modal.data, taxItemKind: e.target.value as 'goods' | 'service' },
+                    })
+                  }
+                >
+                  <option value="goods">{t('tax.item.goods')}</option>
+                  <option value="service">{t('tax.item.service')}</option>
+                </select>
+              </div>
+              <p className="col-span-2 -mt-1 text-[0.68rem] text-muted-foreground">
+                {t('tax.item.help')}
               </p>
               {numFields.map((field) => (
                 <div key={String(field)}>
