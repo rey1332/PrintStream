@@ -9,7 +9,7 @@ ENV_FILE=/config/etna.env
 if [ -f "$ENV_FILE" ]; then
   node scripts/db/migrate.mjs
 else
-  node scripts/setup-local.mjs --env-file "$ENV_FILE"
+  node scripts/setup-local.mjs --settings "$ENV_FILE"
 fi
 
 node --input-type=module -e "
