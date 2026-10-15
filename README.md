@@ -205,7 +205,7 @@ Internal applications
 | Exports | CSV, `xlsx` |
 | Testing | Node test runner; database tests on in-memory PostgreSQL (`@electric-sql/pglite`) |
 | Tooling | ESLint, Prettier, TypeScript compiler |
-| Deployment | Windows servers; reverse proxy through Cloudflare Tunnel or Caddy (see `docs/INSTALL-SERVER.md`) |
+| Deployment | Windows servers (`etna.bat`, see `docs/INSTALL-SERVER.md`) or Linux (systemd or Docker Compose, see `docs/INSTALL-LINUX.md`); reverse proxy through Cloudflare Tunnel or Caddy |
 
 ## Project Status
 
@@ -265,7 +265,8 @@ Not provided: PrintStream has **no external security audit and no compliance cer
 
 ## Deploy di Windows (etna.bat)
 
-`etna.bat` adalah **satu-satunya installer resmi** PrintStream. Ia memasang
+`etna.bat` adalah **installer resmi** PrintStream untuk Windows (untuk Linux:
+[Deploy di Linux](#deploy-di-linux)). Ia memasang
 dan mengelola ETNA di satu server Windows: aplikasi, cluster PostgreSQL
 sendiri, worker TERMINAL, backup harian, dan start otomatis setelah reboot.
 Tanpa Docker. Rincian dan layout dua server ada di
@@ -409,6 +410,34 @@ etna.bat).
 | `app\src\` (dibutuhkan worker TERMINAL), `app\public\` | `dist/` (hasil `npm run package`) |
 | `package.json`, `package-lock.json`, `next.config.mjs`, `image-hosts.config.mjs`, `docs\`, `LICENSE`, `README.md` | `.next/` di PC development |
 
+## Deploy di Linux
+
+Dua cara, keduanya diuji di CI sampai sign-in dan membaca data. Rincian:
+[docs/INSTALL-LINUX.md](docs/INSTALL-LINUX.md).
+
+**A. Langsung, dengan systemd** (Ubuntu, Debian, RHEL; Node.js 24 dan
+PostgreSQL 18):
+
+```bash
+# sekali: role etna_owner dan database etna (docs/INSTALL-LINUX.md, A2), lalu
+sudo MIGRATION_DATABASE_URL=postgres://etna_owner@localhost:5432/etna \
+     PGPASSWORD='…' deploy/linux/install.sh
+```
+
+Memasang aplikasi di `/opt/etna` (versi aktif dan sebelumnya), pengaturan di
+`/etc/etna/etna.env`, data di `/var/lib/etna`, dan layanan `etna` (aplikasi,
+`127.0.0.1:4028`) dan `etna-worker` sebagai user `etna`, dengan pengamanan
+systemd. Update: jalankan perintah yang sama dari versi baru. Backup harian:
+`etna-db-backup.timer`. HTTPS: `deploy/linux/Caddyfile`.
+
+**B. Docker Compose:**
+
+```bash
+cd deploy/docker && cp .env.example .env   # isi dua password
+docker compose up -d --build               # db, setup, app, worker
+docker compose --profile https up -d       # opsional: Caddy dengan HTTPS
+```
+
 ## Development
 
 Requires Node.js 24 and PostgreSQL 18. Full steps: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
@@ -435,7 +464,7 @@ npm run dev                           # http://localhost:4028/erp/login
 | `npm run db:new -- <name>` | Create a migration and its rollback |
 | `npm run db:backup` | Database backup tool |
 
-Environment variables: [docs/CONFIGURATION.md](docs/CONFIGURATION.md). Installing on a server: [docs/INSTALL-SERVER.md](docs/INSTALL-SERVER.md) and [docs/HOW TO ETNA.md](docs/HOW%20TO%20ETNA.md).
+Environment variables: [docs/CONFIGURATION.md](docs/CONFIGURATION.md). Installing on a server: [docs/INSTALL-SERVER.md](docs/INSTALL-SERVER.md) and [docs/HOW TO ETNA.md](docs/HOW%20TO%20ETNA.md) (Windows), [docs/INSTALL-LINUX.md](docs/INSTALL-LINUX.md) (Linux).
 
 ## Repository Structure
 
@@ -449,11 +478,15 @@ src/            Next.js app: pages and API routes (app/), server-only code (serv
 db/             bootstrap/ (roles, auth schema), migrations/, rollback/
 scripts/        db/ (migrate, backup, transfer), admin/ (accounts),
                 server/ (etna.bat bootstrap and manager, worker, DB backup, Caddy),
+                server/env-run.mjs (starts app or worker with etna.env, on Linux),
                 setup-local.mjs
+deploy/         linux/ (install.sh, systemd units, DB backup timer, Caddyfile),
+                docker/ (compose.yml, setup), smoke-test.sh
+Dockerfile      container image (app, worker, setup)
 tests/          unit/, db/ (in-memory PostgreSQL), i18n/
 docs/           documentation
 public/         static files
-etna.bat        the one official Windows installer and server manager
+etna.bat        the official Windows installer and server manager
 prereqs/        offline installers for etna.bat (only README.txt is in Git)
 storage/        runtime data, not in Git: uploaded documents, logs, local backups
 ```
@@ -464,7 +497,8 @@ storage/        runtime data, not in Git: uploaded documents, logs, local backup
 |---|---|
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local setup, checks, migrations, project layout |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Environment variables and secrets |
-| [docs/INSTALL-SERVER.md](docs/INSTALL-SERVER.md) | Server installation (Indonesian) |
+| [docs/INSTALL-SERVER.md](docs/INSTALL-SERVER.md) | Server installation on Windows (Indonesian) |
+| [docs/INSTALL-LINUX.md](docs/INSTALL-LINUX.md) | Server installation on Linux: systemd or Docker Compose (Indonesian) |
 | [docs/HOW TO ETNA.md](docs/HOW%20TO%20ETNA.md) | Setup on a server and workload layout (Indonesian) |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Releases, backups, monitoring, incidents |
 | [docs/ROLES.md](docs/ROLES.md) | Workspace roles and read areas |

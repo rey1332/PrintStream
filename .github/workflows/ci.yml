@@ -43,3 +43,111 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Verify
         run: npm run verify
+
+  # A real Linux server install (deploy/linux/install.sh with systemd): first
+  # install, then an update over it, each checked by signing in and reading data.
+  linux-systemd:
+    name: Linux install (systemd)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: ci-postgres-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 30
+    env:
+      MIGRATION_DATABASE_URL: postgres://etna_owner@127.0.0.1:5432/etna
+      ADMIN_DATABASE_URL: postgres://etna_owner@127.0.0.1:5432/etna
+      PGPASSWORD: ci-owner-password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Node.js on the system PATH (as a distribution package would install it)
+        run: sudo ln -sf "$(command -v node)" /usr/local/bin/node
+      - name: Database owner and database
+        env:
+          PGPASSWORD: ci-postgres-password
+        run: |
+          psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE etna_owner LOGIN CREATEROLE PASSWORD 'ci-owner-password'" \
+            -c "CREATE DATABASE etna OWNER etna_owner"
+      - name: Install
+        run: sudo env "PATH=$PATH" MIGRATION_DATABASE_URL="$MIGRATION_DATABASE_URL" PGPASSWORD="$PGPASSWORD" deploy/linux/install.sh
+      - name: Units and permissions
+        run: |
+          systemctl is-active etna etna-worker
+          sudo systemd-analyze verify /etc/systemd/system/etna.service /etc/systemd/system/etna-worker.service /etc/systemd/system/etna-db-backup.service /etc/systemd/system/etna-db-backup.timer
+          test "$(sudo stat -c '%U:%G %a' /etc/etna/etna.env)" = "root:etna 640"
+          test "$(sudo stat -c '%U:%G' /var/lib/etna)" = "etna:etna"
+          if sudo -u etna touch /opt/etna/current/write-test 2>/dev/null; then echo "the service can write the app folder"; exit 1; fi
+      - name: First account
+        run: printf 'ci-password-0123456789' | sudo env "PATH=$PATH" ADMIN_DATABASE_URL="$ADMIN_DATABASE_URL" PGPASSWORD="$PGPASSWORD" node /opt/etna/current/scripts/admin/users.mjs create-user --email ci@example.com --password-stdin
+      - name: Smoke test
+        run: sh deploy/smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
+      - name: Update over the running install
+        run: |
+          before=$(readlink -f /opt/etna/current)
+          sudo env "PATH=$PATH" MIGRATION_DATABASE_URL="$MIGRATION_DATABASE_URL" PGPASSWORD="$PGPASSWORD" deploy/linux/install.sh
+          test "$(readlink -f /opt/etna/current)" != "$before"
+          test -d "$before"
+          sh deploy/smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
+      - name: Logs
+        if: failure()
+        run: sudo journalctl -u etna -u etna-worker --no-pager -n 200
+
+  # The container setup (deploy/docker/compose.yml): build, first start,
+  # account, sign-in, then a second start (migrations path).
+  linux-docker:
+    name: Linux install (Docker Compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: deploy/docker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Settings
+        run: printf 'POSTGRES_PASSWORD=ci-postgres-password\nETNA_OWNER_PASSWORD=ci-owner-password\n' > .env
+      - name: Build and start
+        run: |
+          docker compose up -d --build
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:4028/api/health && exit 0
+            sleep 2
+          done
+          exit 1
+      - name: First account
+        run: printf 'ci-password-0123456789' | docker compose run --rm -T -e ADMIN_DATABASE_URL=postgres://etna_owner@db:5432/etna setup node scripts/admin/users.mjs create-user --email ci@example.com --password-stdin
+      - name: Smoke test
+        run: sh ../smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
+      - name: Second start (keeps the keys, applies migrations)
+        run: |
+          before=$(docker compose run --rm -T --entrypoint sh setup -c 'grep MFA_ENCRYPTION_KEY /config/etna.env')
+          docker compose up -d
+          docker compose logs setup | grep -q 'Settings in /config/etna.env are ready'
+          after=$(docker compose run --rm -T --entrypoint sh setup -c 'grep MFA_ENCRYPTION_KEY /config/etna.env')
+          test "$before" = "$after"
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4028/api/health && break; sleep 2; done
+          sh ../smoke-test.sh http://127.0.0.1:4028 ci@example.com ci-password-0123456789
+      - name: Worker is running
+        run: test "$(docker compose ps worker --format '{{.State}}')" = running
+      - name: Logs
+        if: failure()
+        run: docker compose logs --no-color
