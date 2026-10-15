@@ -1,12 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { HINT_COOKIE, SESSION_COOKIE, readHint } from '@/lib/auth/hint';
 import { isPublicPath } from '@/lib/auth/public-paths';
+import { contentSecurityPolicy, newNonce } from '@/lib/security/csp';
+import { imageHosts } from '../image-hosts.config.mjs';
 
 export async function middleware(request: NextRequest) {
+  return (await gate(request)) ?? withPolicy(request);
+}
+
+/** A redirect or refusal for a request that may not go on, else null. */
+async function gate(request: NextRequest): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
-  if (isPublicPath(pathname)) {
-    return NextResponse.next({ request });
-  }
+  if (isPublicPath(pathname)) return null;
 
   // The hint is signed by the server for this session cookie, so a made-up
   // cookie gets no further. Routes still check the session itself.
@@ -22,8 +27,7 @@ export async function middleware(request: NextRequest) {
       : Promise.resolve(null);
 
   if (pathname.startsWith('/api/')) {
-    if (pathname.startsWith('/api/auth/') || (await readFor(true)))
-      return NextResponse.next({ request });
+    if (pathname.startsWith('/api/auth/') || (await readFor(true))) return null;
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -37,7 +41,27 @@ export async function middleware(request: NextRequest) {
       `/mfa?next=${encodeURIComponent(pathname + request.nextUrl.search)}`
     );
   }
-  return NextResponse.next({ request });
+  return null;
+}
+
+/**
+ * Pages get this request's Content Security Policy (src/lib/security/csp.ts).
+ * Next.js reads the nonce from the request's CSP header and puts it on its
+ * scripts; the root layout reads x-nonce for its own.
+ */
+function withPolicy(request: NextRequest): NextResponse {
+  if (request.nextUrl.pathname.startsWith('/api/')) return NextResponse.next({ request });
+  const nonce = newNonce();
+  const policy = contentSecurityPolicy(nonce, {
+    dev: process.env.NODE_ENV !== 'production',
+    imageHosts,
+  });
+  const headers = new Headers(request.headers);
+  headers.set('x-nonce', nonce);
+  headers.set('content-security-policy', policy);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set('Content-Security-Policy', policy);
+  return response;
 }
 
 const HOST_RE = /^([A-Za-z0-9.-]{1,253}|\[[0-9A-Fa-f:.]{2,45}\])(:\d{1,5})?$/;
@@ -60,7 +84,7 @@ function redirectTo(request: NextRequest, path: string) {
 
 export const config = {
   matcher: [
-    // Everything except static files, images and the sign-in pages.
-    '/((?!_next/static|_next/image|favicon.ico|(?:erp/)?login(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Everything except static files and images (sign-in pages too: they need the nonce).
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

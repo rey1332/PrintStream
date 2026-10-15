@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import '../styles/tailwind.css';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
@@ -26,15 +27,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // This request's script nonce (src/middleware.ts): inline scripts run only with it.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: UI_BOOT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: UI_BOOT_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider
+          nonce={nonce}
           attribute="class"
           defaultTheme="light"
           enableSystem={false}

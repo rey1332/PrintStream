@@ -1,22 +1,9 @@
 import { imageHosts } from './image-hosts.config.mjs';
 
-const isDev = process.env.NODE_ENV !== 'production';
-
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-  "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${imageHosts.map((h) => `${h.protocol}://${h.hostname}`).join(' ')}`,
-  "font-src 'self' data:",
-  `connect-src 'self'${isDev ? ' ws:' : ''}`,
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join('; ');
-
+// The Content Security Policy is set per request by src/middleware.ts (a new
+// script nonce each time, src/lib/security/csp.ts). A fixed one here would be
+// sent as well and, combined, block every script.
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
