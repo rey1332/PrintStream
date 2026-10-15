@@ -5,8 +5,9 @@
 // the mouse sends rings out from the cursor, a click sends a shock wave, and a
 // first wave sweeps across when the page opens. Characters on a crest are
 // lifted outwards, glow, grow and flicker into other glyphs, then settle.
-// Nothing moves for people who ask for reduced motion, and screen readers get
-// the word "PrintStream".
+// For people who ask for reduced motion (Windows' "Animation effects" off) it
+// still answers the pointer, more gently, but nothing moves on its own: no
+// opening wave. Screen readers get the word "PrintStream".
 
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -95,7 +96,8 @@ export function AsciiLogo({
   useEffect(() => {
     const host = pre.current;
     if (!host) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const gentle = reduced ? 0.55 : 1;
     const cells: Cell[] = [...host.querySelectorAll<HTMLSpanElement>('span[data-c]')].map((el) => ({
       el,
       ch: el.textContent ?? '',
@@ -111,7 +113,7 @@ export function AsciiLogo({
     // Rings travel at about a third of the logo's width a second, a few characters thick.
     const speed = Math.max(width / 2.6, fontPx * 40);
     const band = fontPx * 2.6;
-    const lift = fontPx * 0.9;
+    const lift = fontPx * 0.9 * gentle;
     const near = fontPx * 7;
     const waves: Wave[] = [];
     let mouse: { x: number; y: number } | null = null;
@@ -119,7 +121,7 @@ export function AsciiLogo({
     let frame = 0;
 
     const emit = (x: number, y: number, strength: number) => {
-      waves.push({ x, y, born: performance.now(), strength });
+      waves.push({ x, y, born: performance.now(), strength: strength * gentle });
       if (waves.length > 8) waves.shift();
     };
 
@@ -230,12 +232,14 @@ export function AsciiLogo({
     area.addEventListener('pointerdown', onDown);
     area.addEventListener('pointerleave', onLeave);
     // A first wave sweeps across from the left when the logo appears.
-    const intro = window.setTimeout(() => {
-      emit(-fontPx * 4, height / 2, 1.1);
-      kick();
-    }, 250);
+    const intro = reduced
+      ? 0
+      : window.setTimeout(() => {
+          emit(-fontPx * 4, height / 2, 1.1);
+          kick();
+        }, 250);
     return () => {
-      window.clearTimeout(intro);
+      if (intro) window.clearTimeout(intro);
       area.removeEventListener('pointermove', onMove);
       area.removeEventListener('pointerdown', onDown);
       area.removeEventListener('pointerleave', onLeave);
