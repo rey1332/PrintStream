@@ -13,6 +13,10 @@ const MAX_BODY = 2_100_000;
 const REQUESTS_PER_MINUTE = 1200;
 const windows = new Map<string, { count: number; resetAt: number }>();
 const perUser = keyedSlots(3, 100);
+const MAX_BATCH = 25;
+
+const isBatch = (body: unknown): body is { batch: unknown[] } =>
+  !!body && typeof body === 'object' && Array.isArray((body as { batch?: unknown }).batch);
 
 /**
  * Requests per minute for the signed-in user, counted in the database
@@ -81,6 +85,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch {
       return reply(failure('Invalid JSON', 'PGRST102', 400), 400);
     }
+    // { batch: [spec, …] }: what a page asks for at once, in one request
+    // (src/lib/db/browser-client.ts). Each spec runs in its own transaction,
+    // in order, and answers on its own: one failing does not fail the others.
+    if (isBatch(body)) {
+      const specs = body.batch;
+      if (specs.length === 0 || specs.length > MAX_BATCH)
+        return reply(failure(`A batch has 1 to ${MAX_BATCH} requests`, 'PGRST100', 400), 400);
+      try {
+        const results = await perUser.run(session.userId, async () => {
+          const out: RestResult[] = [];
+          for (const item of specs) {
+            const v = validateSpec(item);
+            out.push(
+              v.ok
+                ? await executeSpec(getAppExecutor(), identityOf(session), v.spec)
+                : failure(v.error, 'PGRST100', 400)
+            );
+          }
+          return out;
+        });
+        return NextResponse.json({ batch: results }, { headers: { 'Cache-Control': 'no-store' } });
+      } catch (error) {
+        if (error instanceof SlotsFullError)
+          return reply(failure('Too many requests', 'rate_limited', 429), 429);
+        throw error;
+      }
+    }
+
     const validation = validateSpec(body);
     if (!validation.ok) return reply(failure(validation.error, 'PGRST100', 400), 400);
 

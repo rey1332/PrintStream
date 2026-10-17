@@ -95,21 +95,53 @@ class BrowserAuth {
   }
 
   private emit(event: AuthEvent, session: BrowserSession | null, broadcast = true) {
+    this.sessionAnswer = null;
     for (const listener of this.listeners) listener(event, session);
     if (broadcast && (event === 'SIGNED_IN' || event === 'SIGNED_OUT'))
       this.channel?.postMessage(event);
+  }
+
+  // Several parts of a page ask at the same moment: one request answers them all.
+  private sessionInFlight: Promise<{
+    data: SessionPayload | null;
+    error: AuthErrorShape | null;
+  }> | null = null;
+  // The answer is reused for a moment (pages ask right after one another);
+  // signing in or out forgets it (emit).
+  private sessionAnswer: {
+    at: number;
+    value: Awaited<ReturnType<BrowserAuth['currentSession']>>;
+  } | null = null;
+  private currentSession(): Promise<{ data: SessionPayload | null; error: AuthErrorShape | null }> {
+    const answer = this.sessionAnswer;
+    if (answer && Date.now() - answer.at < 2_000) return Promise.resolve(answer.value);
+    this.sessionInFlight ??= call<SessionPayload>('session', 'GET')
+      .then((value) => {
+        if (!value.error) this.sessionAnswer = { at: Date.now(), value };
+        return value;
+      })
+      .finally(() => {
+        this.sessionInFlight = null;
+      });
+    return this.sessionInFlight;
+  }
+
+  /** The whole session answer (shared computer, server admin…), from the same request. */
+  async sessionPayload(): Promise<Record<string, unknown> | null> {
+    const { data } = await this.currentSession();
+    return (data as Record<string, unknown> | null) ?? null;
   }
 
   async getSession(): Promise<{
     data: { session: BrowserSession | null };
     error: AuthErrorShape | null;
   }> {
-    const { data, error } = await call<SessionPayload>('session', 'GET');
+    const { data, error } = await this.currentSession();
     return { data: { session: data?.session ?? null }, error };
   }
 
   async getUser(): Promise<{ data: { user: BrowserUser | null }; error: AuthErrorShape | null }> {
-    const { data, error } = await call<SessionPayload>('session', 'GET');
+    const { data, error } = await this.currentSession();
     if (error) return { data: { user: null }, error };
     if (!data?.user)
       return {

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { browserAuth } from '@/lib/auth/browser-auth';
 
 const ACTIVITY = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 
@@ -50,10 +51,10 @@ export function SharedComputerGuard() {
       }
     };
 
-    void fetch('/api/auth/session', { cache: 'no-store' })
-      .then((r) => r.json())
+    void browserAuth()
+      .sessionPayload()
       .then((s) => {
-        const seconds = Number(s?.shared?.idleSeconds);
+        const seconds = Number((s?.shared as { idleSeconds?: unknown } | undefined)?.idleSeconds);
         if (stopped || !Number.isFinite(seconds) || seconds <= 0) return;
         idleMs = seconds * 1000;
         for (const event of ACTIVITY) window.addEventListener(event, restart, { passive: true });

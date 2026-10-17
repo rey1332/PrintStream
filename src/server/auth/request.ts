@@ -12,8 +12,38 @@ export function sessionToken(cookies: CookieReader): string | undefined {
   return cookies.get(SESSION_COOKIE)?.value;
 }
 
-export async function sessionFromCookies(cookies: CookieReader): Promise<SessionInfo | null> {
-  return resolveSession(getAuthDeps(), sessionToken(cookies));
+// A page starts many requests at once; each looked its session up in the
+// database. The answer is kept for a few seconds per server process: a
+// sign-out here ends it at once (forgetSession), a session revoked elsewhere
+// (another device, an admin) is refused at the latest SESSION_CACHE_MS later.
+// The auth routes themselves always ask the database ({ fresh: true }).
+const SESSION_CACHE_MS = 5_000;
+const SESSION_CACHE_MAX = 5_000;
+const sessionCache = new Map<string, { at: number; session: SessionInfo | null }>();
+
+export function forgetSession(token: string | undefined | null): void {
+  if (token) sessionCache.delete(token);
+}
+
+export async function sessionFromCookies(
+  cookies: CookieReader,
+  options: { fresh?: boolean } = {}
+): Promise<SessionInfo | null> {
+  const token = sessionToken(cookies);
+  if (!token) return null;
+  const now = Date.now();
+  const hit = options.fresh ? undefined : sessionCache.get(token);
+  if (hit && now - hit.at < SESSION_CACHE_MS) {
+    // Never past the session's own end.
+    if (!hit.session || new Date(hit.session.expiresAt).getTime() > now) return hit.session;
+  }
+  const session = await resolveSession(getAuthDeps(), token);
+  if (sessionCache.size >= SESSION_CACHE_MAX) {
+    for (const [k, v] of sessionCache) if (now - v.at >= SESSION_CACHE_MS) sessionCache.delete(k);
+    if (sessionCache.size >= SESSION_CACHE_MAX) sessionCache.clear();
+  }
+  sessionCache.set(token, { at: now, session });
+  return session;
 }
 
 export function identityOf(session: SessionInfo): RequestIdentity {
