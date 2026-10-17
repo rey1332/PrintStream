@@ -1,4 +1,4 @@
-// ERP lists an import may add to (TERMINAL imports, decision R-27): master
+// ERP lists an import may add to (Terminal imports, decision R-27): master
 // data only. Balances, stock and costs come from the ERP's own documents and
 // are never imported. Shared by the import wizard and the worker.
 

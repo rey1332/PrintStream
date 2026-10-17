@@ -91,7 +91,7 @@ export function HomeNav({ variant, iconOnly, directory, fileActions, onExpand }:
     router.push('/erp');
   };
 
-  // TERMINAL opens on its own screen; choosing one there does not change the ERP.
+  // Terminal opens on its own screen; choosing one there does not change the ERP.
   const openTerminal = (id: string) => {
     terminalSpaces.select(id);
     setModulesOpen(false);
@@ -294,7 +294,7 @@ export function HomeNav({ variant, iconOnly, directory, fileActions, onExpand }:
           onOpenTerminal={openTerminal}
           onClose={() => {
             setModulesOpen(false);
-            // TERMINAL may have been added to or removed from an ERP.
+            // Terminal may have been added to or removed from an ERP.
             void terminalSpaces.refresh();
           }}
         />

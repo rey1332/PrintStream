@@ -209,7 +209,7 @@ by itself or when ended early.
    The company is suspended at once; its Owner is told by e-mail and sees a
    notice in the ERP.
 2. During the export period the **Owner** can prepare and download one file
-   with everything the company stored: every ERP list and every TERMINAL
+   with everything the company stored: every ERP list and every Terminal
    dataset (gzip JSON; passwords, hashes and tokens are left out). The worker
    builds it; each download is in the data-access log
    (`20261012000040_company_export.sql`).
@@ -254,7 +254,7 @@ in ERP → Settings.
 
 Each company has a storage quota (default: none; a super admin sets a default
 and per-company quotas on the workspace page, or *unlimited*). Everything
-counts: uploaded documents, import files, exports, TERMINAL datasets and an
+counts: uploaded documents, import files, exports, Terminal datasets and an
 estimate of the ERP's own records, measured every 6 hours. Passing 80, 90 and
 100 % is logged (`STORAGE_WARNING`); the Owner sees use against the quota in
 ERP → Settings. When full, new uploads, imports and pipeline

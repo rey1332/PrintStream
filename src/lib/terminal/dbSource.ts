@@ -1,4 +1,4 @@
-// TERMINAL database sources (20261012000042): what a sync of another
+// Terminal database sources (20261012000042): what a sync of another
 // PostgreSQL database reads (a table, or a read-only query), checked the same
 // way by the screens, the app and the worker.
 

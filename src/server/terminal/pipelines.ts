@@ -1,4 +1,4 @@
-// TERMINAL pipelines outside the editor: a published version run by the
+// Terminal pipelines outside the editor: a published version run by the
 // worker (Run now in the background, schedules, chains), as the user the job
 // runs for. The same executor as the editor's runs; here the "Write to
 // dataset" node really writes.

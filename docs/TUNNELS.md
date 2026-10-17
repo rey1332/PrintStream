@@ -1,6 +1,6 @@
 # Tunnels: reaching a company's internal systems
 
-TERMINAL connectors reach public internet addresses only. A system that lives
+Terminal connectors reach public internet addresses only. A system that lives
 inside a company's own network (SAP Business One, Odoo on premises, an
 internal REST API, a PostgreSQL server) is reached through a **zero-trust
 tunnel**: the company runs a small connector next to the system, the tunnel
@@ -63,7 +63,7 @@ machine or network address than ETNA's own loopback.
 * The company deletes the service token or the tunnel in its own account:
   PrintStream's connections stop at once.
 * A super admin removes the `host:port` in **Tunnels**.
-* The company's members remove the connection in TERMINAL → Connections.
+* The company's members remove the connection in Terminal → Connections.
 
 ## Notes
 

@@ -21,7 +21,7 @@ where the Owner switched on two-factor for everyone. A personal ERP used
 alone does not ask for it.
 
 Sales and Inventory do not see the dashboard, payments, cash flow, accounting,
-TERMINAL pipelines or reports; ERP → Search offers them only their own record types.
+Terminal pipelines or reports; ERP → Search offers them only their own record types.
 Every member can read the settings their forms need (base currency, tax rates,
 exchange rates).
 
@@ -91,7 +91,7 @@ shared ERP, and a custom role with one of them cannot switch two-factor off.
   has *See sensitive fields unmasked* **and** signed in with two-factor; every
   unmasked read is in the data-access log.
 * **Exports** (ERP lists and datasets) need a two-factor session.
-* **TERMINAL** must be added to the ERP (Dashboard → Add modules) before any
+* **Terminal** must be added to the ERP (Dashboard → Add modules) before any
   dataset, import or pipeline permission does anything.
 
 ETNA's own staff (platform roles: super admin, support, auditor, **security

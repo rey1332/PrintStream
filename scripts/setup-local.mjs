@@ -56,7 +56,7 @@ try {
   fs.mkdirSync(path.dirname(envFile), { recursive: true });
   fs.writeFileSync(envFile, lines.join('\n'), { mode: 0o600 });
   console.log(`Wrote ${envFile} (app connections + new keys). Back it up in a password manager.`);
-  console.log('Next: create a user with scripts/admin/users.mjs, or import data with scripts/db/transfer.mjs, then npm run dev (and npm run worker for TERMINAL jobs).');
+  console.log('Next: create a user with scripts/admin/users.mjs, or import data with scripts/db/transfer.mjs, then npm run dev (and npm run worker for Terminal jobs).');
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;

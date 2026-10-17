@@ -1,26 +1,26 @@
-# PrintStream TERMINAL
+# PrintStream Terminal
 
-TERMINAL is the data module of PrintStream (by ETNA): **datasets**,
+Terminal is the data module of PrintStream (by ETNA): **datasets**,
 **imports**, **pipelines** and **connections**, run in the background by a
-separate worker. A TERMINAL is one of two things:
+separate worker. A Terminal is one of two things:
 
-* **A TERMINAL on its own** (Dashboard → Add modules → PrintStream TERMINAL →
-  *New TERMINAL*): its own members, roles and invitations (**Members** on the
-  TERMINAL screen), no ERP needed, and it does not use one of the account's
-  three ERP slots (an account belongs to at most 10 TERMINALs). Its Owner can
+* **A Terminal on its own** (Dashboard → Add modules → PrintStream Terminal →
+  *New Terminal*): its own members, roles and invitations (**Members** on the
+  Terminal screen), no ERP needed, and it does not use one of the account's
+  three ERP slots (an account belongs to at most 10 Terminals). Its Owner can
   delete it (with the password). It never appears among the ERPs.
-* **An ERP's TERMINAL**: added to an ERP by its Owner or an Admin, working with
-  that ERP's members and data. Removing it hides TERMINAL and stops new jobs,
+* **An ERP's Terminal**: added to an ERP by its Owner or an Admin, working with
+  that ERP's members and data. Removing it hides Terminal and stops new jobs,
   writes and scheduled runs; nothing is deleted, and adding it again brings
   everything back.
 
-Both are listed under **TERMINAL** in the Dashboard sidebar and open on their
-own screen (`/terminal`), which remembers its own choice: opening a TERMINAL
+Both are listed under **Terminal** in the Dashboard sidebar and open on their
+own screen (`/terminal`), which remembers its own choice: opening a Terminal
 never opens or switches an ERP.
 
 It replaces Workflows: every existing workflow is now a pipeline (same tables,
 same editor at `/erp/workflows/[id]`), and ERPs that had workflows start with
-TERMINAL added. `/erp/workflows` and `/erp/terminal` lead to `/terminal`.
+Terminal added. `/erp/workflows` and `/erp/terminal` lead to `/terminal`.
 
 This document covers phase 1 (P1) and the connectors of phase 2 (P2) built so
 far. AI and approvals (P3–P4) are designed in the specification but not built yet.
@@ -52,11 +52,11 @@ and in background runs (`src/lib/workflow/unifyNodes.ts`).
 | Reshape | Pivot (at most 200 new columns), Unpivot, Running Values (running total or count, row number, rank, previous value, change, % of group total; per group, in an order), Date Part, Date Difference |
 | Data Quality | Profile Columns, Check Rules (outputs *Valid* and *Not valid*, the latter with `_reason`: missing, not a number or date, out of range, not an allowed value, duplicate key), Find Outliers (IQR or z-score; `is_outlier`, `outlier_score`) |
 
-### Syncing with ERPs (a TERMINAL on its own)
+### Syncing with ERPs (a Terminal on its own)
 
-**Linked ERPs** on the TERMINAL screen lists the ERPs this TERMINAL's
+**Linked ERPs** on the Terminal screen lists the ERPs this Terminal's
 pipelines may use. Linking needs both *Add connectors and credentials* in the
-TERMINAL and being the ERP's Owner or an Admin (two-factor on both sides);
+Terminal and being the ERP's Owner or an Admin (two-factor on both sides);
 either side can unlink, and both activity logs record it.
 
 * ERP source nodes (ERP Data, ERP Summary, Customers, Invoices…) have an
@@ -68,7 +68,7 @@ either side can unlink, and both activity logs record it.
   them*. At most 20,000 rows a run. Only background runs write; the editor
   shows how many rows would be added.
 * Every read and write runs as the person running the pipeline, with their
-  rights in the ERP: a member of the TERMINAL who is not a member of the ERP
+  rights in the ERP: a member of the Terminal who is not a member of the ERP
   reads nothing from it.
 
 ## Security model
@@ -99,7 +99,7 @@ either side can unlink, and both activity logs record it.
 
 ## Connections to other ERPs (P2)
 
-**TERMINAL → Connections** links another ERP and copies its lists into
+**Terminal → Connections** links another ERP and copies its lists into
 datasets: customers, suppliers, products, sales invoices and purchase
 invoices, with the same columns whatever the ERP (`src/lib/terminal/connectors.ts`).
 
@@ -116,7 +116,7 @@ server down).
 
 * **Who:** members with *Add connectors and credentials* (and a two-factor
   sign-in) add, change and remove connections; *Use approved connectors*
-  sees them and runs syncs. TERMINAL must be added to the ERP.
+  sees them and runs syncs. Terminal must be added to the ERP.
 * **Secrets** (passwords, API keys, OAuth tokens) are sealed with AES-256-GCM
   by the app (`src/server/vault.ts`, key derived from `MFA_ENCRYPTION_KEY`)
   and stored apart (`etna_platform.connection_secrets`), readable only by the
@@ -283,7 +283,7 @@ Not yet verified against a live MCP server: tested with simulated servers.
 
 ## Intelligence (P3): insights and AI
 
-**TERMINAL → Insights** analyses a dataset; **TERMINAL → AI** sets up who may
+**Terminal → Insights** analyses a dataset; **Terminal → AI** sets up who may
 help and with what (`src/lib/terminal/stats.ts`, `insights.ts`,
 `aiProviders.ts`; `src/server/ai/providers.ts`, `src/server/terminal/aiJobs.ts`).
 
@@ -328,6 +328,49 @@ help and with what (`src/lib/terminal/stats.ts`, `insights.ts`,
 
 Not yet verified against live AI providers: tested with simulated providers.
 
+## Jobs and what needs attention
+
+* **Jobs** (Overview → Recent jobs, and the Jobs tab): the same work that
+  ended the same way in a row is one line with a count (×8), opened to see
+  each. A line says why a job failed (the error in words) or who cancelled it.
+  **Run again** queues a new job with the same work for a failed or cancelled
+  pipeline run, sync, connection or AI provider check, export or file
+  analysis; it needs the permission to start that job, and a retry already
+  waiting is reused (`ps_retry_job`). The Jobs tab filters by failed or
+  cancelled, waiting or running, succeeded, and by kind.
+* **Needs attention** (Overview): the background worker not running while
+  jobs or schedules wait (it reports every 30 seconds), jobs waiting for a
+  turn, pipelines whose last run failed, schedules that are late or were
+  switched off after three failures, failing or stopped syncs, and datasets a
+  sync or a pipeline keeps up to date that have not changed for a week. Each
+  links to where to fix it. Everything is read with the member's rights.
+
+## MCP access for AI assistants (read)
+
+An AI assistant (Claude Desktop, Claude Code, Cursor, any MCP client) can read
+a Terminal's pipelines over MCP: **Terminal → AI → MCP access → New access
+token**.
+
+* **Endpoint**: `POST https://<server>/api/mcp` (Streamable HTTP, JSON
+  responses, no event stream), header `Authorization: Bearer psmcp_…`.
+  Claude Code: `claude mcp add --transport http printstream https://<server>/api/mcp --header "Authorization: Bearer psmcp_…"`.
+* **Tools** (all read-only): `list_pipelines`, `get_pipeline` (steps with
+  their configuration and connections, draft or a published version,
+  schedule, chains), `list_pipeline_runs`, `get_pipeline_run` (each step: ok,
+  time, rows, warnings, error code; no row data), `list_datasets`,
+  `preview_dataset` (at most 50 rows).
+* **Rights**: the member's own, in that Terminal only: row-level security and
+  the masking views as in the app, restricted pipelines hidden, dataset
+  previews in the data-access log. A token needs `pipelines.view`; where the
+  role needs two-factor, the token must be made in a two-factor session.
+* **Tokens** (`ps_mcp_tokens`): shown once, stored as a SHA-256 hash, 1 to 365
+  days, at most 10 active per member and Terminal. A member revokes their own;
+  someone with `members` revokes anyone's. A token stops working when it is
+  revoked or expires, when the account is banned, or when the member leaves.
+  Only the auth server role looks tokens up (`auth.mcp_token_use`).
+* **Limits**: 120 calls a minute per token; 30 bad tokens a minute per
+  address. Requests from a web page of another origin are refused.
+
 ## The worker
 
 `scripts/server/worker.mjs` signs in as `etna_worker` (`WORKER_DATABASE_URL`).
@@ -363,12 +406,12 @@ company's quota.
 | `20261012000036_terminal_datasets` | `etna_ddl`, `ps_data`/`ps_admin`, dataset metadata, access, masking, row functions, provisioning |
 | `20261012000037_terminal_imports` | Imports and rejected rows |
 | `20261012000038_terminal_pipelines` | Pipeline access and on/off, background runs tied to the worker's job |
-| `20261012000039_terminal_module` | TERMINAL added per ERP (`erp_set_terminal`); off, no new jobs, writes or scheduled runs |
+| `20261012000039_terminal_module` | Terminal added per ERP (`erp_set_terminal`); off, no new jobs, writes or scheduled runs |
 | `20261012000040_company_export` | The Owner's export of a company being terminated |
 | `20261012000041_terminal_connectors` | Connections, sealed secrets, syncs, connector networks |
 | `20261012000042_terminal_db_sources` | PostgreSQL connections; syncs of tables and queries |
-| `20261012000043_terminal_spaces` | TERMINALs on their own (`erp_workspaces.kind`), their limit apart from ERPs' |
-| `20261012000044_terminal_erp_links` | Links from a TERMINAL to ERPs (`ps_erp_links`) |
+| `20261012000043_terminal_spaces` | Terminals on their own (`erp_workspaces.kind`), their limit apart from ERPs' |
+| `20261012000044_terminal_erp_links` | Links from a Terminal to ERPs (`ps_erp_links`) |
 | `20261012000046_terminal_rest_tunnels` | REST API connections and endpoint syncs; tunnels allowed per company (`etna_platform.network_allowlist`) |
 | `20261012000047_terminal_web` | Website connections and their syncs |
 | `20261012000048_terminal_mcp` | MCP connections, their tools and approvals (`ps_mcp_tools`) |

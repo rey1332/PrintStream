@@ -1,4 +1,4 @@
-// TERMINAL in the browser: calls to /api/terminal and the shapes they return.
+// Terminal in the browser: calls to /api/terminal and the shapes they return.
 
 import type { DatasetColumn, DatasetInfo, RowPage } from '@/server/terminal/datasets';
 import type { ColumnType } from './tabular';
@@ -127,6 +127,50 @@ export interface JobSummary {
   pipeline_id: string | null;
   dataset_id: string | null;
   import_id: string | null;
+  connection_id: string | null;
+  provider_id: string | null;
+  max_attempts: number;
+  mine: boolean;
+  cancelled_by: string | null;
+  cancelled_by_email: string | null;
+  retry_of: string | null;
+}
+
+/** What needs attention (src/server/terminal/service.ts, healthOf). */
+export interface TerminalHealth {
+  workerSeenAt: string | null;
+  workerOnline: boolean;
+  waitingJobs: number;
+  runningJobs: number;
+  last24h: { succeeded: number; failed: number; cancelled: number };
+  failingPipelines: { id: string; name: string; at: string | null; errorCode: string | null }[];
+  lateSchedules: { id: string; name: string; due: string | null }[];
+  stoppedSchedules: { id: string; name: string; reason: string }[];
+  failingSyncs: {
+    id: string;
+    object: string;
+    connection: string;
+    dataset: string | null;
+    enabled: boolean;
+    streak: number;
+    errorKey: string | null;
+    at: string | null;
+  }[];
+  staleDatasets: { id: string; name: string; updatedAt: string | null }[];
+}
+
+export interface McpToken {
+  id: string;
+  name: string;
+  prefix: string;
+  mine: boolean;
+  owner: string | null;
+  aal: string;
+  createdAt: string | null;
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  uses: number;
+  revokedAt: string | null;
 }
 
 export interface PipelineSummary {
@@ -161,6 +205,7 @@ export interface Overview {
     available_bytes: number | null;
   } | null;
   aal: 'aal1' | 'aal2';
+  health: TerminalHealth;
 }
 
 export interface DatasetDetail {

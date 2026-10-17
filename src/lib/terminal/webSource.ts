@@ -1,4 +1,4 @@
-// TERMINAL web sources (20261012000047): what a sync of a website reads
+// Terminal web sources (20261012000047): what a sync of a website reads
 // (pages from a list or a sitemap, optionally following a "next page" link)
 // and how records come out of them: an HTML table, repeated items picked with
 // CSS selectors, JSON-LD, an RSS or Atom feed, or a JSON, CSV or XML file.

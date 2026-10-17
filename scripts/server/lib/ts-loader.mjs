@@ -1,4 +1,4 @@
-// Module hooks that let the TERMINAL worker run the app's TypeScript sources
+// Module hooks that let the Terminal worker run the app's TypeScript sources
 // directly (Node's type stripping): `@/x` resolves to <app>/src/x, and
 // imports without an extension find x.ts or x/index.ts. Same rules as
 // tests/ts-esm-loader.mjs.

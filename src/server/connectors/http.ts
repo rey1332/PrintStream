@@ -1,4 +1,4 @@
-// Outgoing HTTP for TERMINAL connectors. Every request:
+// Outgoing HTTP for Terminal connectors. Every request:
 //
 //  * goes only to public addresses, unless ETNA allows the host or network
 //    (etna_platform.settings.connector_private_hosts, e.g. an SAP B1 server in
@@ -310,7 +310,7 @@ export class GuardedHttp {
         {
           method: options.method ?? 'GET',
           headers: {
-            'User-Agent': 'PrintStream-TERMINAL/1',
+            'User-Agent': 'PrintStream-Terminal/1',
             Accept: 'application/json',
             ...options.headers,
             ...(this.guard.originHeaders?.origin === url.origin

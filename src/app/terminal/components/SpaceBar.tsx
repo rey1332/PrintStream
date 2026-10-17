@@ -1,6 +1,6 @@
 'use client';
 
-// The TERMINAL's own people and life (20261012000043, 044): members,
+// The Terminal's own people and life (20261012000043, 044): members,
 // invitations and roles (the same panel as an ERP's), the ERPs it is linked
 // to, and deleting it (its Owner, with the password).
 
@@ -83,8 +83,8 @@ interface ErpLink {
 }
 
 /**
- * The ERPs this TERMINAL's pipelines may read and add to. Linking needs
- * managing the TERMINAL's connections and being the ERP's Owner or an Admin
+ * The ERPs this Terminal's pipelines may read and add to. Linking needs
+ * managing the Terminal's connections and being the ERP's Owner or an Admin
  * (both with two-factor); every run still uses its runner's rights in the ERP.
  */
 function ErpLinksDialog({

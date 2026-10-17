@@ -1,4 +1,4 @@
-// TERMINAL REST sources (20261012000046): what a sync of a generic REST API
+// Terminal REST sources (20261012000046): what a sync of a generic REST API
 // reads (one endpoint, its pagination, where the records are), and how JSON
 // records become dataset columns. Checked the same way by the screens, the
 // app and the worker; pure functions, no network.

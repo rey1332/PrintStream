@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL intelligence (P3, 20261012000049): AI providers, data sharing,
+// Terminal intelligence (P3, 20261012000049): AI providers, data sharing,
 // budget, insights with their review, and what datasets hold.
 export const terminalAiMessages = {
   'ps.tab.insights': { en: 'Insights', id: 'Insight', zh: '洞察' },

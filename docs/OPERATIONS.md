@@ -150,7 +150,7 @@ the file is refused.
 
 With SMTP set up (`SMTP_HOST`, docs/CONFIGURATION.md) and
 `ETNA_ALERT_EMAILS=you@example.com,ops@example.com` in the settings (else the
-server admins in `ETNA_ADMIN_EMAILS` get them), the app and the TERMINAL
+server admins in `ETNA_ADMIN_EMAILS` get them), the app and the Terminal
 worker e-mail every error they log:
 
 - the first e-mail a minute after the first error, then at most one every 15

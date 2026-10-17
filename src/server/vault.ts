@@ -1,4 +1,4 @@
-// Secrets of TERMINAL connections (passwords, API keys, OAuth tokens), sealed
+// Secrets of Terminal connections (passwords, API keys, OAuth tokens), sealed
 // with AES-256-GCM before they reach the database
 // (etna_platform.connection_secrets, 20261012000041). The key is derived
 // from MFA_ENCRYPTION_KEY with HKDF for this one purpose, so the app and the

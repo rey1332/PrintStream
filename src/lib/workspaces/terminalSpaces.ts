@@ -1,7 +1,7 @@
 'use client';
 
-// The TERMINALs the signed-in person can open (20261012000043): TERMINALs on
-// their own (kind 'terminal') and ERPs with TERMINAL added. The TERMINAL
+// The Terminals the signed-in person can open (20261012000043): Terminals on
+// their own (kind 'terminal') and ERPs with Terminal added. The Terminal
 // screen remembers its own choice, apart from the ERP's.
 
 import { useCallback, useEffect, useState } from 'react';
@@ -11,11 +11,11 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface TerminalSpace {
   id: string;
   name: string;
-  /** 'terminal': a TERMINAL on its own; 'erp': an ERP with TERMINAL added. */
+  /** 'terminal': a Terminal on its own; 'erp': an ERP with Terminal added. */
   kind: 'terminal' | 'erp';
   role: string;
   isOwner: boolean;
-  /** Owner or Admin: may rename, invite, remove (and, for an ERP, remove TERMINAL). */
+  /** Owner or Admin: may rename, invite, remove (and, for an ERP, remove Terminal). */
   canManage: boolean;
 }
 
@@ -39,10 +39,10 @@ export function rememberTerminalSpace(id: string) {
   window.dispatchEvent(new Event(CHANGED_EVENT));
 }
 
-/** Ids of the caller's TERMINALs (kind 'terminal'), for leaving them out of ERP lists. */
+/** Ids of the caller's Terminals (kind 'terminal'), for leaving them out of ERP lists. */
 export async function terminalSpaceIds(): Promise<Set<string>> {
   const { data, error } = await createClient().rpc('ps_my_spaces');
-  // Older database: there are no TERMINALs on their own.
+  // Older database: there are no Terminals on their own.
   if (error || !Array.isArray(data)) return new Set();
   return new Set(
     data.filter((r: any) => r.kind === 'terminal').map((r: any) => String(r.workspace_id))
@@ -93,7 +93,7 @@ export function useTerminalSpaces() {
   useEffect(() => {
     const sync = () => {
       const stored = readActive();
-      // A TERMINAL created elsewhere (the sidebar, Add modules): load the list again.
+      // A Terminal created elsewhere (the sidebar, Add modules): load the list again.
       if (stored && !spaces.some((s) => s.id === stored)) void refresh();
       else setActiveId((current) => stored ?? current);
     };

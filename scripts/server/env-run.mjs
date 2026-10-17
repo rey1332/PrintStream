@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Starts the app or the TERMINAL worker with the settings of an etna.env file,
+// Starts the app or the Terminal worker with the settings of an etna.env file,
 // read exactly as etna.bat reads them (scripts/server/lib/envfile.mjs: values
 // are never quoted, expanded or escaped). Used on Linux by the systemd units
 // (deploy/linux) and the container (Dockerfile):
@@ -45,7 +45,7 @@ const args =
     : [path.join(app, 'scripts', 'server', 'worker.mjs')];
 
 if (what === 'worker' && !env.WORKER_DATABASE_URL) {
-  console.error('[etna] WORKER_DATABASE_URL is not set: the TERMINAL worker is not started.');
+  console.error('[etna] WORKER_DATABASE_URL is not set: the Terminal worker is not started.');
   // Not a failure to restart over: the worker is optional.
   process.exit(0);
 }

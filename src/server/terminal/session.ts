@@ -1,4 +1,4 @@
-// TERMINAL: database work as a signed-in user (the app's routes) or as the
+// Terminal: database work as a signed-in user (the app's routes) or as the
 // user a job runs for (the worker). Either way the session is the user's:
 // role authenticated, their claims, row-level security and the ERP's rules.
 

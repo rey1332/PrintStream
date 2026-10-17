@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL generic REST connections (P2, 20261012000046).
+// Terminal generic REST connections (P2, 20261012000046).
 export const terminalRestMessages = {
   'ps.conn.kind.rest': { en: 'REST API (any)', id: 'REST API (apa saja)', zh: 'REST API（任意）' },
   'ps.conn.help.rest': {

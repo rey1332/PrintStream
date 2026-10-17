@@ -104,9 +104,9 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 /**
  * The active workspace, its rights and modules. In the ERP: the ERPs the
- * person belongs to (not TERMINALs on their own), the choice remembered for
- * the ERP. With `workspaceId` (the TERMINAL screen): exactly that workspace,
- * an ERP or a TERMINAL, without changing the ERP's choice.
+ * person belongs to (not Terminals on their own), the choice remembered for
+ * the ERP. With `workspaceId` (the Terminal screen): exactly that workspace,
+ * an ERP or a Terminal, without changing the ERP's choice.
  */
 export function WorkspaceProvider({
   children,
@@ -275,7 +275,7 @@ export function WorkspaceProvider({
 
   const selectWorkspace = useCallback(
     (id: string) => {
-      // The TERMINAL screen chooses its workspace itself.
+      // The Terminal screen chooses its workspace itself.
       if (workspaceId) return;
       storeWorkspace(id);
       setActiveId(id);

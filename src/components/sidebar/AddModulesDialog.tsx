@@ -137,7 +137,7 @@ export function AddModulesDialog({
     onOpenErp(String(data));
   }
 
-  // TERMINAL is added per ERP by its Owner or an Admin; it does not use an ERP slot.
+  // Terminal is added per ERP by its Owner or an Admin; it does not use an ERP slot.
   async function setTerminal(id: string, enabled: boolean) {
     setTerminalBusy(id);
     setTerminalError('');

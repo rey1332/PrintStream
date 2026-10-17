@@ -1,4 +1,4 @@
-// A website as a TERMINAL connection (20261012000047): static pages, feeds
+// A website as a Terminal connection (20261012000047): static pages, feeds
 // and files read as the server sends them (no JavaScript is run). The
 // connection is one site; each sync reads pages from a list or the site's
 // sitemap, optionally following a "next page" link, and takes records out of

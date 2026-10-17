@@ -63,6 +63,7 @@ const CALLABLE = [
   'erp_bank_line_match', 'erp_bank_line_unmatch', 'erp_bank_line_ignore', 'erp_bank_line_post', 'erp_bank_auto_match',
   'erp_bank_reconciliation', 'erp_bank_unmatched_ledger', 'erp_fixed_asset_create', 'erp_fixed_asset_void',
   'erp_fixed_assets_depreciate', 'erp_fixed_asset_dispose', 'erp_fixed_asset_schedule',
+  'ps_retry_job', 'ps_worker_last_seen', 'ps_mcp_token_create', 'ps_mcp_token_list', 'ps_mcp_token_revoke',
 ].sort();
 
 let db;

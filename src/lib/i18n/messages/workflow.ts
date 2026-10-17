@@ -42,7 +42,7 @@ export const workflowMessages = {
   // Editor
   'wf.notFound': { en: 'Workflow not found', id: 'Alur kerja tidak ditemukan', zh: '未找到工作流' },
   'wf.unauthorized': { en: 'Unauthorized', id: 'Tidak diizinkan', zh: '无权访问' },
-  'wf.back': { en: 'Back to TERMINAL', id: 'Kembali ke TERMINAL', zh: '返回 TERMINAL' },
+  'wf.back': { en: 'Back to Terminal', id: 'Kembali ke Terminal', zh: '返回 Terminal' },
   'wf.name': { en: 'Workflow name', id: 'Nama alur kerja', zh: '工作流名称' },
   'wf.unsaved': { en: 'unsaved', id: 'belum disimpan', zh: '未保存' },
   'wf.save': { en: 'Save', id: 'Simpan', zh: '保存' },

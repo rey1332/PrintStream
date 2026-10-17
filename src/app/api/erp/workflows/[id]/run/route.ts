@@ -99,7 +99,7 @@ export const POST = withAuth(async ({ userId, request }) => {
 
   const workspaceId = WORKSPACES_ENABLED ? workflow.workspace_id : null;
   const deadline = started + RUN_BUDGET_MS;
-  // TERMINAL datasets are read here too; only background runs write them.
+  // Terminal datasets are read here too; only background runs write them.
   const session = await sessionFromCookies(request.cookies);
   try {
     const outcome = await executeWorkflow(graph, {

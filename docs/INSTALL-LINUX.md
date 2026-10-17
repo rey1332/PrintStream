@@ -23,7 +23,7 @@ turunannya) bekerja sama.
 
 ### A1. Yang dibutuhkan
 
-- **Node.js 24 LTS** (minimal 22.18, karena worker TERMINAL menjalankan
+- **Node.js 24 LTS** (minimal 22.18, karena worker Terminal menjalankan
   TypeScript langsung), terpasang di PATH sistem (`/usr/bin/node` atau
   `/usr/local/bin/node`), misalnya dari [NodeSource](https://github.com/nodesource/distributions)
   atau paket distribusi. Jangan dari `nvm` di folder home: layanan tidak bisa
@@ -75,7 +75,7 @@ memasang layanan systemd, lalu menunggu sampai `/api/health` menjawab.
 Layanan:
 
 - `etna.service`: aplikasi di `127.0.0.1:4028` saja.
-- `etna-worker.service`: worker TERMINAL.
+- `etna-worker.service`: worker Terminal.
 
 Keduanya berjalan sebagai `etna` dengan pengamanan systemd: folder aplikasi
 hanya bisa dibaca, yang bisa ditulis hanya `/var/lib/etna`, tanpa hak

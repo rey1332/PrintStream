@@ -1,4 +1,4 @@
-// A small, forgiving HTML and XML reader for TERMINAL web extraction
+// A small, forgiving HTML and XML reader for Terminal web extraction
 // (20261012000047): a tree of elements and text, and CSS selectors to find
 // elements in it. No scripts run and nothing is fetched; pages are read as
 // the server sent them (no JavaScript rendering).

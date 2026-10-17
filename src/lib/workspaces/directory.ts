@@ -18,9 +18,9 @@ export interface ErpSummary {
   isOwner: boolean;
   isPersonal: boolean;
   ownerEmail: string;
-  /** PrintStream TERMINAL is added to this ERP (Dashboard → Add modules). */
+  /** PrintStream Terminal is added to this ERP (Dashboard → Add modules). */
   terminal: boolean;
-  /** The caller may add or remove TERMINAL here (Owner or Admin). */
+  /** The caller may add or remove Terminal here (Owner or Admin). */
   canManageTerminal: boolean;
 }
 
@@ -57,7 +57,7 @@ export function useErpDirectory() {
       db.rpc('erp_my_terminals'),
       db.rpc('ps_my_spaces'),
     ]);
-    // TERMINALs on their own are not ERPs (older database: there are none).
+    // Terminals on their own are not ERPs (older database: there are none).
     const terminalOnly = new Set<string>(
       spaces.error || !Array.isArray(spaces.data)
         ? []
@@ -71,7 +71,7 @@ export function useErpDirectory() {
     const rows: ErpSummary[] = (list.data || [])
       .filter((row: any) => isWorkspaceRole(row.role) && !terminalOnly.has(row.workspace_id))
       .map((row: any) => {
-        // Without the function (older database) TERMINAL shows as not added.
+        // Without the function (older database) Terminal shows as not added.
         const term = terminals.error
           ? null
           : (terminals.data || []).find((x: any) => x.workspace_id === row.workspace_id);

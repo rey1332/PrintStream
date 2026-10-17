@@ -1,4 +1,4 @@
-// The statistical core of TERMINAL insights (P3): descriptive statistics,
+// The statistical core of Terminal insights (P3): descriptive statistics,
 // trend, a Holt linear forecast with intervals, and robust anomaly detection.
 // Deterministic and explainable; the AI narrative (when allowed) only puts
 // these results into words. Pure functions, no dependencies.

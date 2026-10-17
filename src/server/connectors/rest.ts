@@ -1,4 +1,4 @@
-// A generic REST API as a TERMINAL connection (20261012000046). The
+// A generic REST API as a Terminal connection (20261012000046). The
 // connection holds the base address and the sign-in; each sync reads one
 // endpoint (src/lib/terminal/restSource.ts): GET, or POST with a JSON body
 // ("POST as query"), page by page in one of the pagination styles, and its

@@ -1,7 +1,8 @@
-// TERMINAL for the app's routes: what the screens ask for, each request one
+// Terminal for the app's routes: what the screens ask for, each request one
 // transaction as the signed-in user. The database checks every permission;
 // this layer shapes requests and answers and keeps inputs bounded.
 
+import { createHash, randomBytes } from 'node:crypto';
 import { createWriteStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { nextRun, scheduleProblem, type ScheduleKind } from '@/lib/terminal/schedule';
@@ -49,9 +50,15 @@ export async function overview(ctx: TerminalContext, workspaceId: unknown) {
     ).rows;
     const jobs = (
       await tx.query(
-        `SELECT id, kind, status, trigger, attempts, error_key, progress, result, created_by, created_at, started_at, finished_at,
-                payload ->> 'pipeline_id' AS pipeline_id, payload ->> 'dataset_id' AS dataset_id, payload ->> 'import_id' AS import_id
-           FROM public.ps_jobs WHERE workspace_id = $1 ORDER BY created_at DESC LIMIT 50`,
+        `SELECT j.id, j.kind, j.status, j.trigger, j.attempts, j.max_attempts, j.error_key, j.progress, j.result,
+                j.created_by, j.created_by = auth.uid() AS mine, j.cancelled_by, cp.email AS cancelled_by_email,
+                j.retry_of, j.created_at, j.started_at, j.finished_at,
+                j.payload ->> 'pipeline_id' AS pipeline_id, j.payload ->> 'dataset_id' AS dataset_id,
+                j.payload ->> 'import_id' AS import_id, j.payload ->> 'connection_id' AS connection_id,
+                j.payload ->> 'provider_id' AS provider_id
+           FROM public.ps_jobs j
+           LEFT JOIN public.user_profiles cp ON cp.id = j.cancelled_by
+          WHERE j.workspace_id = $1 ORDER BY j.created_at DESC LIMIT 200`,
         [ws]
       )
     ).rows;
@@ -81,6 +88,7 @@ export async function overview(ctx: TerminalContext, workspaceId: unknown) {
     const limits =
       (await tx.query('SELECT public.erp_upload_limits($1) AS l', [ws])).rows[0]?.l ?? null;
     const aal = (await tx.query('SELECT public.erp_session_aal() AS a')).rows[0]?.a ?? 'aal1';
+    const health = await healthOf(tx, ws);
     return {
       datasets,
       imports: imports.map((i: any) => ({
@@ -105,9 +113,107 @@ export async function overview(ctx: TerminalContext, workspaceId: unknown) {
       permissions,
       limits,
       aal,
+      health,
     };
   });
 }
+
+// What needs attention (the overview's health cards). Everything is read as
+// the member: what they cannot see is not counted.
+async function healthOf(tx: SqlTx, ws: string) {
+  const all = async (sql: string, params: unknown[] = [ws]) => (await tx.query(sql, params)).rows;
+  const [worker] = await all('SELECT public.ps_worker_last_seen() AS seen', []);
+  const [queue] = await all(
+    `SELECT count(*) FILTER (WHERE status = 'queued' AND run_after < now() - interval '2 minutes')::int AS waiting,
+            count(*) FILTER (WHERE status = 'running')::int AS running,
+            count(*) FILTER (WHERE status = 'succeeded' AND finished_at > now() - interval '24 hours')::int AS succeeded_24h,
+            count(*) FILTER (WHERE status = 'failed' AND finished_at > now() - interval '24 hours')::int AS failed_24h,
+            count(*) FILTER (WHERE status = 'cancelled' AND finished_at > now() - interval '24 hours')::int AS cancelled_24h
+       FROM public.ps_jobs WHERE workspace_id = $1`
+  );
+  const failingPipelines = await all(
+    `SELECT w.id, w.name, r.started_at, r.error_code
+       FROM public.workflows w
+       JOIN LATERAL (SELECT x.status, x.started_at, x.error_code FROM public.workflow_runs x
+                      WHERE x.workflow_id = w.id ORDER BY x.started_at DESC LIMIT 1) r ON true
+      WHERE w.workspace_id = $1 AND w.enabled AND r.status = 'failed'
+      ORDER BY r.started_at DESC LIMIT 20`
+  );
+  const schedules = await all(
+    `SELECT w.id, w.name, s.next_run_at, s.disabled_reason, s.enabled
+       FROM public.ps_schedules s JOIN public.workflows w ON w.id = s.pipeline_id
+      WHERE s.workspace_id = $1
+        AND ((s.enabled AND s.next_run_at < now() - interval '15 minutes')
+             OR (NOT s.enabled AND s.disabled_reason IS NOT NULL))
+      ORDER BY w.name LIMIT 20`
+  );
+  const failingSyncs = await all(
+    `SELECT y.id, y.object, y.enabled, y.failure_streak, y.last_error_key, y.last_run_at,
+            c.name AS connection, d.name AS dataset
+       FROM public.ps_syncs y
+       JOIN public.ps_connections c ON c.id = y.connection_id
+       LEFT JOIN public.ps_datasets d ON d.id = y.dataset_id
+      WHERE y.workspace_id = $1 AND (y.last_status = 'failed' OR (NOT y.enabled AND y.failure_streak > 0))
+      ORDER BY y.last_run_at DESC NULLS LAST LIMIT 20`
+  );
+  // Datasets something keeps up to date (a sync, a pipeline) that have not changed in a week.
+  const staleDatasets = await all(
+    `SELECT d.id, d.name, d.updated_at
+       FROM public.ps_datasets d
+      WHERE d.workspace_id = $1 AND d.deleted_at IS NULL AND d.status = 'ready'
+        AND d.updated_at < now() - interval '7 days'
+        AND (EXISTS (SELECT 1 FROM public.ps_syncs y WHERE y.dataset_id = d.id AND y.enabled)
+             OR EXISTS (SELECT 1 FROM public.ps_lineage_edges l
+                         WHERE l.to_kind = 'dataset' AND l.to_id = d.id::text AND l.via_kind = 'pipeline'))
+      ORDER BY d.updated_at LIMIT 20`
+  );
+  const seen = worker?.seen ? new Date(worker.seen) : null;
+  return {
+    workerSeenAt: seen ? seen.toISOString() : null,
+    // The worker reports every 30 seconds while it runs.
+    workerOnline: seen !== null && Date.now() - seen.getTime() < 2 * 60_000,
+    waitingJobs: queue.waiting as number,
+    runningJobs: queue.running as number,
+    last24h: {
+      succeeded: queue.succeeded_24h as number,
+      failed: queue.failed_24h as number,
+      cancelled: queue.cancelled_24h as number,
+    },
+    failingPipelines: failingPipelines.map((p: any) => ({
+      id: p.id as string,
+      name: p.name as string,
+      at: iso(p.started_at),
+      errorCode: p.error_code as string | null,
+    })),
+    lateSchedules: schedules
+      .filter((x: any) => x.enabled)
+      .map((x: any) => ({ id: x.id as string, name: x.name as string, due: iso(x.next_run_at) })),
+    stoppedSchedules: schedules
+      .filter((x: any) => !x.enabled)
+      .map((x: any) => ({
+        id: x.id as string,
+        name: x.name as string,
+        reason: x.disabled_reason as string,
+      })),
+    failingSyncs: failingSyncs.map((y: any) => ({
+      id: y.id as string,
+      object: y.object as string,
+      connection: y.connection as string,
+      dataset: y.dataset as string | null,
+      enabled: y.enabled as boolean,
+      streak: y.failure_streak as number,
+      errorKey: y.last_error_key as string | null,
+      at: iso(y.last_run_at),
+    })),
+    staleDatasets: staleDatasets.map((d: any) => ({
+      id: d.id as string,
+      name: d.name as string,
+      updatedAt: iso(d.updated_at),
+    })),
+  };
+}
+
+export type TerminalHealth = Awaited<ReturnType<typeof healthOf>>;
 
 // ─── Datasets ────────────────────────────────────────────────────────────────
 
@@ -421,6 +527,13 @@ export async function cancelJob(ctx: TerminalContext, body: any) {
   }));
 }
 
+export async function retryJob(ctx: TerminalContext, body: any) {
+  return run(ctx, async (tx) => ({
+    jobId: (await tx.query('SELECT public.ps_retry_job($1) AS id', [uuid(body.id)])).rows[0]
+      .id as string,
+  }));
+}
+
 export async function runPipeline(ctx: TerminalContext, body: any) {
   const id = uuid(body.pipelineId);
   return run(ctx, async (tx) => {
@@ -602,4 +715,51 @@ export async function uploadImport(
     ).catch(() => undefined);
     throw error;
   }
+}
+
+// ─── MCP access tokens ───────────────────────────────────────────────────────
+// The token is made here and shown once; the database keeps its SHA-256.
+
+export async function listMcpTokens(ctx: TerminalContext, body: any) {
+  const ws = uuid(body.workspaceId);
+  return run(ctx, async (tx) =>
+    (await tx.query('SELECT * FROM public.ps_mcp_token_list($1)', [ws])).rows.map((r: any) => ({
+      id: r.id as string,
+      name: r.name as string,
+      prefix: r.token_prefix as string,
+      mine: r.mine as boolean,
+      owner: r.owner_email as string | null,
+      aal: r.aal as string,
+      createdAt: iso(r.created_at),
+      expiresAt: iso(r.expires_at),
+      lastUsedAt: iso(r.last_used_at),
+      uses: Number(r.use_count),
+      revokedAt: iso(r.revoked_at),
+    }))
+  );
+}
+
+export async function createMcpToken(ctx: TerminalContext, body: any) {
+  const ws = uuid(body.workspaceId);
+  const days = Math.floor(Number(body.days) || 90);
+  const token = `psmcp_${randomBytes(32).toString('base64url')}`;
+  const hash = createHash('sha256').update(token).digest('hex');
+  const id = await run(
+    ctx,
+    async (tx) =>
+      (
+        await tx.query('SELECT public.ps_mcp_token_create($1, $2, $3, $4, $5) AS id', [
+          ws,
+          text(body.name, 80),
+          hash,
+          token.slice(0, 12),
+          days,
+        ])
+      ).rows[0].id as string
+  );
+  return { id, token };
+}
+
+export async function revokeMcpToken(ctx: TerminalContext, body: any) {
+  await run(ctx, (tx) => tx.query('SELECT public.ps_mcp_token_revoke($1)', [uuid(body.id)]));
 }

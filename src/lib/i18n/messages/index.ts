@@ -52,6 +52,7 @@ import { terminalMcpMessages } from './terminalMcp';
 import { terminalAiMessages } from './terminalAi';
 import { taxMessages } from './tax';
 import { financeMessages } from './finance';
+import { terminalOpsMessages } from './terminalOps';
 
 export const messages = {
   ...commonMessages,
@@ -90,6 +91,7 @@ export const messages = {
   ...equipmentMessages,
   ...taxMessages,
   ...financeMessages,
+  ...terminalOpsMessages,
   ...payrollIdMessages,
   ...workspaceRoleMessages,
   ...workspaceGovernanceMessages,

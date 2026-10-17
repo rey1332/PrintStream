@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       });
       return adminReply({ success: true });
     }
-    // Internal hosts and networks TERMINAL connectors may reach (one per line).
+    // Internal hosts and networks Terminal connectors may reach (one per line).
     if (body.action === 'set_connector_hosts') {
       const hosts = String(body.hosts ?? '')
         .split(/[\s,]+/)

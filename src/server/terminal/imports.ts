@@ -1,4 +1,4 @@
-// TERMINAL imports in the worker: reading the uploaded file (CSV streamed,
+// Terminal imports in the worker: reading the uploaded file (CSV streamed,
 // Excel through SheetJS), analysing it, and committing its rows to a dataset
 // or an ERP list as the user who started the import.
 

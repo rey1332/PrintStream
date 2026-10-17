@@ -6,7 +6,7 @@
 //
 // Loads the settings from <root>\config\etna.env (they stay out of the app
 // folder, so an update can replace it), starts the app on 127.0.0.1:4028 only
-// (Cloudflare Tunnel or a reverse proxy in front) and the TERMINAL worker
+// (Cloudflare Tunnel or a reverse proxy in front) and the Terminal worker
 // (scripts/server/worker.mjs, when WORKER_DATABASE_URL is set), restarts each
 // 10 seconds after it stops, and writes <root>\logs\server-YYYYMMDD.log
 // (kept 30 days).

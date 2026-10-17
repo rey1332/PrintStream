@@ -16,9 +16,9 @@ import { SuspendedNotice } from '@/app/erp/components/shell/SuspendedNotice';
 import { GovernanceBanner } from '@/app/erp/components/shell/GovernanceBanner';
 
 /**
- * PrintStream TERMINAL on its own screen (Dashboard → TERMINAL): the
- * Dashboard's sidebar and the TERMINAL chosen there — a TERMINAL on its own,
- * or an ERP with TERMINAL added. No ERP is opened; an ERP's TERMINAL only
+ * PrintStream Terminal on its own screen (Dashboard → Terminal): the
+ * Dashboard's sidebar and the Terminal chosen there — a Terminal on its own,
+ * or an ERP with Terminal added. No ERP is opened; an ERP's Terminal only
  * offers a link to it.
  */
 export default function TerminalLayout({ children }: { children: React.ReactNode }) {
@@ -59,7 +59,7 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
       </div>
     );
   } else {
-    // A new provider per TERMINAL: choosing another one in the sidebar loads it.
+    // A new provider per Terminal: choosing another one in the sidebar loads it.
     body = (
       <WorkspaceProvider key={space.id} workspaceId={space.id}>
         <SpaceBar space={space} onGone={() => void terminals.refresh()} />

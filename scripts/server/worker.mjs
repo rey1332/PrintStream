@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The TERMINAL worker: runs PrintStream's background jobs (dataset tables,
+// The Terminal worker: runs PrintStream's background jobs (dataset tables,
 // imports, pipeline runs, schedules, maintenance). See src/server/terminal/worker.ts.
 //
 //   node scripts/server/worker.mjs                 (settings from the environment)
@@ -25,7 +25,7 @@ if (!process.features.typescript) {
     });
     process.exit(r.status ?? 1);
   }
-  console.error(`[worker] Node.js ${process.version} cannot run the TERMINAL worker; install Node.js 22.18 or newer.`);
+  console.error(`[worker] Node.js ${process.version} cannot run the Terminal worker; install Node.js 22.18 or newer.`);
   process.exit(3);
 }
 

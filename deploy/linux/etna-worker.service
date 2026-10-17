@@ -1,8 +1,8 @@
-# The TERMINAL worker: background jobs (dataset tables, imports, pipelines,
+# The Terminal worker: background jobs (dataset tables, imports, pipelines,
 # schedules). Installed by deploy/linux/install.sh; docs/INSTALL-LINUX.md.
 
 [Unit]
-Description=ETNA TERMINAL worker
+Description=ETNA Terminal worker
 Documentation=file:///opt/etna/current/docs/INSTALL-LINUX.md
 After=network-online.target postgresql.service etna.service
 Wants=network-online.target

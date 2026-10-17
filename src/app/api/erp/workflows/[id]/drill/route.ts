@@ -63,7 +63,7 @@ export const POST = withAuth(async ({ userId, request }) => {
       : 0;
 
   try {
-    // The node's linked ERP, when it names one (a TERMINAL on its own).
+    // The node's linked ERP, when it names one (a Terminal on its own).
     const erp = (node.data.config as { erpId?: unknown })?.erpId;
     const scope = await resolveScopeFor(
       db,

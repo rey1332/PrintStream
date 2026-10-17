@@ -15,7 +15,7 @@ export const primaryCls =
 
 type T = ReturnType<typeof useI18n>['t'];
 
-/** A TERMINAL error code as text. */
+/** A Terminal error code as text. */
 export function errorMessage(error: unknown, t: T): string {
   if (error instanceof TerminalApiError) {
     const key = `ps.err.${error.code}`;

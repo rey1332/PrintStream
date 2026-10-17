@@ -1,4 +1,4 @@
-// TERMINAL remote MCP sources (20261012000048): what a sync of an MCP
+// Terminal remote MCP sources (20261012000048): what a sync of an MCP
 // server reads — the result of one approved tool called with fixed
 // arguments, or one resource — and how results become records. Pure
 // functions shared by the screens, the app and the worker.

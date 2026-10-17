@@ -1,0 +1,254 @@
+import type { Entry } from './types';
+
+// Terminal: the jobs list, the overview's health panel and MCP access
+// (src/app/terminal/components/Jobs.tsx, Health.tsx, McpAccess.tsx).
+export const terminalOpsMessages = {
+  // ─── Jobs ──────────────────────────────────────────────────────────────────
+  'ps.job.retry': { en: 'Run again', id: 'Jalankan lagi', zh: '重新运行' },
+  'ps.job.retryQueued': { en: 'Queued again', id: 'Diantrekan lagi', zh: '已重新排队' },
+  'ps.job.retried': { en: 'retry', id: 'ulangan', zh: '重试' },
+  'ps.job.showAll': { en: 'Show all {n}', id: 'Tampilkan semua {n}', zh: '显示全部 {n} 个' },
+  'ps.job.lastOf': { en: 'last {when}', id: 'terakhir {when}', zh: '最近 {when}' },
+  'ps.job.attempts': {
+    en: 'tried {n} of {max}',
+    id: 'dicoba {n} dari {max}',
+    zh: '已尝试 {n}/{max}',
+  },
+  'ps.job.cancelledByYou': { en: 'Cancelled by you', id: 'Dibatalkan oleh Anda', zh: '由您取消' },
+  'ps.job.cancelledBy': {
+    en: 'Cancelled by {who}',
+    id: 'Dibatalkan oleh {who}',
+    zh: '由 {who} 取消',
+  },
+  'ps.job.cancelledByUser': {
+    en: 'Cancelled before it started',
+    id: 'Dibatalkan sebelum dimulai',
+    zh: '在开始前被取消',
+  },
+  'ps.job.filter': { en: 'Show jobs', id: 'Tampilkan pekerjaan', zh: '显示任务' },
+  'ps.job.filter.all': { en: 'All', id: 'Semua', zh: '全部' },
+  'ps.job.filter.problems': {
+    en: 'Failed or cancelled',
+    id: 'Gagal atau dibatalkan',
+    zh: '失败或已取消',
+  },
+  'ps.job.filter.active': {
+    en: 'Waiting or running',
+    id: 'Menunggu atau berjalan',
+    zh: '等待或运行中',
+  },
+  'ps.job.filter.succeeded': { en: 'Succeeded', id: 'Berhasil', zh: '成功' },
+  'ps.job.kindFilter': { en: 'Kind of job', id: 'Jenis pekerjaan', zh: '任务类型' },
+  'ps.job.kindAll': { en: 'All kinds', id: 'Semua jenis', zh: '全部类型' },
+  'ps.job.family.ai': { en: 'AI', id: 'AI', zh: 'AI' },
+  'ps.job.family.connector': { en: 'Connections', id: 'Koneksi', zh: '连接' },
+  'ps.job.family.dataset': { en: 'Datasets', id: 'Dataset', zh: '数据集' },
+  'ps.job.family.import': { en: 'Imports', id: 'Impor', zh: '导入' },
+  'ps.job.family.pipeline': { en: 'Pipelines', id: 'Pipeline', zh: '管道' },
+  'ps.job.family.maintenance': { en: 'Upkeep', id: 'Perawatan', zh: '维护' },
+  'ps.job.family.workspace': { en: 'Company', id: 'Perusahaan', zh: '公司' },
+  'ps.job.shown': { en: '{n} of {total}', id: '{n} dari {total}', zh: '{total} 中的 {n}' },
+  'ps.err.cancelled_by_user': {
+    en: 'Cancelled before it started.',
+    id: 'Dibatalkan sebelum dimulai.',
+    zh: '在开始前被取消。',
+  },
+  'ps.err.worker_lost': {
+    en: 'The background worker stopped while running it.',
+    id: 'Proses latar belakang berhenti saat menjalankannya.',
+    zh: '后台进程在运行时停止。',
+  },
+  'ps.err.not_retryable': {
+    en: 'This job cannot be run again; start it from where it was made.',
+    id: 'Pekerjaan ini tidak bisa dijalankan lagi; mulai dari tempat asalnya.',
+    zh: '此任务无法重新运行；请从原处重新开始。',
+  },
+  'ps.err.too_many_tokens': {
+    en: 'At most 10 tokens per Terminal; revoke one first.',
+    id: 'Paling banyak 10 token per Terminal; cabut salah satu dulu.',
+    zh: '每个 Terminal 最多 10 个令牌；请先撤销一个。',
+  },
+  'ps.err.name': { en: 'Enter a name.', id: 'Isi nama.', zh: '请输入名称。' },
+  'ps.err.days': {
+    en: 'A token lasts 1 to 365 days.',
+    id: 'Token berlaku 1 sampai 365 hari.',
+    zh: '令牌有效期为 1 至 365 天。',
+  },
+
+  // ─── Health ────────────────────────────────────────────────────────────────
+  'ps.health.title': { en: 'Needs attention', id: 'Perlu perhatian', zh: '需要关注' },
+  'ps.health.allGood': {
+    en: 'Nothing needs attention: pipelines, schedules and syncs are fine.',
+    id: 'Tidak ada yang perlu perhatian: pipeline, jadwal, dan sinkronisasi baik-baik saja.',
+    zh: '一切正常：管道、计划和同步均无问题。',
+  },
+  'ps.health.hint': {
+    en: 'Open an item to see it and fix it.',
+    id: 'Buka sebuah item untuk melihat dan memperbaikinya.',
+    zh: '打开某项以查看并修复。',
+  },
+  'ps.health.last24h': {
+    en: 'Last 24 h: {ok} succeeded, {failed} failed, {cancelled} cancelled',
+    id: '24 jam terakhir: {ok} berhasil, {failed} gagal, {cancelled} dibatalkan',
+    zh: '最近 24 小时：{ok} 成功，{failed} 失败，{cancelled} 取消',
+  },
+  'ps.health.workerOnline': {
+    en: 'background worker running',
+    id: 'proses latar belakang berjalan',
+    zh: '后台进程运行中',
+  },
+  'ps.health.workerIdle': {
+    en: 'background worker not running',
+    id: 'proses latar belakang tidak berjalan',
+    zh: '后台进程未运行',
+  },
+  'ps.health.workerOffline': {
+    en: 'The background worker is not running: waiting jobs ({n}) and schedules do not start',
+    id: 'Proses latar belakang tidak berjalan: pekerjaan yang menunggu ({n}) dan jadwal tidak dimulai',
+    zh: '后台进程未运行：等待中的任务（{n}）和计划不会启动',
+  },
+  'ps.health.workerSeen': {
+    en: 'Last seen {when}. Start it (etna-worker service, or "worker" in the server manager).',
+    id: 'Terakhir terlihat {when}. Jalankan (layanan etna-worker, atau "worker" di pengelola server).',
+    zh: '最后一次在 {when}。请启动它（etna-worker 服务，或服务器管理器中的 “worker”）。',
+  },
+  'ps.health.workerNever': {
+    en: 'It has never reported. Start it (etna-worker service, or "worker" in the server manager).',
+    id: 'Belum pernah melapor. Jalankan (layanan etna-worker, atau "worker" di pengelola server).',
+    zh: '从未报告过。请启动它（etna-worker 服务，或服务器管理器中的 “worker”）。',
+  },
+  'ps.health.waiting': {
+    en: 'Jobs waiting for a turn: {n}',
+    id: 'Pekerjaan menunggu giliran: {n}',
+    zh: '等待执行的任务：{n}',
+  },
+  'ps.health.waitingHint': {
+    en: 'The worker runs one job per Terminal at a time.',
+    id: 'Proses latar belakang menjalankan satu pekerjaan per Terminal sekaligus.',
+    zh: '后台进程每个 Terminal 一次只运行一个任务。',
+  },
+  'ps.health.pipelineFailed': {
+    en: 'Last run of "{name}" failed',
+    id: 'Jalannya "{name}" yang terakhir gagal',
+    zh: '“{name}” 最近一次运行失败',
+  },
+  'ps.health.scheduleLate': {
+    en: '"{name}" should have run already',
+    id: '"{name}" seharusnya sudah berjalan',
+    zh: '“{name}” 本应已经运行',
+  },
+  'ps.health.due': { en: 'Due {when}', id: 'Jatuh tempo {when}', zh: '应于 {when}' },
+  'ps.health.scheduleStopped': {
+    en: 'Schedule of "{name}" was switched off',
+    id: 'Jadwal "{name}" dimatikan',
+    zh: '“{name}” 的计划已关闭',
+  },
+  'ps.health.stopped.three_failures': {
+    en: 'After three failed runs in a row; fix it and switch the schedule on again.',
+    id: 'Setelah tiga kali gagal berturut-turut; perbaiki lalu nyalakan lagi jadwalnya.',
+    zh: '连续三次运行失败后关闭；修复后请重新开启计划。',
+  },
+  'ps.health.syncFailing': {
+    en: 'Sync of {object} from {connection} is failing',
+    id: 'Sinkronisasi {object} dari {connection} gagal',
+    zh: '从 {connection} 同步 {object} 失败',
+  },
+  'ps.health.syncStopped': {
+    en: 'Sync of {object} from {connection} was stopped',
+    id: 'Sinkronisasi {object} dari {connection} dihentikan',
+    zh: '从 {connection} 同步 {object} 已停止',
+  },
+  'ps.health.streak': {
+    en: '{n} failures in a row',
+    id: '{n} kali gagal berturut-turut',
+    zh: '连续失败 {n} 次',
+  },
+  'ps.health.stale': {
+    en: '"{name}" has not changed for over a week',
+    id: '"{name}" tidak berubah lebih dari seminggu',
+    zh: '“{name}” 已超过一周未更新',
+  },
+  'ps.health.changed': {
+    en: 'Last change {when}',
+    id: 'Perubahan terakhir {when}',
+    zh: '最近更新 {when}',
+  },
+
+  // ─── MCP access ────────────────────────────────────────────────────────────
+  'ps.mcpAccess.title': {
+    en: 'MCP access for AI assistants',
+    id: 'Akses MCP untuk asisten AI',
+    zh: 'AI 助手的 MCP 访问',
+  },
+  'ps.mcpAccess.intro': {
+    en: "Let an AI assistant (Claude, Cursor, …) read this Terminal's pipelines, their runs and its datasets over MCP, with your own rights. It can read, never change or run anything. Each token is yours and can be revoked at any time.",
+    id: 'Izinkan asisten AI (Claude, Cursor, …) membaca pipeline, riwayat jalannya, dan dataset Terminal ini lewat MCP, dengan hak Anda sendiri. Ia hanya bisa membaca, tidak pernah mengubah atau menjalankan apa pun. Setiap token milik Anda dan bisa dicabut kapan saja.',
+    zh: '允许 AI 助手（Claude、Cursor 等）通过 MCP 以您本人的权限读取此 Terminal 的管道、运行记录和数据集。它只能读取，绝不会修改或运行任何内容。每个令牌属于您，可随时撤销。',
+  },
+  'ps.mcpAccess.endpoint': { en: 'Server URL:', id: 'URL server:', zh: '服务器地址：' },
+  'ps.mcpAccess.tools': {
+    en: 'Tools: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset.',
+    id: 'Alat: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset.',
+    zh: '工具：list_pipelines、get_pipeline、list_pipeline_runs、get_pipeline_run、list_datasets、preview_dataset。',
+  },
+  'ps.mcpAccess.new': { en: 'New access token', id: 'Token akses baru', zh: '新建访问令牌' },
+  'ps.mcpAccess.none': {
+    en: 'No access tokens yet.',
+    id: 'Belum ada token akses.',
+    zh: '还没有访问令牌。',
+  },
+  'ps.mcpAccess.name': { en: 'Name', id: 'Nama', zh: '名称' },
+  'ps.mcpAccess.namePlaceholder': {
+    en: 'e.g. Claude Desktop on my laptop',
+    id: 'mis. Claude Desktop di laptop saya',
+    zh: '例如：我笔记本上的 Claude Desktop',
+  },
+  'ps.mcpAccess.validFor': { en: 'Valid for', id: 'Berlaku selama', zh: '有效期' },
+  'ps.mcpAccess.days': { en: '{n} days', id: '{n} hari', zh: '{n} 天' },
+  'ps.mcpAccess.rights': {
+    en: 'The assistant sees what you see in this Terminal: masked columns stay masked, restricted pipelines stay hidden. Dataset previews are in the data-access log.',
+    id: 'Asisten melihat apa yang Anda lihat di Terminal ini: kolom tersamar tetap tersamar, pipeline terbatas tetap tersembunyi. Pratinjau dataset tercatat di log akses data.',
+    zh: '助手看到的与您在此 Terminal 中看到的相同：脱敏列保持脱敏，受限管道保持隐藏。数据集预览会记录在数据访问日志中。',
+  },
+  'ps.mcpAccess.create': { en: 'Create token', id: 'Buat token', zh: '创建令牌' },
+  'ps.mcpAccess.createdTitle': { en: 'Token "{name}"', id: 'Token "{name}"', zh: '令牌 “{name}”' },
+  'ps.mcpAccess.once': {
+    en: 'Copy it now: it is shown only this once. Keep it like a password.',
+    id: 'Salin sekarang: token hanya ditampilkan kali ini. Simpan seperti kata sandi.',
+    zh: '请立即复制：令牌只显示这一次。请像密码一样保管。',
+  },
+  'ps.mcpAccess.token': { en: 'Token', id: 'Token', zh: '令牌' },
+  'ps.mcpAccess.claudeCode': {
+    en: 'Claude Code (terminal)',
+    id: 'Claude Code (terminal)',
+    zh: 'Claude Code（终端）',
+  },
+  'ps.mcpAccess.json': {
+    en: 'MCP client settings (JSON)',
+    id: 'Pengaturan klien MCP (JSON)',
+    zh: 'MCP 客户端设置（JSON）',
+  },
+  'ps.mcpAccess.copy': { en: 'Copy', id: 'Salin', zh: '复制' },
+  'ps.mcpAccess.copied': { en: 'Copied', id: 'Disalin', zh: '已复制' },
+  'ps.mcpAccess.copyFailed': { en: 'Could not copy', id: 'Tidak bisa menyalin', zh: '无法复制' },
+  'ps.mcpAccess.done': { en: 'Done', id: 'Selesai', zh: '完成' },
+  'ps.mcpAccess.used': {
+    en: 'last used {when} · {n} calls',
+    id: 'terakhir dipakai {when} · {n} panggilan',
+    zh: '最近使用 {when} · {n} 次调用',
+  },
+  'ps.mcpAccess.neverUsed': { en: 'not used yet', id: 'belum dipakai', zh: '尚未使用' },
+  'ps.mcpAccess.expires': { en: 'expires {when}', id: 'berakhir {when}', zh: '{when} 到期' },
+  'ps.mcpAccess.revoke': { en: 'Revoke', id: 'Cabut', zh: '撤销' },
+  'ps.mcpAccess.revokeConfirm': {
+    en: 'Revoke "{name}"? Assistants using it lose access at once.',
+    id: 'Cabut "{name}"? Asisten yang memakainya langsung kehilangan akses.',
+    zh: '撤销 “{name}”？使用它的助手将立即失去访问权限。',
+  },
+  'ps.mcpAccess.revoked': { en: 'Token revoked', id: 'Token dicabut', zh: '令牌已撤销' },
+  'ps.mcpAccess.ended': {
+    en: 'Revoked or expired: {n}',
+    id: 'Dicabut atau kedaluwarsa: {n}',
+    zh: '已撤销或过期：{n}',
+  },
+} satisfies Record<string, Entry>;

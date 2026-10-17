@@ -6,7 +6,7 @@ import * as connectors from '@/server/terminal/connectorService';
 import * as erpLinks from '@/server/terminal/erpLinkService';
 import * as terminal from '@/server/terminal/service';
 
-// PrintStream TERMINAL: one endpoint, an action per request (as /api/erp/workspace).
+// PrintStream Terminal: one endpoint, an action per request (as /api/erp/workspace).
 
 const ACTIONS: Record<string, (ctx: terminal.TerminalContext, body: any) => Promise<unknown>> = {
   overview: (ctx, b) => terminal.overview(ctx, b.workspaceId),
@@ -21,6 +21,10 @@ const ACTIONS: Record<string, (ctx: terminal.TerminalContext, body: any) => Prom
   'import.reanalyze': terminal.reanalyzeImport,
   'import.cancel': terminal.cancelImport,
   'job.cancel': terminal.cancelJob,
+  'job.retry': terminal.retryJob,
+  'mcpTokens.list': terminal.listMcpTokens,
+  'mcpToken.create': terminal.createMcpToken,
+  'mcpToken.revoke': terminal.revokeMcpToken,
   'pipeline.run': terminal.runPipeline,
   'pipeline.schedule': terminal.saveSchedule,
   'pipeline.unschedule': terminal.deleteSchedule,

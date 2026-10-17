@@ -1,4 +1,4 @@
-// A TERMINAL on its own and the ERPs it is linked to (20261012000044):
+// A Terminal on its own and the ERPs it is linked to (20261012000044):
 // which workspace a pipeline's ERP node reads, and adding a pipeline's rows
 // to an ERP's customers, suppliers or products. Everything runs as the
 // person running the pipeline, with their rights in the ERP.
@@ -16,7 +16,7 @@ type Db = { from: (table: string) => any };
 
 /**
  * The workspace an ERP node reads: the pipeline's own, or an ERP its
- * TERMINAL is linked to (checked here; the person's rights there are checked
+ * Terminal is linked to (checked here; the person's rights there are checked
  * by the query itself).
  */
 export async function erpWorkspaceFor(

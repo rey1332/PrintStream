@@ -1,4 +1,4 @@
-// TERMINAL intelligence for the app's routes (P3, 20261012000049): AI
+// Terminal intelligence for the app's routes (P3, 20261012000049): AI
 // providers and keys (sealed here, never read back), data policies, the
 // budget, the disclosure shown before a run, insights and their review, and
 // what each dataset holds (ontology).

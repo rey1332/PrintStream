@@ -13,7 +13,7 @@ interface DeleteErpSectionProps {
   name: string;
   inputClassName: string;
   mode?: 'delete' | 'empty';
-  /** What is deleted: an ERP, or a TERMINAL on its own (same route, other words). */
+  /** What is deleted: an ERP, or a Terminal on its own (same route, other words). */
   noun?: 'erp' | 'terminal';
   onDeleted?: () => void;
 }

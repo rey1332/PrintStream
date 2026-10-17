@@ -21,7 +21,7 @@ const inputCls =
   'w-full rounded-md border border-border bg-input px-2.5 py-1.5 text-[0.75rem] text-foreground outline-none focus:border-foreground/40';
 
 /**
- * Settings of the TERMINAL dataset nodes: which dataset, how many rows to read
+ * Settings of the Terminal dataset nodes: which dataset, how many rows to read
  * (Dataset) or how to write (Write to dataset). Picking a dataset for reading
  * stores its column names, so the next steps can offer them.
  */

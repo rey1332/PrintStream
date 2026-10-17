@@ -151,7 +151,7 @@ export async function migrateWith(appDir, inst, log = () => {}) {
       { exec: (sql) => client.query(sql), query: (sql, params) => client.query(sql, params) },
       { log, migrations: migrator.listMigrations() }
     );
-    // Servers set up before the TERMINAL worker get its login on the first update.
+    // Servers set up before the Terminal worker get its login on the first update.
     const envFile = paths(inst.root, inst.backupDir).envFile;
     const provision = await import(pathToFileURL(path.join(appDir, 'scripts', 'db', 'provision.mjs')).href);
     if (provision.newLogin && fs.existsSync(envFile) && !readEnvFile(envFile).WORKER_DATABASE_URL) {

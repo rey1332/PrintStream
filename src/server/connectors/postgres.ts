@@ -1,4 +1,4 @@
-// Another PostgreSQL database as a TERMINAL source (20261012000042).
+// Another PostgreSQL database as a Terminal source (20261012000042).
 //
 //  * The host is checked like an ERP's (src/server/connectors/http.ts): public
 //    addresses only, unless ETNA allows the host or network; the client
@@ -121,7 +121,7 @@ export async function openPg(ctx: ConnectorContext): Promise<pg.Client> {
     connectionTimeoutMillis: 15_000,
     query_timeout: STATEMENT_MS + 10_000,
     statement_timeout: STATEMENT_MS,
-    application_name: 'PrintStream TERMINAL',
+    application_name: 'PrintStream Terminal',
     options: '-c default_transaction_read_only=on -c idle_in_transaction_session_timeout=600000',
     types,
   } as pg.ClientConfig);

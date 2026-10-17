@@ -1,8 +1,8 @@
 import type { Entry } from './types';
 
-// PrintStream TERMINAL: datasets, imports, pipelines, jobs (ERP → TERMINAL).
+// PrintStream Terminal: datasets, imports, pipelines, jobs (ERP → Terminal).
 export const terminalMessages = {
-  'ps.title': { en: 'TERMINAL', id: 'TERMINAL', zh: 'TERMINAL' },
+  'ps.title': { en: 'Terminal', id: 'Terminal', zh: 'Terminal' },
   'ps.subtitle': {
     en: 'Datasets, imports and pipelines of this company, run in the background by PrintStream.',
     id: 'Dataset, impor, dan pipeline perusahaan ini, dijalankan di latar oleh PrintStream.',
@@ -512,7 +512,7 @@ export const terminalMessages = {
 
   // Command bar (Ctrl+K)
   'ps.cmd.hint': { en: 'Ctrl+K to search', id: 'Ctrl+K untuk mencari', zh: 'Ctrl+K 搜索' },
-  'ps.cmd.title': { en: 'TERMINAL commands', id: 'Perintah TERMINAL', zh: 'TERMINAL 命令' },
+  'ps.cmd.title': { en: 'Terminal commands', id: 'Perintah Terminal', zh: 'Terminal 命令' },
   'ps.cmd.placeholder': {
     en: 'Go to a dataset, pipeline or tab…',
     id: 'Buka dataset, pipeline, atau tab…',
@@ -728,9 +728,9 @@ export const terminalMessages = {
   // Pipeline nodes
   'wf.node.src.psDataset': { en: 'Dataset', id: 'Dataset', zh: '数据集' },
   'wf.desc.src.psDataset': {
-    en: 'Rows of a TERMINAL dataset',
-    id: 'Baris dari dataset TERMINAL',
-    zh: 'TERMINAL 数据集的行',
+    en: 'Rows of a Terminal dataset',
+    id: 'Baris dari dataset Terminal',
+    zh: 'Terminal 数据集的行',
   },
   'wf.node.out.psDataset': { en: 'Write to dataset', id: 'Tulis ke dataset', zh: '写入数据集' },
   'wf.desc.out.psDataset': {
@@ -758,9 +758,9 @@ export const terminalMessages = {
   'wf.field.mode': { en: 'How', id: 'Cara', zh: '方式' },
   'wf.ds.loading': { en: 'Loading datasets…', id: 'Memuat dataset…', zh: '正在加载数据集…' },
   'wf.ds.none': {
-    en: 'No datasets in this company yet (TERMINAL → New dataset).',
-    id: 'Belum ada dataset di perusahaan ini (TERMINAL → Dataset baru).',
-    zh: '本公司还没有数据集（TERMINAL → 新建数据集）。',
+    en: 'No datasets in this company yet (Terminal → New dataset).',
+    id: 'Belum ada dataset di perusahaan ini (Terminal → Dataset baru).',
+    zh: '本公司还没有数据集（Terminal → 新建数据集）。',
   },
   'wf.ds.matchHint': {
     en: 'Columns are matched to the dataset’s columns by name; rename them with “Select columns” first.',

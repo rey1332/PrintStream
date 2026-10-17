@@ -1,5 +1,5 @@
-// The ERPs a TERMINAL on its own is linked to (20261012000044), for the
-// TERMINAL screen and the pipeline editor's ERP nodes.
+// The ERPs a Terminal on its own is linked to (20261012000044), for the
+// Terminal screen and the pipeline editor's ERP nodes.
 
 import type { SqlTx } from '@/server/db/executor';
 import { TerminalError, asUser, isUuid } from './session';

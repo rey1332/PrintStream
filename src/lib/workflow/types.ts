@@ -81,7 +81,7 @@ export interface Workflow {
   name: string;
   description?: string;
   graph: WorkflowGraph;
-  /** The ERP or TERMINAL it belongs to (null: a personal one from before workspaces). */
+  /** The ERP or Terminal it belongs to (null: a personal one from before workspaces). */
   workspace_id?: string | null;
   created_at: string;
   updated_at: string;

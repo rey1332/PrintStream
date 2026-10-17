@@ -12,8 +12,8 @@ import { rememberTerminalSpace } from '@/lib/workspaces/terminalSpaces';
 import PipelineEditor from './PipelineEditor';
 
 /**
- * A TERMINAL pipeline in its own window: the whole screen is the editor, in
- * the TERMINAL (or ERP) the pipeline belongs to. No ERP is opened or chosen.
+ * A Terminal pipeline in its own window: the whole screen is the editor, in
+ * the Terminal (or ERP) the pipeline belongs to. No ERP is opened or chosen.
  */
 export default function PipelinePage() {
   const { t } = useI18n();
@@ -27,7 +27,7 @@ export default function PipelinePage() {
       .then((wf) => {
         if (cancelled) return;
         const ws = wf?.workspace_id ?? null;
-        // Back in TERMINAL, the pipeline's TERMINAL is the one shown.
+        // Back in Terminal, the pipeline's Terminal is the one shown.
         if (ws) rememberTerminalSpace(ws);
         setWorkspaceId(ws);
       })

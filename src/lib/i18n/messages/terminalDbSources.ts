@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL database sources (P2): another PostgreSQL database, synced by table or query.
+// Terminal database sources (P2): another PostgreSQL database, synced by table or query.
 export const terminalDbSourceMessages = {
   'ps.conn.kind.postgres': {
     en: 'PostgreSQL database',

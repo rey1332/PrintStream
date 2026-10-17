@@ -1,7 +1,7 @@
 'use client';
 
 // Which ERP an ERP node reads or writes (20261012000044): the pipeline's own
-// workspace, or an ERP its TERMINAL is linked to.
+// workspace, or an ERP its Terminal is linked to.
 
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '@/lib/i18n/I18nProvider';

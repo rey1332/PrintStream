@@ -1,4 +1,4 @@
-// TERMINAL pipeline nodes for unified data: combining and cleaning tables,
+// Terminal pipeline nodes for unified data: combining and cleaning tables,
 // matching records across sources, reshaping, and checking quality. Each
 // node is pure (rows in, rows out), so it runs alike in the editor and in the
 // worker's background runs, and describes its output columns for the editor.

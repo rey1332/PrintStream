@@ -36,6 +36,9 @@ import { CommandBar } from './components/CommandBar';
 import { AiSettings } from './components/AiSettings';
 import { Connections } from './components/Connections';
 import { Insights } from './components/Insights';
+import { HealthPanel } from './components/Health';
+import { JobList, JobsPanel } from './components/Jobs';
+import { McpAccess } from './components/McpAccess';
 import { Empty, Status, buttonCls, bytes, errorMessage, primaryCls } from './components/shared';
 
 const TABS = [
@@ -159,6 +162,18 @@ function TerminalPage() {
 
   const can = (p: string) => has(data, p);
   const failedJobs = data?.jobs.filter((j) => j.status === 'failed') ?? [];
+  // The permission each kind needs to be started (ps_job_permission).
+  const JOB_PERMISSION: Record<string, string> = {
+    'pipeline.run': 'pipelines.run',
+    'connector.sync': 'integrations.use',
+    'connector.test': 'integrations.use',
+    'connector.describe': 'integrations.use',
+    'ai.test': 'integrations.manage',
+    'dataset.export': 'datasets.export',
+    'import.analyze': 'datasets.import',
+  };
+  const canRetryJob = (j: { kind: string }) =>
+    !!JOB_PERMISSION[j.kind] && can(JOB_PERMISSION[j.kind]);
 
   return (
     <div className="space-y-5">
@@ -274,6 +289,7 @@ function TerminalPage() {
               </button>
             ))}
           </div>
+          {data.health && <HealthPanel health={data.health} onTab={go} />}
           {data.limits && (
             <p className="text-[0.72rem] text-muted-foreground">
               {t('ps.home.limits', { csv: bytes(data.limits.max_upload_bytes) })}
@@ -286,10 +302,12 @@ function TerminalPage() {
               {t('ps.home.recent')}
             </h2>
             <JobList
-              jobs={data.jobs.slice(0, 8)}
+              jobs={data.jobs.slice(0, 30)}
               datasetName={nameOfDataset}
               pipelineName={nameOfPipeline}
               onCancel={(id) => action('job.cancel', { id })}
+              onRetry={(id) => action('job.retry', { id }, t('ps.job.retryQueued'))}
+              canRetryJob={canRetryJob}
             />
           </section>
         </div>
@@ -549,18 +567,25 @@ function TerminalPage() {
       {data && tab === 'insights' && ws && (
         <Insights workspaceId={ws} permissions={data.permissions} />
       )}
-      {data && tab === 'ai' && ws && <AiSettings workspaceId={ws} permissions={data.permissions} />}
+      {data && tab === 'ai' && ws && (
+        <div className="space-y-4">
+          <AiSettings workspaceId={ws} permissions={data.permissions} />
+          <McpAccess workspaceId={ws} permissions={data.permissions} />
+        </div>
+      )}
 
       {data && tab === 'jobs' && (
         <section className="rounded-xl border border-border bg-card p-4">
           {data.jobs.length === 0 ? (
             <Empty icon={Activity} title={t('ps.job.empty')} />
           ) : (
-            <JobList
+            <JobsPanel
               jobs={data.jobs}
               datasetName={nameOfDataset}
               pipelineName={nameOfPipeline}
               onCancel={(id) => action('job.cancel', { id })}
+              onRetry={(id) => action('job.retry', { id }, t('ps.job.retryQueued'))}
+              canRetryJob={canRetryJob}
             />
           )}
         </section>
@@ -602,62 +627,6 @@ function TerminalPage() {
         onTab={go}
       />
     </div>
-  );
-}
-
-function JobList({
-  jobs,
-  datasetName,
-  pipelineName,
-  onCancel,
-}: {
-  jobs: Overview['jobs'];
-  datasetName: Map<string, string>;
-  pipelineName: Map<string, string>;
-  onCancel: (id: string) => void;
-}) {
-  const { t, fmt } = useI18n();
-  if (!jobs.length)
-    return <p className="text-[0.75rem] text-muted-foreground">{t('ps.job.empty')}</p>;
-  return (
-    <ul className="divide-y divide-border">
-      {jobs.map((j) => {
-        const what = j.pipeline_id
-          ? pipelineName.get(j.pipeline_id)
-          : j.dataset_id
-            ? datasetName.get(j.dataset_id)
-            : null;
-        return (
-          <li key={j.id} className="py-2 flex flex-wrap items-center gap-2 text-[0.75rem]">
-            <Status value={j.status} />
-            <span className="text-foreground">{t(`ps.job.kind.${j.kind}` as any)}</span>
-            {what && <span className="text-muted-foreground truncate max-w-[14rem]">{what}</span>}
-            {j.trigger !== 'manual' && (
-              <span className="text-[0.62rem] text-muted-foreground">
-                {t(`ps.job.trigger.${j.trigger}` as any)}
-              </span>
-            )}
-            {j.error_key && (
-              <span className="text-[0.68rem] text-red-600 dark:text-red-400">
-                {t('ps.job.error', { code: j.error_key })}
-              </span>
-            )}
-            <span className="ml-auto text-[0.66rem] text-muted-foreground">
-              {fmt.dateTime(j.finished_at ?? j.started_at ?? j.created_at)}
-            </span>
-            {(j.status === 'queued' || j.status === 'running') && (
-              <button
-                type="button"
-                className="text-[0.66rem] text-muted-foreground hover:text-red-500"
-                onClick={() => onCancel(j.id)}
-              >
-                {t('ps.job.cancel')}
-              </button>
-            )}
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

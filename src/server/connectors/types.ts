@@ -1,4 +1,4 @@
-// What every TERMINAL connector adapter provides (src/server/connectors/*).
+// What every Terminal connector adapter provides (src/server/connectors/*).
 
 import type { ObjectKey } from '@/lib/terminal/connectors';
 import { TerminalError } from '@/server/terminal/session';

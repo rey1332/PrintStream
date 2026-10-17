@@ -39,7 +39,7 @@ export const ERP_WRITE_MODES: readonly ErpWriteMode[] = ['add_new', 'add_or_upda
 
 export interface RuntimeContext {
   /**
-   * ERP rows. `erp`: a linked ERP (a TERMINAL on its own reads ERPs it is
+   * ERP rows. `erp`: a linked ERP (a Terminal on its own reads ERPs it is
    * linked to); none: the pipeline's own workspace.
    */
   query: (spec: QuerySpec, erp?: string | null) => Promise<QueryResult>;
@@ -49,7 +49,7 @@ export interface RuntimeContext {
     spec: { erpId: string | null; list: ErpListTarget; mode: ErpWriteMode },
     table: DataTable
   ) => Promise<{ added: number; updated: number; skipped: number; rejected: number }>;
-  /** TERMINAL datasets: read in the editor and in background runs. */
+  /** Terminal datasets: read in the editor and in background runs. */
   readDataset?: (spec: DatasetReadSpec) => Promise<DataTable>;
   /** Only background runs (the worker) write; runs in the editor show what would be written. */
   writeDataset?: (
@@ -305,7 +305,7 @@ export interface ErpSourceConfig {
   filters: QueryFilter[];
   sort?: { field: string; direction: 'asc' | 'desc' } | null;
   limit: number;
-  /** A linked ERP to read from (a TERMINAL on its own); empty: the pipeline's workspace. */
+  /** A linked ERP to read from (a Terminal on its own); empty: the pipeline's workspace. */
   erpId?: string;
 }
 

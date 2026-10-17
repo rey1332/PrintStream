@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL connectors (P2): connections to other ERPs and their syncs.
+// Terminal connectors (P2): connections to other ERPs and their syncs.
 export const terminalConnectorMessages = {
   'ps.tab.connections': { en: 'Connections', id: 'Koneksi', zh: '连接' },
   'ps.conn.intro': {
@@ -198,9 +198,9 @@ export const terminalConnectorMessages = {
     zh: '有字段无效（{field}）。',
   },
   'ps.err.terminal_off': {
-    en: 'TERMINAL is not added to this ERP (Dashboard → Add modules).',
-    id: 'TERMINAL belum ditambahkan ke ERP ini (Dasbor → Tambah modul).',
-    zh: '此 ERP 尚未添加 TERMINAL（仪表板 → 添加模块）。',
+    en: 'Terminal is not added to this ERP (Dashboard → Add modules).',
+    id: 'Terminal belum ditambahkan ke ERP ini (Dasbor → Tambah modul).',
+    zh: '此 ERP 尚未添加 Terminal（仪表板 → 添加模块）。',
   },
   'ps.err.urlScheme': {
     en: 'The address must start with https://.',

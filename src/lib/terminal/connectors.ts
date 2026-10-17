@@ -1,4 +1,4 @@
-// TERMINAL connectors (P2): which ERPs PrintStream connects to, what each
+// Terminal connectors (P2): which ERPs PrintStream connects to, what each
 // needs, and which lists it syncs into datasets. Every ERP's lists come out
 // with the same columns (customers look alike whether they come from Odoo or
 // SAP), so pipelines can treat them alike. Shared by the screens and the worker.

@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL pipeline nodes for unified data (src/lib/workflow/unifyNodes.ts).
+// Terminal pipeline nodes for unified data (src/lib/workflow/unifyNodes.ts).
 export const workflowUnifyMessages = {
   'wf.palette.search': { en: 'Find a node…', id: 'Cari node…', zh: '查找节点…' },
   'wf.cat.combine': { en: 'Combine & Clean', id: 'Gabung & Rapikan', zh: '合并与清理' },

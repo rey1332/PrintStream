@@ -35,9 +35,9 @@ passwords.
 |---|---|---|---|---|---|
 | `DATABASE_URL` | Connection of the app server role `etna_app`; every request runs as the signed-in user under row-level security | **Yes** | `postgres://etna_app:PW@10.0.0.20:5432/etna?sslmode=verify-full&sslrootcert=C:/ETNA-certs/db-ca.crt` | `src/server/config.ts` | **Yes** (password) |
 | `AUTH_DATABASE_URL` | Connection of the sign-in role `etna_auth` (users, sessions, two-factor) | **Yes** | as above, user `etna_auth` | `src/server/config.ts` | **Yes** |
-| `WORKER_DATABASE_URL` | Connection of the TERMINAL worker's role `etna_worker` (job queue, dataset tables, imports, schedules). Written by `etna.bat` (also on update) and `scripts/setup-local.mjs` | Yes, for TERMINAL (without it the worker does not start and background jobs wait) | as above, user `etna_worker` | `scripts/server/worker.mjs`, `scripts/server/run.mjs` | **Yes** |
+| `WORKER_DATABASE_URL` | Connection of the Terminal worker's role `etna_worker` (job queue, dataset tables, imports, schedules). Written by `etna.bat` (also on update) and `scripts/setup-local.mjs` | Yes, for Terminal (without it the worker does not start and background jobs wait) | as above, user `etna_worker` | `scripts/server/worker.mjs`, `scripts/server/run.mjs` | **Yes** |
 | `ETNA_WORKER_CONCURRENCY` | Jobs the worker runs at once (1–8; one per company at a time) | No (default 2) | `3` | `scripts/server/worker.mjs` | No |
-| `MFA_ENCRYPTION_KEY` | AES-256 key that encrypts stored two-factor secrets; TERMINAL connection secrets use a key derived from it. Losing it forces every user to enroll again and every connection to be given its password or key again | **Yes** | 32 random bytes, base64 (44 characters) | `src/server/auth/secret-box.ts`, `scripts/db/transfer.mjs` | **Yes** |
+| `MFA_ENCRYPTION_KEY` | AES-256 key that encrypts stored two-factor secrets; Terminal connection secrets use a key derived from it. Losing it forces every user to enroll again and every connection to be given its password or key again | **Yes** | 32 random bytes, base64 (44 characters) | `src/server/auth/secret-box.ts`, `scripts/db/transfer.mjs` | **Yes** |
 | `SESSION_HINT_SECRET` | Signs the session hint cookie read by the middleware. Changing it signs everyone out | **Yes** | at least 32 random characters | `src/server/config.ts` | **Yes** |
 | `TRUST_PROXY` | Which client IP to use for sign-in limits: `1` = last `X-Forwarded-For` entry (behind a proxy that overwrites it, e.g. Caddy), `cloudflare` = `CF-Connecting-IP`. Unset = headers ignored, limits per account | Behind a proxy or tunnel | `1` or `cloudflare` | `src/server/auth/request.ts` | No |
 | `NEXT_PUBLIC_ERP_WORKSPACES` | Several ERPs per account, teams, sync between ERPs. **Read at build time** and sent to browsers | No (default on) | `off` | `src/app/erp/lib/workspace.ts`, ERP API routes | No (public) |
@@ -118,6 +118,6 @@ database. Production therefore:
 |---|---|---|
 | `etna_app` / `etna_auth` password | `ALTER ROLE etna_app PASSWORD '…'` as the owner, update `.env.local`, restart ETNA | none for users |
 | `SESSION_HINT_SECRET` | new random value, restart | everyone signs in again |
-| `MFA_ENCRYPTION_KEY` | cannot simply be replaced: stored secrets must be re-encrypted, or every user re-enrolls (`reset-mfa`) and every TERMINAL connection gets its secret again | see OPERATIONS.md section 6 |
+| `MFA_ENCRYPTION_KEY` | cannot simply be replaced: stored secrets must be re-encrypted, or every user re-enrolls (`reset-mfa`) and every Terminal connection gets its secret again | see OPERATIONS.md section 6 |
 | `etna_owner` password | `ALTER ROLE etna_owner PASSWORD '…'` as `postgres`, update `pgpass.conf` on the database server (backups) | migrations and account scripts need the new password |
 | `RESEND_API_KEY` | new key in Resend, update `.env.local`, restart | none |

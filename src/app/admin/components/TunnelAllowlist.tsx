@@ -26,7 +26,7 @@ const HOST_EXAMPLE = '10.20.0.5:50000';
 
 /**
  * Tunnels (20261012000046): for one company only, the internal host:port its
- * zero-trust tunnel arrives at, which its TERMINAL connections may then reach.
+ * zero-trust tunnel arrives at, which its Terminal connections may then reach.
  * Super admins add and remove entries; every change is in the security log.
  */
 export function TunnelAllowlist({

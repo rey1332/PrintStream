@@ -1,4 +1,4 @@
-// A remote MCP server as a TERMINAL connection (20261012000048), read only.
+// A remote MCP server as a Terminal connection (20261012000048), read only.
 // PrintStream speaks MCP's Streamable HTTP transport itself (JSON-RPC over
 // POST; answers as JSON or as a server-sent event stream) through the same
 // network guard as every connector, rather than through a library that

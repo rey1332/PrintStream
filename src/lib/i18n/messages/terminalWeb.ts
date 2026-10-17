@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL web extraction (P2, 20261012000047).
+// Terminal web extraction (P2, 20261012000047).
 export const terminalWebMessages = {
   'ps.conn.kind.web': { en: 'Website', id: 'Situs web', zh: '网站' },
   'ps.conn.help.web': {

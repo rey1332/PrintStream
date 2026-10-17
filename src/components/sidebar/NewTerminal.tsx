@@ -1,6 +1,6 @@
 'use client';
 
-// Creating a PrintStream TERMINAL on its own (20261012000043): a name, and
+// Creating a PrintStream Terminal on its own (20261012000043): a name, and
 // the creator is its Owner. It does not use one of the account's ERP slots.
 
 import React, { useState } from 'react';
@@ -10,7 +10,7 @@ import { createClient } from '@/lib/data/client';
 
 type CreateProblem = 'limit' | 'mfa' | 'failed';
 
-/** The new TERMINAL's id, or what stopped it. */
+/** The new Terminal's id, or what stopped it. */
 export async function createTerminal(
   name: string
 ): Promise<{ id: string } | { problem: CreateProblem }> {

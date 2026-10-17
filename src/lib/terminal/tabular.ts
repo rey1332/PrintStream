@@ -1,4 +1,4 @@
-// Reading uploaded tables (TERMINAL imports): CSV parsing, detection of the
+// Reading uploaded tables (Terminal imports): CSV parsing, detection of the
 // delimiter and header, column types, and turning cells into typed values.
 // Pure functions, shared by the worker and the tests.
 

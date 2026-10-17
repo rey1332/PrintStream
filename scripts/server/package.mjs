@@ -55,7 +55,7 @@ const copy = (rel, filter) => {
 };
 // The build without its cache and traces.
 copy('.next', (src) => !/[\\/]\.next[\\/](cache|trace)([\\/]|$)/.test(src));
-// src: the TERMINAL worker runs the server sources directly (scripts/server/worker.mjs).
+// src: the Terminal worker runs the server sources directly (scripts/server/worker.mjs).
 for (const rel of ['public', 'db', 'scripts', 'src', 'docs', 'package.json', 'package-lock.json', 'next.config.mjs', 'image-hosts.config.mjs', '.env.example', 'LICENSE', 'README.md']) {
   copy(rel);
 }

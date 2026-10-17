@@ -1,5 +1,5 @@
 // Turns error alerts on for this process (src/server/alerts.ts): the app from
-// src/instrumentation.ts, the TERMINAL worker from scripts/server/worker.mjs.
+// src/instrumentation.ts, the Terminal worker from scripts/server/worker.mjs.
 
 import os from 'node:os';
 import { AlertQueue, alertRecipients, installConsoleAlerts } from './alerts';

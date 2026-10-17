@@ -1,4 +1,4 @@
-// TERMINAL connections and syncs for the app's routes (20261012000041, 042, 046-048).
+// Terminal connections and syncs for the app's routes (20261012000041, 042, 046-048).
 // Secrets typed into the form are sealed here (src/server/vault.ts) and go to
 // the database only as ciphertext; they are never read back by the app.
 

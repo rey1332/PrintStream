@@ -130,7 +130,7 @@ export const platformAdminGovernanceMessages = {
 
   'gov.storage': { en: 'Storage', id: 'Penyimpanan', zh: '存储' },
   'gov.unlimited': { en: 'unlimited', id: 'tanpa batas', zh: '无限制' },
-  'gov.usedDatasets': { en: 'TERMINAL datasets', id: 'Dataset TERMINAL', zh: 'TERMINAL 数据集' },
+  'gov.usedDatasets': { en: 'Terminal datasets', id: 'Dataset Terminal', zh: 'Terminal 数据集' },
   'gov.usedFiles': { en: 'Files', id: 'File', zh: '文件' },
   'gov.usedErp': {
     en: 'ERP records (estimate)',
@@ -349,9 +349,9 @@ export const platformAdminGovernanceMessages = {
   'gov.older': { en: 'Older entries', id: 'Entri lebih lama', zh: '更早的记录' },
   'gov.connectorHosts': { en: 'Connector networks', id: 'Jaringan konektor', zh: '连接器网络' },
   'gov.connectorHostsIntro': {
-    en: 'TERMINAL connectors reach only public internet addresses. List here the internal servers or networks they may also reach (one per line: a host name, an IP address or a network like 10.10.0.0/16), for example an SAP Business One server in a client’s network. Loopback and cloud metadata addresses are never allowed.',
-    id: 'Konektor TERMINAL hanya menjangkau alamat internet publik. Tuliskan di sini server atau jaringan internal yang juga boleh dijangkau (satu per baris: nama host, alamat IP, atau jaringan seperti 10.10.0.0/16), misalnya server SAP Business One di jaringan klien. Alamat loopback dan metadata cloud tidak pernah diizinkan.',
-    zh: 'TERMINAL 连接器仅访问公网地址。在此列出也允许访问的内网服务器或网络（每行一个：主机名、IP 地址或如 10.10.0.0/16 的网段），例如客户内网中的 SAP Business One 服务器。环回地址和云元数据地址始终禁止。',
+    en: 'Terminal connectors reach only public internet addresses. List here the internal servers or networks they may also reach (one per line: a host name, an IP address or a network like 10.10.0.0/16), for example an SAP Business One server in a client’s network. Loopback and cloud metadata addresses are never allowed.',
+    id: 'Konektor Terminal hanya menjangkau alamat internet publik. Tuliskan di sini server atau jaringan internal yang juga boleh dijangkau (satu per baris: nama host, alamat IP, atau jaringan seperti 10.10.0.0/16), misalnya server SAP Business One di jaringan klien. Alamat loopback dan metadata cloud tidak pernah diizinkan.',
+    zh: 'Terminal 连接器仅访问公网地址。在此列出也允许访问的内网服务器或网络（每行一个：主机名、IP 地址或如 10.10.0.0/16 的网段），例如客户内网中的 SAP Business One 服务器。环回地址和云元数据地址始终禁止。',
   },
   'gov.aiLocal': {
     en: 'Local AI servers',
@@ -374,9 +374,9 @@ export const platformAdminGovernanceMessages = {
     zh: '隧道（按公司）',
   },
   'gov.tunnelsIntro': {
-    en: 'A company’s system inside its own network is reached through a zero-trust tunnel (such as Cloudflare Tunnel) that arrives at one internal host and port ETNA’s server can reach. Allow that host:port here for that company only; its TERMINAL connections may then reach it, and no other company’s can. The procedure is in docs/TUNNELS.md.',
-    id: 'Sistem perusahaan di dalam jaringannya sendiri dijangkau lewat tunnel zero-trust (seperti Cloudflare Tunnel) yang tiba di satu host dan port internal yang bisa dijangkau server ETNA. Izinkan host:port itu di sini hanya untuk perusahaan tersebut; koneksi TERMINAL-nya lalu boleh menjangkaunya, dan perusahaan lain tidak. Prosedurnya ada di docs/TUNNELS.md.',
-    zh: '公司内网中的系统通过零信任隧道（如 Cloudflare Tunnel）访问，隧道到达 ETNA 服务器可访问的某个内网主机和端口。在此仅为该公司允许该 host:port；其 TERMINAL 连接即可访问，其他公司不能。操作步骤见 docs/TUNNELS.md。',
+    en: 'A company’s system inside its own network is reached through a zero-trust tunnel (such as Cloudflare Tunnel) that arrives at one internal host and port ETNA’s server can reach. Allow that host:port here for that company only; its Terminal connections may then reach it, and no other company’s can. The procedure is in docs/TUNNELS.md.',
+    id: 'Sistem perusahaan di dalam jaringannya sendiri dijangkau lewat tunnel zero-trust (seperti Cloudflare Tunnel) yang tiba di satu host dan port internal yang bisa dijangkau server ETNA. Izinkan host:port itu di sini hanya untuk perusahaan tersebut; koneksi Terminal-nya lalu boleh menjangkaunya, dan perusahaan lain tidak. Prosedurnya ada di docs/TUNNELS.md.',
+    zh: '公司内网中的系统通过零信任隧道（如 Cloudflare Tunnel）访问，隧道到达 ETNA 服务器可访问的某个内网主机和端口。在此仅为该公司允许该 host:port；其 Terminal 连接即可访问，其他公司不能。操作步骤见 docs/TUNNELS.md。',
   },
   'gov.noTunnels': { en: 'No tunnels yet.', id: 'Belum ada tunnel.', zh: '暂无隧道。' },
   'gov.tunnelHost': { en: 'Host:port', id: 'Host:port', zh: '主机:端口' },

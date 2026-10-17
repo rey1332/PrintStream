@@ -1,4 +1,4 @@
-// TERMINAL datasets on the server: their description, reading rows through
+// Terminal datasets on the server: their description, reading rows through
 // the masking view (ps_data.dsv_*), and writing rows through the database's
 // ps_rows_* functions. Every call runs inside a transaction as the user
 // (session.ts); row-level security decides what they may see and change.

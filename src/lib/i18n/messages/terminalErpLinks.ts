@@ -1,12 +1,12 @@
 import type { Entry } from './types';
 
-// A TERMINAL on its own linked to ERPs; pipeline nodes that read or add to them.
+// A Terminal on its own linked to ERPs; pipeline nodes that read or add to them.
 export const terminalErpLinkMessages = {
   'terminal.erps': { en: 'Linked ERPs', id: 'ERP terhubung', zh: '已关联的 ERP' },
   'terminal.erpsIntro': {
-    en: 'Pipelines of this TERMINAL may read these ERPs and add to their customers, suppliers and products, always with the rights of the person running them. Linking needs managing this TERMINAL’s connections and being the ERP’s Owner or an Admin, both with two-factor.',
-    id: 'Pipeline TERMINAL ini boleh membaca ERP berikut dan menambah pelanggan, pemasok, dan produknya, selalu dengan hak akses orang yang menjalankannya. Menghubungkan perlu hak mengelola koneksi TERMINAL ini dan menjadi Pemilik atau Admin ERP itu, keduanya dengan verifikasi dua langkah.',
-    zh: '此 TERMINAL 的管道可读取这些 ERP，并向其客户、供应商和产品添加数据，始终使用运行者本人的权限。关联需要能管理此 TERMINAL 的连接，并且是该 ERP 的所有者或管理员，均需双重验证。',
+    en: 'Pipelines of this Terminal may read these ERPs and add to their customers, suppliers and products, always with the rights of the person running them. Linking needs managing this Terminal’s connections and being the ERP’s Owner or an Admin, both with two-factor.',
+    id: 'Pipeline Terminal ini boleh membaca ERP berikut dan menambah pelanggan, pemasok, dan produknya, selalu dengan hak akses orang yang menjalankannya. Menghubungkan perlu hak mengelola koneksi Terminal ini dan menjadi Pemilik atau Admin ERP itu, keduanya dengan verifikasi dua langkah.',
+    zh: '此 Terminal 的管道可读取这些 ERP，并向其客户、供应商和产品添加数据，始终使用运行者本人的权限。关联需要能管理此 Terminal 的连接，并且是该 ERP 的所有者或管理员，均需双重验证。',
   },
   'terminal.erpsNone': {
     en: 'Not linked to any ERP. Pipelines work with datasets and connections only.',
@@ -36,9 +36,9 @@ export const terminalErpLinkMessages = {
     zh: '取消关联“{name}”？读取或写入它的管道将停止工作，直到修改。',
   },
   'ps.err.not_terminal': {
-    en: 'Only a TERMINAL on its own is linked to ERPs.',
-    id: 'Hanya TERMINAL tersendiri yang bisa dihubungkan ke ERP.',
-    zh: '只有独立的 TERMINAL 可以关联 ERP。',
+    en: 'Only a Terminal on its own is linked to ERPs.',
+    id: 'Hanya Terminal tersendiri yang bisa dihubungkan ke ERP.',
+    zh: '只有独立的 Terminal 可以关联 ERP。',
   },
 
   'wf.field.erpId': { en: 'ERP', id: 'ERP', zh: 'ERP' },
@@ -54,9 +54,9 @@ export const terminalErpLinkMessages = {
     zh: '您不是此 ERP 的成员：您运行时无法读取。',
   },
   'wf.erp.noLinks': {
-    en: 'Link ERPs from the TERMINAL screen (Linked ERPs) to read them here.',
-    id: 'Hubungkan ERP dari layar TERMINAL (ERP terhubung) untuk membacanya di sini.',
-    zh: '请在 TERMINAL 页面（已关联的 ERP）中关联 ERP 后在此读取。',
+    en: 'Link ERPs from the Terminal screen (Linked ERPs) to read them here.',
+    id: 'Hubungkan ERP dari layar Terminal (ERP terhubung) untuk membacanya di sini.',
+    zh: '请在 Terminal 页面（已关联的 ERP）中关联 ERP 后在此读取。',
   },
   'wf.node.out.erpList': {
     en: 'Add to ERP list',
@@ -89,9 +89,9 @@ export const terminalErpLinkMessages = {
     zh: '列按名称对应列表字段：name（必填）、email、phone、address、city、credit_limit；产品另有 sku、category、unit、purchase_price、selling_price、min_stock、max_stock、density。名称（产品为 SKU）相同即视为已存在。',
   },
   'wf.err.erpNotLinked': {
-    en: 'This TERMINAL is not linked to that ERP (TERMINAL → Linked ERPs).',
-    id: 'TERMINAL ini tidak terhubung ke ERP tersebut (TERMINAL → ERP terhubung).',
-    zh: '此 TERMINAL 未关联该 ERP（TERMINAL → 已关联的 ERP）。',
+    en: 'This Terminal is not linked to that ERP (Terminal → Linked ERPs).',
+    id: 'Terminal ini tidak terhubung ke ERP tersebut (Terminal → ERP terhubung).',
+    zh: '此 Terminal 未关联该 ERP（Terminal → 已关联的 ERP）。',
   },
   'wf.err.erpNameColumn': {
     en: 'The rows need a “name” column to be added to an ERP list.',

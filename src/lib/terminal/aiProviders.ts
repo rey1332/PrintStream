@@ -1,4 +1,4 @@
-// TERMINAL AI providers (P3, 20261012000049): which kinds PrintStream can
+// Terminal AI providers (P3, 20261012000049): which kinds PrintStream can
 // call, what each needs, and the capabilities it declares. One interface for
 // all (src/server/ai/providers.ts); shared by the screens and the worker.
 

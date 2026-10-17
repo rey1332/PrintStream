@@ -1,4 +1,4 @@
-// The TERMINAL worker (decision R-05): a separate process, signed in as the
+// The Terminal worker (decision R-05): a separate process, signed in as the
 // role etna_worker, that runs the job queue (public.ps_jobs).
 //
 //   * Jobs are claimed under a 60-second lease kept by a heartbeat; a lost

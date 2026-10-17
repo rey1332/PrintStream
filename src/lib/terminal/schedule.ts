@@ -1,4 +1,4 @@
-// Pipeline schedules (TERMINAL): checking a schedule and finding when it next
+// Pipeline schedules (Terminal): checking a schedule and finding when it next
 // runs, in the schedule's time zone. Shared by the app (which stores the first
 // next run) and the worker (which moves it on after each run).
 //

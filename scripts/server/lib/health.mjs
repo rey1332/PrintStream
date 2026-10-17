@@ -82,7 +82,7 @@ export async function healthCheck(inst) {
       const applied = new Set(rows.map((r) => r.name));
       const pending = listMigrations().filter((m) => !applied.has(m.name)).length;
       results.push(pending ? fail(G2, 'h.migrations', { count: pending }) : ok(G2, 'h.migrations', { count: applied.size }));
-      // The TERMINAL worker reports every 30 seconds while it runs.
+      // The Terminal worker reports every 30 seconds while it runs.
       if (applied.has('migrations/20261012000035_terminal_jobs.sql')) {
         const { rows: w } = await client.query(
           `select coalesce(max(seen_at) > now() - interval '2 minutes', false) as live,

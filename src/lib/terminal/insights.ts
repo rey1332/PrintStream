@@ -1,4 +1,4 @@
-// TERMINAL insights (P3): what an analysis asks for, what an AI provider may
+// Terminal insights (P3): what an analysis asks for, what an AI provider may
 // see of it (deny by default; R-18), the prompt it gets, and how its answer
 // is read back. The statistical core (stats.ts) decides the numbers; the AI
 // only explains them, citing evidence, and is always labelled AI inference.

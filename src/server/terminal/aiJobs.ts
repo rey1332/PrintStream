@@ -1,4 +1,4 @@
-// TERMINAL AI jobs in the worker (P3, 20261012000049):
+// Terminal AI jobs in the worker (P3, 20261012000049):
 //  * ai.test: one tiny call to a provider, to check its address, key and model;
 //  * ai.analyze: an insight. The statistical core reads the dataset as the
 //    person (row-level security and masking apply) and records its evidence;

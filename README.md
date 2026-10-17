@@ -268,7 +268,7 @@ Not provided: PrintStream has **no external security audit and no compliance cer
 `etna.bat` adalah **installer resmi** PrintStream untuk Windows (untuk Linux:
 [Deploy di Linux](#deploy-di-linux)). Ia memasang
 dan mengelola ETNA di satu server Windows: aplikasi, cluster PostgreSQL
-sendiri, worker TERMINAL, backup harian, dan start otomatis setelah reboot.
+sendiri, worker Terminal, backup harian, dan start otomatis setelah reboot.
 Tanpa Docker. Rincian dan layout dua server ada di
 [docs/HOW TO ETNA.md](docs/HOW%20TO%20ETNA.md) dan
 [docs/INSTALL-SERVER.md](docs/INSTALL-SERVER.md).
@@ -407,7 +407,7 @@ etna.bat).
 | `app\.next\` (build), `app\node_modules\` (produksi) | `tailwind.config.js`, `postcss.config.cjs`, `next-env.d.ts` |
 | `app\db\` (bootstrap, migrasi, rollback) | `.env.local` (pengaturan PC development) |
 | `app\scripts\` (installer, manager, worker, migrasi, backup) | `storage/` (data lokal development) |
-| `app\src\` (dibutuhkan worker TERMINAL), `app\public\` | `dist/` (hasil `npm run package`) |
+| `app\src\` (dibutuhkan worker Terminal), `app\public\` | `dist/` (hasil `npm run package`) |
 | `package.json`, `package-lock.json`, `next.config.mjs`, `image-hosts.config.mjs`, `docs\`, `LICENSE`, `README.md` | `.next/` di PC development |
 
 ## Deploy di Linux

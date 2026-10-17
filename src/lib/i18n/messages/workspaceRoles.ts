@@ -5,8 +5,8 @@ export const workspaceRoleMessages = {
   'permGroup.erp': { en: 'ERP modules', id: 'Modul ERP', zh: 'ERP 模块' },
   'permGroup.workspace': { en: 'Workspace', id: 'Ruang kerja', zh: '工作区' },
   'permGroup.integrations': { en: 'Integrations', id: 'Integrasi', zh: '集成' },
-  'permGroup.datasets': { en: 'TERMINAL datasets', id: 'Dataset TERMINAL', zh: 'TERMINAL 数据集' },
-  'permGroup.pipelines': { en: 'TERMINAL pipelines', id: 'Pipeline TERMINAL', zh: 'TERMINAL 管道' },
+  'permGroup.datasets': { en: 'Terminal datasets', id: 'Dataset Terminal', zh: 'Terminal 数据集' },
+  'permGroup.pipelines': { en: 'Terminal pipelines', id: 'Pipeline Terminal', zh: 'Terminal 管道' },
   'permGroup.approvals': { en: 'Approvals', id: 'Persetujuan', zh: '审批' },
 
   'perm.read': { en: 'Read all ERP data', id: 'Membaca semua data ERP', zh: '读取所有 ERP 数据' },

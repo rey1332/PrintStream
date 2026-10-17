@@ -1,4 +1,4 @@
-// TERMINAL connector jobs in the worker (20261012000041, 042, 046-048):
+// Terminal connector jobs in the worker (20261012000041, 042, 046-048):
 // testing a connection, finishing (or revoking) an OAuth authorisation,
 // describing a database's tables and columns, an API's endpoints, a site's
 // pages or an MCP server's tools, and syncing one ERP list (or a database's

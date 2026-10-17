@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// TERMINAL remote MCP, read only (P2, 20261012000048).
+// Terminal remote MCP, read only (P2, 20261012000048).
 export const terminalMcpMessages = {
   'ps.conn.kind.mcp': {
     en: 'MCP server (remote)',
