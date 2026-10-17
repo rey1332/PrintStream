@@ -1,19 +1,47 @@
 // The tools an MCP client may call on /api/mcp: reading one Terminal's
-// pipelines, their runs and its datasets. Each call is one read-only
-// transaction as the member the access token belongs to (row-level security
-// and the masking views decide what they see, as in the app); the Terminal
-// is the token's, whatever the arguments say.
+// pipelines, their runs and its datasets, insights into a dataset, and, for
+// connections allowed to write, building pipelines (drafts only: a person
+// publishes them in the editor). Each call is one transaction as the member
+// the access token belongs to (row-level security and the masking views
+// decide what they see, as in the app); the Terminal is the token's,
+// whatever the arguments say.
 
 import type { Executor, SqlTx } from '@/server/db/executor';
 import { asUser, isUuid, TerminalError, type RequestIdentity } from '@/server/terminal/session';
-import { listDatasets, loadDataset, readRows } from '@/server/terminal/datasets';
+import { listDatasets, loadDataset, readRows, visibleColumns } from '@/server/terminal/datasets';
+import { analyzeSeries, fillGaps, readProfile, readSeries } from '@/server/terminal/aiJobs';
+import { healthOf } from '@/server/terminal/service';
+import { parseInsightInput } from '@/lib/terminal/insights';
+import { cleanGraph } from '@/lib/workflow/graph';
+import type { WorkflowGraph } from '@/lib/workflow/types';
 import { ToolError, type McpTool } from './protocol';
+import {
+  GraphShapeError,
+  attachDatasets,
+  check,
+  erpFields,
+  fromEditorGraph,
+  graphInputSchema,
+  nodeTypes,
+  testRun,
+  toEditorGraph,
+} from './builder';
 
 export interface McpContext {
   executor: Executor;
   identity: RequestIdentity;
   workspaceId: string;
+  /** The access token used (the database checks it again for writes). */
+  tokenId?: string;
+  /** The connection may build pipelines (chosen when it was made). */
+  canWrite?: boolean;
+  /** A shared rate limit per token: false when the bucket is full. */
+  allow?: (bucket: string, max: number, seconds: number) => Promise<boolean>;
 }
+
+/** The tools this connection may use: the writing ones only when it may write. */
+export const toolsFor = (ctx: McpContext) =>
+  ctx.canWrite ? MCP_TOOLS : MCP_TOOLS.filter((t) => !t.write);
 
 const PATH = '/api/mcp';
 const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
@@ -42,6 +70,7 @@ async function read<T>(ctx: McpContext, fn: (tx: SqlTx) => Promise<T>): Promise<
     return result;
   } catch (error) {
     if (error instanceof TerminalError) {
+      if (WRITE_ERRORS[error.code]) throw new ToolError(WRITE_ERRORS[error.code]);
       if (error.code === 'notFound') throw new ToolError('Not found in this Terminal.');
       if (error.code === 'forbidden' || error.code === 'mfaRequired')
         throw new ToolError('The access token does not allow this.');
@@ -50,6 +79,18 @@ async function read<T>(ctx: McpContext, fn: (tx: SqlTx) => Promise<T>): Promise<
     throw error;
   }
 }
+
+const WRITE_ERRORS: Record<string, string> = {
+  conflict:
+    'The draft changed since it was read (saved in the editor or by another assistant). Read it again with get_pipeline and apply the change to that.',
+  not_owner:
+    'Only pipelines this member made can be changed. Create a new pipeline instead (create_pipeline), for example an improved copy.',
+  read_only: 'This connection may only read.',
+  name: 'Give the pipeline a name.',
+  graph: 'The graph is not valid (at most 100 nodes and 300 edges).',
+  too_many: 'At most 100 pipelines a day through MCP.',
+  no_write: 'The member may not build pipelines in this Terminal.',
+};
 
 const uuidArg = (args: Record<string, unknown>, name: string): string => {
   const v = args[name];
@@ -65,7 +106,8 @@ const limitArg = (args: Record<string, unknown>, fallback: number, max: number) 
 async function pipelineRow(tx: SqlTx, ctx: McpContext, id: string) {
   const { rows } = await tx.query(
     `SELECT w.id, w.name, w.description, w.enabled, w.access, w.graph, w.updated_at, w.published_version_id,
-            v.version AS published_version
+            w.updated_at::text AS revision, w.user_id = auth.uid() AS mine, w.mcp_client, w.mcp_edited_at,
+            v.version AS published_version, v.created_at AS published_at
        FROM public.workflows w
        LEFT JOIN public.workflow_versions v ON v.id = w.published_version_id
       WHERE w.id = $1 AND w.workspace_id = $2`,
@@ -75,27 +117,60 @@ async function pipelineRow(tx: SqlTx, ctx: McpContext, id: string) {
   return rows[0];
 }
 
-// Node data as the editor stores it, without what only the editor needs
-// (cached previews, statuses, positions).
-function describeGraph(graph: any) {
-  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
-  const edges = Array.isArray(graph?.edges) ? graph.edges : [];
-  return {
-    nodes: nodes.map((n: any) => ({
-      id: String(n.id),
-      type: String(n.data?.type ?? n.type ?? ''),
-      label: String(n.data?.label ?? ''),
-      config: n.data?.config ?? {},
-      ...(n.data?.disabled ? { disabled: true } : {}),
-    })),
-    edges: edges.map((e: any) => ({
-      from: String(e.source),
-      to: String(e.target),
-      ...(e.sourceHandle ? { fromPort: String(e.sourceHandle) } : {}),
-      ...(e.targetHandle ? { toPort: String(e.targetHandle) } : {}),
-    })),
-  };
+/** An assistant's graph as the editor's, checked; unusable graphs are refused. */
+async function shaped(
+  tx: SqlTx,
+  ctx: McpContext,
+  args: Record<string, unknown>,
+  previous: WorkflowGraph | null
+) {
+  let graph: WorkflowGraph;
+  try {
+    graph = toEditorGraph(args.nodes, args.edges ?? [], previous);
+  } catch (error) {
+    if (error instanceof GraphShapeError)
+      throw new ToolError(`The graph cannot be used: ${error.message}`);
+    throw error;
+  }
+  return { graph, result: check(graph, await attachDatasets(tx, ctx.workspaceId, graph)) };
 }
+
+const REVIEW =
+  'Saved as a draft. Nothing runs on its own until a person opens it in the PrintStream editor, reviews it and publishes a version.';
+
+/** A dataset of the token's Terminal that the member may query. */
+async function queryableDataset(tx: SqlTx, ctx: McpContext, id: string) {
+  const ds = await loadDataset(tx, id);
+  if (ds.workspaceId !== ctx.workspaceId)
+    throw new ToolError('Dataset not found in this Terminal.');
+  const ok = await tx.query(`SELECT public.ps_can_access_dataset($1, 'query') AS ok`, [ds.id]);
+  if (ok.rows[0]?.ok !== true) throw new ToolError('The member may not query this dataset.');
+  if (ds.status !== 'ready' && ds.status !== 'altering')
+    throw new ToolError(`The dataset is not ready (${ds.status}).`);
+  return ds;
+}
+
+const logInsight = (
+  tx: SqlTx,
+  ds: { workspaceId: string; id: string; name: string; rowCount: number },
+  kind: string
+) =>
+  tx.query(
+    `SELECT public.erp_log_data_access($1::uuid, 'dataset', $2, 'query', $3, '{}'::text[], null, $4::jsonb)`,
+    [
+      ds.workspaceId,
+      ds.id,
+      ds.rowCount,
+      JSON.stringify({ name: ds.name, insight: kind, via: 'mcp' }),
+    ]
+  );
+
+const graphArgs = {
+  type: 'object',
+  properties: { ...graphInputSchema },
+  required: ['nodes'],
+  additionalProperties: false,
+} as const;
 
 export const MCP_TOOLS: McpTool<McpContext>[] = [
   {
@@ -148,7 +223,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
     name: 'get_pipeline',
     title: 'Read a pipeline',
     description:
-      "One pipeline's steps (nodes: id, type, label, configuration) and how they connect (edges), the draft or a published version, with its schedule and the pipelines it starts or that start it.",
+      "One pipeline's steps (nodes: id, type, label, configuration) and how they connect (edges), the draft or a published version, with its schedule and the pipelines it starts or that start it. The draft_revision is what update_pipeline needs.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -215,7 +290,14 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
           version,
           published_version: w.published_version,
           versions,
-          ...describeGraph(graph),
+          draft_revision: w.revision,
+          can_change: w.mine === true,
+          last_changed_through_mcp: w.mcp_client
+            ? { by: w.mcp_client, at: iso(w.mcp_edited_at) }
+            : null,
+          draft_unpublished_changes:
+            !w.published_at || new Date(w.updated_at) > new Date(w.published_at),
+          ...fromEditorGraph(graph),
           schedule: schedule
             ? {
                 ...schedule,
@@ -289,7 +371,11 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
         );
         const r = rows[0];
         if (!r) throw new ToolError('Run not found in this Terminal.');
-        const nodes = describeGraph(r.graph).nodes as { id: string; label: string; type: string }[];
+        const nodes = fromEditorGraph(r.graph).nodes as {
+          id: string;
+          label: string;
+          type: string;
+        }[];
         const labels = new Map(nodes.map((n) => [n.id, n]));
         const results = (r.node_results ?? {}) as Record<string, any>;
         // In the pipeline's order, then any step no longer in the graph.
@@ -395,5 +481,260 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
           ),
         };
       }),
+  },
+
+  // ─── Building pipelines ─────────────────────────────────────────────────────
+  {
+    name: 'list_node_types',
+    title: 'List pipeline steps',
+    description:
+      'The kinds of steps (nodes) a pipeline can have: sources (ERP records, datasets), transforms, combining and cleaning, matching, reshaping, quality checks, analysis and outputs. For each: inputs, output ports, the default configuration and notes on the configuration. Read this before building a pipeline.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        category: {
+          type: 'string',
+          enum: [
+            'source',
+            'transform',
+            'combine',
+            'match',
+            'reshape',
+            'quality',
+            'analysis',
+            'output',
+          ],
+        },
+      },
+      additionalProperties: false,
+    },
+    run: async (_ctx, args) => ({
+      format:
+        'A pipeline is nodes {id, type, label, config} and edges {from, to, from_port?}. Rows flow along the edges; each node gets the columns of the nodes before it. Lists of columns in config are comma-separated text.',
+      node_types: nodeTypes(typeof args.category === 'string' ? args.category : undefined),
+    }),
+  },
+  {
+    name: 'list_erp_fields',
+    title: 'List ERP records and fields',
+    description:
+      'What an "ERP Data" or "ERP Summary" source can read: the record kinds (entities) and, for one entity, its fields (key, type, allowed values), relations and date field.',
+    inputSchema: {
+      type: 'object',
+      properties: { entity: { type: 'string', description: 'One entity, with its fields.' } },
+      additionalProperties: false,
+    },
+    run: async (_ctx, args) => {
+      const entities = erpFields(typeof args.entity === 'string' ? args.entity : undefined);
+      if (args.entity && !entities.length)
+        throw new ToolError('Unknown entity (see list_erp_fields).');
+      return { entities };
+    },
+  },
+  {
+    name: 'validate_pipeline',
+    title: 'Check a pipeline',
+    description:
+      "Checks a pipeline (nodes and edges) the way the editor does, without saving it: missing inputs or settings, unknown columns, cycles, datasets that are not this Terminal's. Returns the problems and the columns each step puts out.",
+    inputSchema: graphArgs,
+    run: (ctx, args) => read(ctx, async (tx) => (await shaped(tx, ctx, args, null)).result),
+  },
+  {
+    name: 'test_pipeline',
+    title: 'Test-run a pipeline',
+    description:
+      'Runs a draft once, as the member, and writes nothing: steps that write (to a dataset or an ERP list) say how many rows they would write. Give pipeline_id to run its saved draft, or nodes and edges to run a graph before saving it. Returns each step (rows, columns, warnings, errors) and a few rows of each final step. At most 10 test runs per 10 minutes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        pipeline_id: { type: 'string', description: 'From list_pipelines; its draft is run.' },
+        ...graphInputSchema,
+      },
+      additionalProperties: false,
+    },
+    run: async (ctx, args) => {
+      if (ctx.allow && !(await ctx.allow('mcp_test', 10, 600)))
+        throw new ToolError('Too many test runs; wait a few minutes.');
+      const prepared = await read(ctx, async (tx) => {
+        if (args.pipeline_id !== undefined) {
+          const w = await pipelineRow(tx, ctx, uuidArg(args, 'pipeline_id'));
+          const graph = cleanGraph(w.graph);
+          return { graph, result: check(graph, await attachDatasets(tx, ctx.workspaceId, graph)) };
+        }
+        if (args.nodes === undefined) throw new ToolError('Give pipeline_id, or nodes and edges.');
+        return shaped(tx, ctx, args, null);
+      });
+      if (!prepared.result.ok) return { status: 'not_run', ...prepared.result };
+      return testRun(ctx.executor, ctx.identity, ctx.workspaceId, prepared.graph);
+    },
+  },
+  {
+    name: 'create_pipeline',
+    title: 'Create a pipeline (draft)',
+    write: true,
+    description:
+      'Saves a new pipeline in this Terminal as a draft, owned by the member: nodes and edges as in validate_pipeline. It is checked first; a graph with problems is saved too (as a draft to finish), and the problems are returned. It does not run, and is not published: a person reviews it in the editor and publishes it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', maxLength: 120 },
+        description: { type: 'string', maxLength: 2000 },
+        ...graphInputSchema,
+      },
+      required: ['name', 'nodes'],
+      additionalProperties: false,
+    },
+    run: (ctx, args) =>
+      read(ctx, async (tx) => {
+        const { graph, result } = await shaped(tx, ctx, args, null);
+        const { rows } = await tx.query(
+          `SELECT id, updated_at::text AS revision FROM public.ps_mcp_pipeline_create($1, $2, $3, $4, $5::jsonb)`,
+          [
+            ctx.tokenId ?? null,
+            ctx.workspaceId,
+            String(args.name ?? ''),
+            typeof args.description === 'string' ? args.description : null,
+            JSON.stringify(graph),
+          ]
+        );
+        return {
+          id: rows[0].id,
+          draft_revision: rows[0].revision,
+          editor_path: `/pipelines/${rows[0].id}`,
+          ...result,
+          next: REVIEW,
+        };
+      }),
+  },
+  {
+    name: 'update_pipeline',
+    title: 'Change a pipeline draft',
+    write: true,
+    description:
+      'Changes the draft of a pipeline the member made: give the whole new nodes and edges (steps with the same id keep their place on the canvas), and/or a new name or description. draft_revision from get_pipeline is required, so that changes saved since in the editor are not overwritten. Published versions stay as they are; a person publishes the new draft after reviewing it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        pipeline_id: { type: 'string' },
+        draft_revision: { type: 'string', description: 'From get_pipeline.' },
+        name: { type: 'string', maxLength: 120 },
+        description: { type: 'string', maxLength: 2000 },
+        ...graphInputSchema,
+      },
+      required: ['pipeline_id', 'draft_revision'],
+      additionalProperties: false,
+    },
+    run: (ctx, args) =>
+      read(ctx, async (tx) => {
+        const w = await pipelineRow(tx, ctx, uuidArg(args, 'pipeline_id'));
+        if (!w.mine) throw new ToolError(WRITE_ERRORS.not_owner);
+        const previous = cleanGraph(w.graph);
+        const next =
+          args.nodes === undefined
+            ? { ...fromEditorGraph(previous) }
+            : { nodes: args.nodes, edges: args.edges ?? [] };
+        const { graph, result } = await shaped(tx, ctx, next, previous);
+        const { rows } = await tx.query(
+          `SELECT public.ps_mcp_pipeline_update($1, $2, $3::timestamptz, $4::jsonb, $5, $6)::text AS revision`,
+          [
+            ctx.tokenId ?? null,
+            w.id,
+            typeof args.draft_revision === 'string' ? args.draft_revision : null,
+            JSON.stringify(graph),
+            typeof args.name === 'string' ? args.name : null,
+            typeof args.description === 'string' ? args.description : null,
+          ]
+        );
+        return {
+          id: w.id,
+          draft_revision: rows[0].revision,
+          editor_path: `/pipelines/${w.id}`,
+          ...result,
+          next: REVIEW,
+        };
+      }),
+  },
+
+  // ─── Insights ───────────────────────────────────────────────────────────────
+  {
+    name: 'profile_dataset',
+    title: 'Profile a dataset',
+    description:
+      'Every column of a dataset at a glance, computed over all its rows: filled and empty values, distinct values, minimum, maximum and mean, and the most common values of text columns (not of sensitive ones). In the data-access log.',
+    inputSchema: {
+      type: 'object',
+      properties: { dataset_id: { type: 'string', description: 'From list_datasets.' } },
+      required: ['dataset_id'],
+      additionalProperties: false,
+    },
+    run: (ctx, args) =>
+      read(ctx, async (tx) => {
+        const ds = await queryableDataset(tx, ctx, uuidArg(args, 'dataset_id'));
+        const profile = await readProfile(tx, ds);
+        await logInsight(tx, ds, 'profile');
+        return { id: ds.id, name: ds.name, rows: ds.rowCount, columns: profile };
+      }),
+  },
+  {
+    name: 'analyze_dataset',
+    title: 'Trend, anomalies or forecast',
+    description:
+      'A measure of a dataset per period (sum, avg, count, min or max of a numeric column per day, week, month or quarter of a date column), with its trend, and either the unusual periods (anomalies: modified z-score) or a forecast (Holt, with a 95% interval and its accuracy on the history). The numbers are computed in PrintStream; explain them from the evidence given.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dataset_id: { type: 'string' },
+        kind: { type: 'string', enum: ['anomalies', 'forecast'] },
+        date_column: { type: 'string', description: 'A date or timestamp column (its name).' },
+        value_column: { type: 'string', description: 'A numeric column; not needed for count.' },
+        measure: { type: 'string', enum: ['sum', 'avg', 'count', 'min', 'max'], default: 'sum' },
+        period: { type: 'string', enum: ['day', 'week', 'month', 'quarter'], default: 'month' },
+        horizon: { type: 'integer', minimum: 1, maximum: 36, default: 6 },
+      },
+      required: ['dataset_id', 'kind', 'date_column'],
+      additionalProperties: false,
+    },
+    run: (ctx, args) =>
+      read(ctx, async (tx) => {
+        const ds = await queryableDataset(tx, ctx, uuidArg(args, 'dataset_id'));
+        const columns = visibleColumns(ds).map((c) => ({
+          label: c.label,
+          type: c.type,
+          sensitive: c.sensitive,
+        }));
+        const input = parseInsightInput({ ...args, provider_id: null }, columns);
+        if ('problem' in input)
+          throw new ToolError(
+            input.problem === 'date_column'
+              ? 'date_column must be a date or timestamp column of the dataset.'
+              : input.problem === 'value_column'
+                ? 'value_column must be a numeric column of the dataset (or use measure "count").'
+                : `Invalid ${input.problem}.`
+          );
+        const points = fillGaps(await readSeries(tx, ds, input), input.period, input.measure);
+        if (points.length < 3)
+          throw new ToolError('Too few periods with values (at least 3) for an analysis.');
+        const analysis = analyzeSeries(points, input);
+        await logInsight(tx, ds, input.kind);
+        return {
+          dataset: { id: ds.id, name: ds.name },
+          measure: `${input.measure}(${input.value_column ?? '*'}) per ${input.period} of ${input.date_column}`,
+          method: analysis.method,
+          confidence: analysis.confidence,
+          evidence: analysis.evidence,
+          ...(input.kind === 'forecast'
+            ? { forecast: (analysis.output as { forecast: unknown }).forecast }
+            : { anomalies: (analysis.output as { anomalies: unknown }).anomalies }),
+          series_tail: points.slice(-36),
+        };
+      }),
+  },
+  {
+    name: 'get_terminal_health',
+    title: 'What needs attention',
+    description:
+      'What needs attention in this Terminal: whether the background worker is running, waiting and failed jobs, pipelines whose last run failed, late or stopped schedules, failing syncs and datasets that stopped changing.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    run: (ctx) => read(ctx, (tx) => healthOf(tx, ctx.workspaceId)),
   },
 ];

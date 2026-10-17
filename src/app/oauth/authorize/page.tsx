@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n/I18nProvider';
 
 type Described = {
   client: { name: string; redirectHost: string };
-  terminals: { id: string; name: string }[];
+  terminals: { id: string; name: string; canBuild: boolean }[];
   needsMfa?: boolean;
 };
 
@@ -55,6 +55,7 @@ export default function AuthorizePage() {
   const [request, setRequest] = useState<Record<string, string> | null>(null);
   const [info, setInfo] = useState<Described | null>(null);
   const [workspaceId, setWorkspaceId] = useState('');
+  const [build, setBuild] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -75,7 +76,8 @@ export default function AuthorizePage() {
   async function decide(action: 'approve' | 'deny') {
     if (!request) return;
     setBusy(true);
-    const res = await call(action, request, { workspaceId });
+    const canBuild = !!info?.terminals.find((x) => x.id === workspaceId)?.canBuild;
+    const res = await call(action, request, { workspaceId, canWrite: canBuild && build });
     if (res.success && res.data?.redirect) {
       window.location.assign(res.data.redirect);
       return;
@@ -155,6 +157,23 @@ export default function AuthorizePage() {
                     </option>
                   ))}
                 </select>
+              </label>
+            )}
+
+            {info.terminals.find((x) => x.id === workspaceId)?.canBuild && (
+              <label className="flex items-start gap-2 rounded-lg border border-border p-3 text-[0.8rem] text-foreground">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={build}
+                  onChange={(e) => setBuild(e.target.checked)}
+                />
+                <span>
+                  {t('oauth.allowBuild')}
+                  <span className="mt-0.5 block text-[0.7rem] text-muted-foreground">
+                    {t('oauth.allowBuildHint')}
+                  </span>
+                </span>
               </label>
             )}
 

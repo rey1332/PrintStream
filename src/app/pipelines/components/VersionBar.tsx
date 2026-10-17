@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, GitCommitVertical, Upload } from 'lucide-react';
+import { Bot, ChevronDown, GitCommitVertical, Upload } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { WorkflowDetail } from '@/lib/workflow/storage';
 
@@ -59,6 +59,8 @@ export default function VersionBar({
   const published = detail.published;
   // Unsaved edits always differ from what was published.
   const differs = published && (dirty || !published.draftMatches);
+  // An assistant wrote this draft and it is not published as it is: a person reviews it first.
+  const byAssistant = detail.mcp_client && detail.mcp_edited_at && (!published || differs);
 
   const submit = async () => {
     setBusy(true);
@@ -88,6 +90,19 @@ export default function VersionBar({
             ? t('wf.ver.differs', { version: published.version })
             : t('wf.ver.matches', { version: published.version })}
       </span>
+
+      {byAssistant && (
+        <span
+          className={`${pill} inline-flex items-center gap-1 bg-violet-100 text-violet-800 dark:bg-violet-950/40 dark:text-violet-300`}
+          title={t('wf.mcp.reviewHint')}
+        >
+          <Bot size={11} />
+          {t('wf.mcp.drafted', {
+            client: detail.mcp_client!,
+            when: fmt.dateTime(detail.mcp_edited_at!),
+          })}
+        </span>
+      )}
 
       {detail.versionsAvailable && (
         <div className="relative" ref={menuRef}>

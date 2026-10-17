@@ -181,15 +181,15 @@ export const terminalOpsMessages = {
     zh: 'AI 助手的 MCP 访问',
   },
   'ps.mcpAccess.intro': {
-    en: "Let an AI assistant (Claude, Cursor, …) read this Terminal's pipelines, their runs and its datasets over MCP, with your own rights. It can read, never change or run anything. Each token is yours and can be revoked at any time.",
-    id: 'Izinkan asisten AI (Claude, Cursor, …) membaca pipeline, riwayat jalannya, dan dataset Terminal ini lewat MCP, dengan hak Anda sendiri. Ia hanya bisa membaca, tidak pernah mengubah atau menjalankan apa pun. Setiap token milik Anda dan bisa dicabut kapan saja.',
-    zh: '允许 AI 助手（Claude、Cursor 等）通过 MCP 以您本人的权限读取此 Terminal 的管道、运行记录和数据集。它只能读取，绝不会修改或运行任何内容。每个令牌属于您，可随时撤销。',
+    en: 'Let an AI assistant (Claude, Cursor, …) work with this Terminal over MCP, with your own rights: read its pipelines, their runs and its datasets, analyse datasets, check and test-run pipeline ideas. If you allow it, it can also build pipelines: those are drafts, and nothing runs until you review and publish them. Each token is yours and can be revoked at any time.',
+    id: 'Izinkan asisten AI (Claude, Cursor, …) bekerja dengan Terminal ini lewat MCP, dengan hak Anda sendiri: membaca pipeline, riwayat jalannya, dan dataset, menganalisis dataset, serta memeriksa dan mencoba ide pipeline. Jika Anda izinkan, ia juga bisa membuat pipeline: semuanya berupa draf, dan tidak ada yang berjalan sampai Anda memeriksa dan memublikasikannya. Setiap token milik Anda dan bisa dicabut kapan saja.',
+    zh: '允许 AI 助手（Claude、Cursor 等）通过 MCP 以您本人的权限使用此 Terminal：读取管道、运行记录和数据集，分析数据集，检查并试运行管道方案。若您允许，它还可以构建管道：这些都是草稿，在您审核并发布之前不会运行。每个令牌属于您，可随时撤销。',
   },
   'ps.mcpAccess.endpoint': { en: 'Server URL:', id: 'URL server:', zh: '服务器地址：' },
   'ps.mcpAccess.tools': {
-    en: 'Tools: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset.',
-    id: 'Alat: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset.',
-    zh: '工具：list_pipelines、get_pipeline、list_pipeline_runs、get_pipeline_run、list_datasets、preview_dataset。',
+    en: 'Tools: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset, list_node_types, list_erp_fields, validate_pipeline, test_pipeline, profile_dataset, analyze_dataset, get_terminal_health; with building allowed also create_pipeline, update_pipeline.',
+    id: 'Alat: list_pipelines, get_pipeline, list_pipeline_runs, get_pipeline_run, list_datasets, preview_dataset, list_node_types, list_erp_fields, validate_pipeline, test_pipeline, profile_dataset, analyze_dataset, get_terminal_health; bila membuat pipeline diizinkan, juga create_pipeline, update_pipeline.',
+    zh: '工具：list_pipelines、get_pipeline、list_pipeline_runs、get_pipeline_run、list_datasets、preview_dataset、list_node_types、list_erp_fields、validate_pipeline、test_pipeline、profile_dataset、analyze_dataset、get_terminal_health；允许构建时另有 create_pipeline、update_pipeline。',
   },
   'ps.mcpAccess.new': { en: 'New access token', id: 'Token akses baru', zh: '新建访问令牌' },
   'ps.mcpAccess.none': {
@@ -279,9 +279,9 @@ export const terminalOpsMessages = {
     zh: '批准后将返回 {host}。仅当您是从那里发起时才批准。',
   },
   'oauth.canRead': {
-    en: "It can read the Terminal's pipelines, their runs and its datasets.",
-    id: 'Aplikasi bisa membaca pipeline, riwayat jalannya, dan dataset Terminal itu.',
-    zh: '它可以读取该 Terminal 的管道、运行记录和数据集。',
+    en: "It can read the Terminal's pipelines, their runs and its datasets, analyse datasets and test-run pipeline ideas (a test run writes nothing).",
+    id: 'Aplikasi bisa membaca pipeline, riwayat jalannya, dan dataset Terminal itu, menganalisis dataset, dan mencoba ide pipeline (uji coba tidak menulis apa pun).',
+    zh: '它可以读取该 Terminal 的管道、运行记录和数据集，分析数据集，并试运行管道方案（试运行不写入任何内容）。',
   },
   'oauth.yourRights': {
     en: 'With your rights: masked columns stay masked, restricted pipelines stay hidden.',
@@ -289,9 +289,9 @@ export const terminalOpsMessages = {
     zh: '以您的权限：脱敏列保持脱敏，受限管道保持隐藏。',
   },
   'oauth.cannot': {
-    en: 'It cannot change, run or delete anything.',
-    id: 'Aplikasi tidak bisa mengubah, menjalankan, atau menghapus apa pun.',
-    zh: '它不能修改、运行或删除任何内容。',
+    en: 'It cannot publish, run in the background, schedule or delete anything.',
+    id: 'Aplikasi tidak bisa memublikasikan, menjalankan di latar belakang, menjadwalkan, atau menghapus apa pun.',
+    zh: '它不能发布、在后台运行、设置计划或删除任何内容。',
   },
   'oauth.terminal': { en: 'Terminal', id: 'Terminal', zh: 'Terminal' },
   'oauth.noTerminal': {
@@ -301,6 +301,41 @@ export const terminalOpsMessages = {
   },
   'oauth.approve': { en: 'Approve', id: 'Setujui', zh: '批准' },
   'oauth.deny': { en: 'Deny', id: 'Tolak', zh: '拒绝' },
+  'ps.mcpAccess.canBuild': {
+    en: 'Builds pipelines',
+    id: 'Membuat pipeline',
+    zh: '可构建管道',
+  },
+  'ps.mcpAccess.allowBuild': {
+    en: 'Also let it build pipelines',
+    id: 'Izinkan juga membuat pipeline',
+    zh: '同时允许构建管道',
+  },
+  'ps.mcpAccess.allowBuildHint': {
+    en: 'It can create pipelines and change the drafts of pipelines you made. Nothing it builds runs until you review and publish it in the editor.',
+    id: 'Asisten bisa membuat pipeline dan mengubah draf pipeline buatan Anda. Tidak ada yang dibuatnya berjalan sampai Anda memeriksa dan memublikasikannya di editor.',
+    zh: '它可以创建管道，并修改您所建管道的草稿。在您于编辑器中审核并发布之前，它构建的内容不会运行。',
+  },
+  'oauth.allowBuild': {
+    en: 'Also let it build pipelines in this Terminal',
+    id: 'Izinkan juga membuat pipeline di Terminal ini',
+    zh: '同时允许在此 Terminal 中构建管道',
+  },
+  'oauth.allowBuildHint': {
+    en: 'It can create pipelines and change the drafts of pipelines you made. They stay drafts: nothing runs until you review and publish them.',
+    id: 'Aplikasi bisa membuat pipeline dan mengubah draf pipeline buatan Anda. Semuanya tetap draf: tidak ada yang berjalan sampai Anda memeriksa dan memublikasikannya.',
+    zh: '它可以创建管道，并修改您所建管道的草稿。它们始终是草稿：在您审核并发布之前不会运行。',
+  },
+  'wf.mcp.drafted': {
+    en: 'Draft by {client}, {when}',
+    id: 'Draf oleh {client}, {when}',
+    zh: '{client} 的草稿，{when}',
+  },
+  'wf.mcp.reviewHint': {
+    en: 'An AI assistant changed this draft through MCP. Check the steps and test-run it before publishing; only published versions run in the background.',
+    id: 'Asisten AI mengubah draf ini lewat MCP. Periksa langkah-langkahnya dan uji coba sebelum memublikasikan; hanya versi terbit yang berjalan di latar belakang.',
+    zh: 'AI 助手通过 MCP 修改了此草稿。发布前请检查各步骤并试运行；只有已发布的版本会在后台运行。',
+  },
   'oauth.revokeHint': {
     en: 'You can disconnect it any time in Terminal → AI → MCP access.',
     id: 'Anda bisa memutusnya kapan saja di Terminal → AI → Akses MCP.',

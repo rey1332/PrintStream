@@ -2,7 +2,7 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDb, createUser, run, admin } from './harness.mjs';
 import { handleMessage } from '../../src/server/mcp/protocol.ts';
-import { MCP_TOOLS } from '../../src/server/mcp/tools.ts';
+import { MCP_TOOLS, toolsFor } from '../../src/server/mcp/tools.ts';
 import { overview } from '../../src/server/terminal/service.ts';
 
 let db;
@@ -120,7 +120,12 @@ test('initialize, ping and the list of read-only tools', async () => {
     (await handleMessage({ jsonrpc: '2.0', id: 3, method: 'ping' }, ctx, MCP_TOOLS)).result,
     {}
   );
-  const list = await handleMessage({ jsonrpc: '2.0', id: 4, method: 'tools/list' }, ctx, MCP_TOOLS);
+  // A connection that may only read is not offered the tools that write.
+  const list = await handleMessage(
+    { jsonrpc: '2.0', id: 4, method: 'tools/list' },
+    ctx,
+    toolsFor(ctx)
+  );
   assert.deepEqual(
     list.result.tools.map((t) => t.name),
     [
@@ -130,6 +135,13 @@ test('initialize, ping and the list of read-only tools', async () => {
       'get_pipeline_run',
       'list_datasets',
       'preview_dataset',
+      'list_node_types',
+      'list_erp_fields',
+      'validate_pipeline',
+      'test_pipeline',
+      'profile_dataset',
+      'analyze_dataset',
+      'get_terminal_health',
     ]
   );
   assert.ok(

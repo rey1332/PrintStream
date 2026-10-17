@@ -164,7 +164,11 @@ export function fillGaps(points: Point[], period: string, measure: string): Poin
   return out;
 }
 
-async function readSeries(tx: SqlTx, ds: DatasetInfo, input: InsightInput): Promise<Point[]> {
+export async function readSeries(
+  tx: SqlTx,
+  ds: DatasetInfo,
+  input: InsightInput
+): Promise<Point[]> {
   const cols = visibleColumns(ds);
   const date = cols.find((c) => c.label === input.date_column);
   const value = cols.find((c) => c.label === input.value_column);
@@ -186,7 +190,7 @@ async function readSeries(tx: SqlTx, ds: DatasetInfo, input: InsightInput): Prom
     .filter((x: Point) => Number.isFinite(x.v));
 }
 
-async function readProfile(tx: SqlTx, ds: DatasetInfo) {
+export async function readProfile(tx: SqlTx, ds: DatasetInfo) {
   const out: Record<string, unknown>[] = [];
   for (const c of visibleColumns(ds).slice(0, 60)) {
     const col = `"${c.physical}"`;
@@ -234,7 +238,7 @@ async function sampleRows(tx: SqlTx, ds: DatasetInfo, labels: string[], n: numbe
 
 // ─── The analysis ────────────────────────────────────────────────────────────
 
-interface Analysis {
+export interface Analysis {
   method: string;
   evidence: EvidenceItem[];
   output: Record<string, unknown>;

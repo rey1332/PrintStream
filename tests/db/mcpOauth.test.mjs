@@ -213,6 +213,16 @@ test('revoking, or leaving the Terminal, ends the connection', async () => {
 
 test('rollback removes connected apps and keeps personal tokens', async () => {
   const d = await createDb();
+  // Later migrations first, newest first.
+  await d.exec(
+    readFileSync(
+      new URL(
+        '../../db/rollback/rollback_20261012000057_mcp_pipeline_builder.sql',
+        import.meta.url
+      ),
+      'utf8'
+    )
+  );
   await d.exec(
     readFileSync(
       new URL('../../db/rollback/rollback_20261012000056_mcp_oauth.sql', import.meta.url),
