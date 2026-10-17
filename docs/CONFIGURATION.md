@@ -18,6 +18,7 @@ staging app at the production database.
 | Reached through | localhost | Caddy, `https://staging.…` | Cloudflare Tunnel, `https://erp.…` |
 | Database | local PostgreSQL | DB server, PostgreSQL service on port **5433**, database `etna_staging` | DB server, PostgreSQL service on port **5432**, database `etna` |
 | `TRUST_PROXY` | unset | `1` | `cloudflare` |
+| `ETNA_MCP_OAUTH_REDIRECTS` | Extra redirect addresses MCP clients may register for OAuth sign-in, comma-separated: exact, or a prefix ending in `/` (Claude's callback and loopback addresses are always allowed) | `/api/oauth/register` | No |
 | DB connection | plain, localhost | TLS, `sslmode=verify-full` | TLS, `sslmode=verify-full` |
 | In-app backup + user accounts (`ETNA_BACKUP_*`) | optional | unset | **unset** |
 | `.env.local` written by | `scripts/setup-local.mjs` | `scripts/setup-local.mjs` | `scripts/setup-local.mjs` |

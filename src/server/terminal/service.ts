@@ -763,3 +763,27 @@ export async function createMcpToken(ctx: TerminalContext, body: any) {
 export async function revokeMcpToken(ctx: TerminalContext, body: any) {
   await run(ctx, (tx) => tx.query('SELECT public.ps_mcp_token_revoke($1)', [uuid(body.id)]));
 }
+
+// ─── Connected apps (OAuth, db/migrations/20261012000056_mcp_oauth.sql) ──────
+
+export async function listMcpApps(ctx: TerminalContext, body: any) {
+  const ws = uuid(body.workspaceId);
+  return run(ctx, async (tx) =>
+    (await tx.query('SELECT * FROM public.ps_oauth_grant_list($1)', [ws])).rows.map((r: any) => ({
+      id: r.id as string,
+      name: r.client_name as string,
+      host: r.redirect_host as string | null,
+      mine: r.mine as boolean,
+      owner: r.owner_email as string | null,
+      createdAt: iso(r.created_at),
+      lastUsedAt: iso(r.last_used_at),
+      uses: Number(r.uses),
+      expiresAt: iso(r.refresh_expires_at),
+      revokedAt: iso(r.revoked_at),
+    }))
+  );
+}
+
+export async function revokeMcpApp(ctx: TerminalContext, body: any) {
+  await run(ctx, (tx) => tx.query('SELECT public.ps_oauth_grant_revoke($1)', [uuid(body.id)]));
+}

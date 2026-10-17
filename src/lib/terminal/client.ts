@@ -173,6 +173,20 @@ export interface McpToken {
   revokedAt: string | null;
 }
 
+/** An app connected through OAuth (Claude's connectors and others). */
+export interface McpApp {
+  id: string;
+  name: string;
+  host: string | null;
+  mine: boolean;
+  owner: string | null;
+  createdAt: string | null;
+  lastUsedAt: string | null;
+  uses: number;
+  expiresAt: string | null;
+  revokedAt: string | null;
+}
+
 export interface PipelineSummary {
   id: string;
   name: string;

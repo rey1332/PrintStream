@@ -11,6 +11,7 @@ import {
   type JsonRpcResponse,
 } from '@/server/mcp/protocol';
 import { MCP_TOOLS, type McpContext } from '@/server/mcp/tools';
+import { issuerOf } from '@/server/mcp/oauth';
 
 // MCP for AI assistants (Streamable HTTP): POST /api/mcp with
 //   Authorization: Bearer psmcp_…   (a Terminal → AI → MCP access token)
@@ -27,16 +28,22 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 const json = (body: JsonRpcResponse | Record<string, unknown>, status = 200, headers = {}) =>
   NextResponse.json(body, { status, headers: { ...NO_STORE, ...headers } });
 
-function unauthorized(message: string) {
+// Points MCP clients at the sign-in (OAuth discovery, RFC 9728).
+function unauthorized(request: NextRequest, message: string) {
+  const metadata = `${issuerOf(request)}/.well-known/oauth-protected-resource`;
   return json({ jsonrpc: '2.0', id: null, error: { code: -32001, message } }, 401, {
-    'WWW-Authenticate': 'Bearer realm="printstream-mcp"',
+    'WWW-Authenticate': `Bearer realm="printstream-mcp", resource_metadata="${metadata}"`,
   });
 }
 
-/** A browser page of another site may not use the endpoint (DNS rebinding included). */
+// Claude's apps may say where they call from; other sites' pages may not use
+// the endpoint (DNS rebinding included).
+const CLIENT_ORIGINS = ['https://claude.ai', 'https://claude.com'];
+
+/** A browser page of another site, not one of the known MCP clients. */
 function foreignOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
-  if (!origin) return false;
+  if (!origin || CLIENT_ORIGINS.includes(origin)) return false;
   try {
     return new URL(origin).host !== request.headers.get('host');
   } catch {
@@ -61,7 +68,10 @@ export async function POST(request: NextRequest) {
         { jsonrpc: '2.0', id: null, error: { code: -32000, message: 'Too many requests' } },
         429
       );
-    return unauthorized('An MCP access token is required (Authorization: Bearer psmcp_…).');
+    return unauthorized(
+      request,
+      'An MCP access token is required (Authorization: Bearer psmcp_…).'
+    );
   }
 
   const hash = createHash('sha256').update(token).digest('hex');
@@ -74,7 +84,10 @@ export async function POST(request: NextRequest) {
         { jsonrpc: '2.0', id: null, error: { code: -32000, message: 'Too many requests' } },
         429
       );
-    return unauthorized('The access token is not valid (revoked, expired, or the member left).');
+    return unauthorized(
+      request,
+      'The access token is not valid (revoked, expired, or the member left).'
+    );
   }
   if (!(await requestAllowed(auth, 'mcp', found.token_id, 120, 60)))
     return json(

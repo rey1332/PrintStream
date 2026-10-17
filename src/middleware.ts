@@ -32,7 +32,13 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
   }
 
   const hint = await readFor(false);
-  if (!hint) return redirectTo(request, pathname.startsWith('/erp') ? '/erp/login' : '/login');
+  if (!hint) {
+    if (pathname.startsWith('/erp')) return redirectTo(request, '/erp/login');
+    // Back to the page asked for after signing in (the OAuth consent page, a link).
+    const back =
+      pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
+    return redirectTo(request, `/login${back}`);
+  }
 
   // Two-factor: a user with a verified authenticator completes it first.
   if (hint.next === 'aal2' && hint.aal !== 'aal2' && !pathname.startsWith('/mfa')) {

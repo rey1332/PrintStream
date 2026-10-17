@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
-import { terminalApi, type McpToken } from '@/lib/terminal/client';
+import { terminalApi, type McpApp, type McpToken } from '@/lib/terminal/client';
 import { Dialog, buttonCls, errorMessage, inputCls, primaryCls } from './shared';
 
 const DAYS = [30, 90, 180, 365];
@@ -53,6 +53,7 @@ export function McpAccess({
 }) {
   const { t, fmt } = useI18n();
   const [tokens, setTokens] = useState<McpToken[] | null>(null);
+  const [apps, setApps] = useState<McpApp[]>([]);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [days, setDays] = useState(90);
@@ -62,7 +63,12 @@ export function McpAccess({
 
   const load = useCallback(async () => {
     try {
-      setTokens(await terminalApi<McpToken[]>('mcpTokens.list', { workspaceId }));
+      const [list, connected] = await Promise.all([
+        terminalApi<McpToken[]>('mcpTokens.list', { workspaceId }),
+        terminalApi<McpApp[]>('mcpApps.list', { workspaceId }),
+      ]);
+      setTokens(list);
+      setApps(connected);
     } catch (e) {
       toast.error(errorMessage(e, t));
     }
@@ -105,6 +111,21 @@ export function McpAccess({
     }
   }
 
+  async function revokeApp(app: McpApp) {
+    if (!confirm(t('ps.mcpAccess.revokeConfirm', { name: app.name }))) return;
+    try {
+      await terminalApi('mcpApp.revoke', { id: app.id });
+      toast.success(t('ps.mcpAccess.revoked'));
+      await load();
+    } catch (err) {
+      toast.error(errorMessage(err, t));
+    }
+  }
+
+  const liveApps = apps.filter(
+    (a) => !a.revokedAt && (!a.expiresAt || new Date(a.expiresAt) > new Date())
+  );
+
   const active = (tokens ?? []).filter(
     (x) => !x.revokedAt && (!x.expiresAt || new Date(x.expiresAt) > new Date())
   );
@@ -131,6 +152,43 @@ export function McpAccess({
         <code className="break-all text-foreground">{url}</code>
         <p className="mt-1 text-[0.66rem] text-muted-foreground">{t('ps.mcpAccess.tools')}</p>
       </div>
+
+      <div className="space-y-2">
+        <h3 className="text-[0.78rem] font-semibold text-foreground">{t('ps.mcpAccess.apps')}</h3>
+        <p className="text-[0.7rem] text-muted-foreground">{t('ps.mcpAccess.appsHint', { url })}</p>
+        {liveApps.length > 0 && (
+          <ul className="divide-y divide-border">
+            {liveApps.map((a) => (
+              <li key={a.id} className="flex flex-wrap items-center gap-2 py-2 text-[0.75rem]">
+                <span className="font-medium text-foreground">{a.name}</span>
+                {a.host && <span className="text-[0.66rem] text-muted-foreground">{a.host}</span>}
+                {!a.mine && a.owner && (
+                  <span className="text-[0.68rem] text-muted-foreground">{a.owner}</span>
+                )}
+                <span className="text-[0.66rem] text-muted-foreground">
+                  {a.lastUsedAt
+                    ? t('ps.mcpAccess.used', { when: fmt.dateTime(a.lastUsedAt), n: a.uses })
+                    : t('ps.mcpAccess.neverUsed')}
+                </span>
+                <span className="ml-auto text-[0.66rem] text-muted-foreground">
+                  {t('ps.mcpAccess.connected', { when: fmt.date(a.createdAt) })}
+                </span>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-red-500"
+                  aria-label={t('ps.mcpAccess.revoke')}
+                  title={t('ps.mcpAccess.revoke')}
+                  onClick={() => revokeApp(a)}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <h3 className="text-[0.78rem] font-semibold text-foreground">{t('ps.mcpAccess.tokens')}</h3>
 
       {tokens === null ? (
         <p className="text-[0.72rem] text-muted-foreground">{t('common.loading')}</p>

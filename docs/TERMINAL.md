@@ -347,9 +347,24 @@ Not yet verified against live AI providers: tested with simulated providers.
 
 ## MCP access for AI assistants (read)
 
-An AI assistant (Claude Desktop, Claude Code, Cursor, any MCP client) can read
-a Terminal's pipelines over MCP: **Terminal → AI → MCP access → New access
-token**.
+An AI assistant (Claude on the web, Claude Desktop and the apps, Claude Code,
+Cursor, any MCP client) can read a Terminal's pipelines over MCP, in one of
+two ways:
+
+* **Connect with sign-in (OAuth)**, for Claude's connectors: in Claude,
+  Settings → Connectors → Add custom connector, URL
+  `https://<server>/api/mcp`, then Connect. PrintStream's sign-in opens; the
+  member signs in (two-factor where the role needs it), sees which app asks
+  and where it returns to, chooses the Terminal and approves. The app then
+  appears under **Terminal → AI → MCP access → Connected apps**, where it can
+  be disconnected.
+* **An access token**, for clients that cannot sign in: **Terminal → AI → MCP
+  access → New access token**, sent as `Authorization: Bearer psmcp_…`.
+
+The server must be reachable over HTTPS at a public address for Claude's
+connectors (they call it from Anthropic's servers): a reverse proxy or a
+tunnel, with `ETNA_PUBLIC_URL` set to that address and `TRUST_PROXY`
+(`cloudflare` behind Cloudflare, else `1`).
 
 * **Endpoint**: `POST https://<server>/api/mcp` (Streamable HTTP, JSON
   responses, no event stream), header `Authorization: Bearer psmcp_…`.
@@ -370,6 +385,22 @@ token**.
   Only the auth server role looks tokens up (`auth.mcp_token_use`).
 * **Limits**: 120 calls a minute per token; 30 bad tokens a minute per
   address. Requests from a web page of another origin are refused.
+* **OAuth** (`db/migrations/20261012000056_mcp_oauth.sql`,
+  `src/server/mcp/oauth.ts`): discovery at
+  `/.well-known/oauth-protected-resource` and
+  `/.well-known/oauth-authorization-server` (the 401 of `/api/mcp` points to
+  them), dynamic client registration at `POST /api/oauth/register`, the
+  consent page `/oauth/authorize`, and `POST /api/oauth/token`
+  (`authorization_code` with PKCE S256 only, `refresh_token`). Clients may
+  register only Claude's callback (`https://claude.ai/api/mcp/auth_callback`,
+  `https://claude.com/…`) and loopback addresses (`http://localhost:*`,
+  `http://127.0.0.1:*`); `ETNA_MCP_OAUTH_REDIRECTS` adds others (exact, or a
+  prefix ending in `/`, e.g. `cursor://anysphere.cursor-retrieval/`). Codes
+  last 10 minutes and work once (a second use ends the connection); access
+  tokens last an hour; refresh tokens last 30 days, renew on use (at most a
+  year) and rotate (an old one used again ends the connection). Only hashes
+  are stored. Registration: 10 an hour per address; token endpoint: 60 a
+  minute per address.
 
 ## The worker
 

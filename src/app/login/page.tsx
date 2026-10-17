@@ -7,6 +7,13 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { AsciiLogo } from '@/components/brand/AsciiLogo';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { translateServerMessage } from '@/lib/i18n/translate';
+import { safeNext } from '@/lib/auth/safe-next';
+
+/** Where to go after signing in: the page that sent here (?next=), else home. */
+function nextPath(): string {
+  if (typeof window === 'undefined') return '/';
+  return safeNext(new URLSearchParams(window.location.search).get('next'), '/');
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,10 +27,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect if already logged in
+  // Redirect if already logged in: to the page that sent here (?next=), else home.
   useEffect(() => {
     if (!authLoading && user) {
-      router.replace('/');
+      router.replace(nextPath());
     }
   }, [user, authLoading, router]);
 
@@ -37,7 +44,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password, shared);
-      router.replace('/');
+      router.replace(nextPath());
     } catch (err: any) {
       setError(err?.message ? translateServerMessage(err.message) : t('auth.invalidCredentials'));
     } finally {

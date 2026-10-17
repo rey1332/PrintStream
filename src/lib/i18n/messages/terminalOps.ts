@@ -233,8 +233,8 @@ export const terminalOpsMessages = {
   'ps.mcpAccess.copyFailed': { en: 'Could not copy', id: 'Tidak bisa menyalin', zh: '无法复制' },
   'ps.mcpAccess.done': { en: 'Done', id: 'Selesai', zh: '完成' },
   'ps.mcpAccess.used': {
-    en: 'last used {when} · {n} calls',
-    id: 'terakhir dipakai {when} · {n} panggilan',
+    en: 'last used {when} · calls: {n}',
+    id: 'terakhir dipakai {when} · panggilan: {n}',
     zh: '最近使用 {when} · {n} 次调用',
   },
   'ps.mcpAccess.neverUsed': { en: 'not used yet', id: 'belum dipakai', zh: '尚未使用' },
@@ -250,5 +250,75 @@ export const terminalOpsMessages = {
     en: 'Revoked or expired: {n}',
     id: 'Dicabut atau kedaluwarsa: {n}',
     zh: '已撤销或过期：{n}',
+  },
+  'ps.mcpAccess.apps': { en: 'Connected apps', id: 'Aplikasi terhubung', zh: '已连接的应用' },
+  'ps.mcpAccess.appsHint': {
+    en: 'In Claude (Settings → Connectors → Add custom connector) or another MCP client, add {url} and connect: you sign in here and choose this Terminal. No token to copy.',
+    id: 'Di Claude (Settings → Connectors → Add custom connector) atau klien MCP lain, tambahkan {url} lalu hubungkan: Anda masuk di sini dan memilih Terminal ini. Tidak perlu menyalin token.',
+    zh: '在 Claude（Settings → Connectors → Add custom connector）或其他 MCP 客户端中添加 {url} 并连接：您在此登录并选择此 Terminal，无需复制令牌。',
+  },
+  'ps.mcpAccess.connected': { en: 'connected {when}', id: 'terhubung {when}', zh: '{when} 连接' },
+  'ps.mcpAccess.tokens': {
+    en: 'Access tokens (for clients without sign-in)',
+    id: 'Token akses (untuk klien tanpa login)',
+    zh: '访问令牌（用于无法登录的客户端）',
+  },
+  'oauth.title': {
+    en: 'Connect an app to PrintStream',
+    id: 'Hubungkan aplikasi ke PrintStream',
+    zh: '将应用连接到 PrintStream',
+  },
+  'oauth.asks': {
+    en: '"{name}" asks to read a PrintStream Terminal for you.',
+    id: '"{name}" meminta izin membaca sebuah Terminal PrintStream untuk Anda.',
+    zh: '“{name}” 请求代您读取一个 PrintStream Terminal。',
+  },
+  'oauth.returnsTo': {
+    en: 'After you approve, you go back to {host}. Only approve if you started this from there.',
+    id: 'Setelah Anda menyetujui, Anda kembali ke {host}. Setujui hanya bila Anda memulainya dari sana.',
+    zh: '批准后将返回 {host}。仅当您是从那里发起时才批准。',
+  },
+  'oauth.canRead': {
+    en: "It can read the Terminal's pipelines, their runs and its datasets.",
+    id: 'Aplikasi bisa membaca pipeline, riwayat jalannya, dan dataset Terminal itu.',
+    zh: '它可以读取该 Terminal 的管道、运行记录和数据集。',
+  },
+  'oauth.yourRights': {
+    en: 'With your rights: masked columns stay masked, restricted pipelines stay hidden.',
+    id: 'Dengan hak Anda: kolom tersamar tetap tersamar, pipeline terbatas tetap tersembunyi.',
+    zh: '以您的权限：脱敏列保持脱敏，受限管道保持隐藏。',
+  },
+  'oauth.cannot': {
+    en: 'It cannot change, run or delete anything.',
+    id: 'Aplikasi tidak bisa mengubah, menjalankan, atau menghapus apa pun.',
+    zh: '它不能修改、运行或删除任何内容。',
+  },
+  'oauth.terminal': { en: 'Terminal', id: 'Terminal', zh: 'Terminal' },
+  'oauth.noTerminal': {
+    en: 'You have no Terminal where you may view pipelines.',
+    id: 'Anda tidak punya Terminal yang pipelinenya boleh Anda lihat.',
+    zh: '您没有可查看管道的 Terminal。',
+  },
+  'oauth.approve': { en: 'Approve', id: 'Setujui', zh: '批准' },
+  'oauth.deny': { en: 'Deny', id: 'Tolak', zh: '拒绝' },
+  'oauth.revokeHint': {
+    en: 'You can disconnect it any time in Terminal → AI → MCP access.',
+    id: 'Anda bisa memutusnya kapan saja di Terminal → AI → Akses MCP.',
+    zh: '您可随时在 Terminal → AI → MCP 访问中断开连接。',
+  },
+  'oauth.err.client': {
+    en: 'This sign-in link is not valid: the app is unknown or sends you somewhere it did not register. Start again from the app.',
+    id: 'Tautan login ini tidak valid: aplikasinya tidak dikenal atau mengarahkan ke alamat yang tidak didaftarkan. Mulai lagi dari aplikasinya.',
+    zh: '此登录链接无效：应用未知，或跳转到未登记的地址。请从应用重新开始。',
+  },
+  'oauth.err.mfa': {
+    en: 'This Terminal needs two-factor sign-in. Turn it on, then try again.',
+    id: 'Terminal ini membutuhkan login dua faktor. Aktifkan, lalu coba lagi.',
+    zh: '此 Terminal 需要双重验证登录。请开启后重试。',
+  },
+  'oauth.err.failed': {
+    en: 'That did not work. Start again from the app.',
+    id: 'Gagal. Mulai lagi dari aplikasinya.',
+    zh: '操作失败。请从应用重新开始。',
   },
 } satisfies Record<string, Entry>;

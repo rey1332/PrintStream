@@ -33,15 +33,44 @@ test('the two-factor page itself is not a destination', () => {
 test('sign-in redirects stay on the host the browser opened (behind a tunnel too)', async () => {
   const { NextRequest } = await import('next/server');
   const { middleware } = await import('../../src/middleware.ts');
-  const at = async (url, headers) => (await middleware(new NextRequest(url, { headers }))).headers.get('location');
+  const at = async (url, headers) =>
+    (await middleware(new NextRequest(url, { headers }))).headers.get('location');
   assert.equal(
-    await at('http://localhost:4028/terminal', { host: 'printstream.example.id', 'x-forwarded-proto': 'https' }),
-    'https://printstream.example.id/login'
+    await at('http://localhost:4028/terminal', {
+      host: 'printstream.example.id',
+      'x-forwarded-proto': 'https',
+    }),
+    'https://printstream.example.id/login?next=%2Fterminal'
   );
+  // Back to the page asked for after signing in, query included (the OAuth consent page).
   assert.equal(
-    await at('http://localhost:4028/erp/customers', { host: 'printstream.example.id', 'x-forwarded-proto': 'https' }),
+    await at('http://localhost:4028/oauth/authorize?client_id=mcpc_x&state=s', {
+      host: 'printstream.example.id',
+      'x-forwarded-proto': 'https',
+    }),
+    'https://printstream.example.id/login?next=%2Foauth%2Fauthorize%3Fclient_id%3Dmcpc_x%26state%3Ds'
+  );
+  // The discovery documents and the token endpoint need no sign-in.
+  const { isPublicPath } = await import('../../src/lib/auth/public-paths.ts');
+  for (const p of [
+    '/.well-known/oauth-authorization-server',
+    '/.well-known/oauth-protected-resource/api/mcp',
+    '/api/oauth/token',
+    '/api/oauth/register',
+    '/api/mcp',
+  ])
+    assert.equal(isPublicPath(p), true, p);
+  assert.equal(isPublicPath('/oauth/authorize'), false);
+  assert.equal(
+    await at('http://localhost:4028/erp/customers', {
+      host: 'printstream.example.id',
+      'x-forwarded-proto': 'https',
+    }),
     'https://printstream.example.id/erp/login'
   );
   // A malformed Host is never used.
-  assert.equal(new URL(await at('http://localhost:4028/', { host: 'evil.example/x' })).host, 'localhost:4028');
+  assert.equal(
+    new URL(await at('http://localhost:4028/', { host: 'evil.example/x' })).host,
+    'localhost:4028'
+  );
 });

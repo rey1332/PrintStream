@@ -25,6 +25,8 @@ const ACTIONS: Record<string, (ctx: terminal.TerminalContext, body: any) => Prom
   'mcpTokens.list': terminal.listMcpTokens,
   'mcpToken.create': terminal.createMcpToken,
   'mcpToken.revoke': terminal.revokeMcpToken,
+  'mcpApps.list': terminal.listMcpApps,
+  'mcpApp.revoke': terminal.revokeMcpApp,
   'pipeline.run': terminal.runPipeline,
   'pipeline.schedule': terminal.saveSchedule,
   'pipeline.unschedule': terminal.deleteSchedule,
