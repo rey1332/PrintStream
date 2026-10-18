@@ -3,7 +3,7 @@ import { withAuth } from '@/lib/api-safe';
 import { terminalContext } from '@/server/terminal/context';
 import { asUser, isUuid } from '@/server/terminal/session';
 import {
-  SCOPE,
+  SCOPES,
   issuerOf,
   newSecret,
   resourceOf,
@@ -43,6 +43,7 @@ export const POST = withAuth(async ({ request }) => {
   const body = ((await request.json().catch(() => null)) ?? {}) as AuthRequest & {
     action?: unknown;
     workspaceId?: unknown;
+    canWrite?: unknown;
   };
   const issuer = issuerOf(request as NextRequest);
   const clientId = str(body.client_id, 80);
@@ -55,11 +56,14 @@ export const POST = withAuth(async ({ request }) => {
     ).rows[0];
     const terminals = (
       await tx.query(
-        `SELECT s.workspace_id AS id, s.name FROM public.ps_my_spaces() s
+        `SELECT s.workspace_id AS id, s.name,
+                public.erp_has_permission(s.workspace_id, 'pipelines.create')
+                  OR public.erp_has_permission(s.workspace_id, 'pipelines.edit') AS "canBuild"
+           FROM public.ps_my_spaces() s
           WHERE s.terminal_on AND public.erp_has_permission(s.workspace_id, 'pipelines.view')
           ORDER BY lower(s.name)`
       )
-    ).rows as { id: string; name: string }[];
+    ).rows as { id: string; name: string; canBuild: boolean }[];
     // No Terminal shown, but some exist and this session lacks two-factor:
     // most likely the role needs it there.
     const [{ spaces, aal }] = (
@@ -83,7 +87,8 @@ export const POST = withAuth(async ({ request }) => {
   if (body.code_challenge_method !== 'S256' || !validChallenge(body.code_challenge))
     return back({ error: 'invalid_request', error_description: 'PKCE with S256 is required' });
   const scope = str(body.scope);
-  if (scope && !scope.split(' ').every((s) => s === SCOPE)) return back({ error: 'invalid_scope' });
+  if (scope && !scope.split(' ').every((s) => SCOPES.includes(s)))
+    return back({ error: 'invalid_scope' });
   const resource = str(body.resource);
   if (resource && resource.replace(/\/$/, '') !== resourceOf(issuer))
     return back({ error: 'invalid_target' });
@@ -108,17 +113,20 @@ export const POST = withAuth(async ({ request }) => {
   if (body.action !== 'approve') return { success: false, error: 'invalid' };
 
   const workspaceId = body.workspaceId;
-  if (!isUuid(workspaceId) || !found.terminals.some((t) => t.id === workspaceId))
-    return { success: false, error: 'forbidden' };
+  const terminal = found.terminals.find((t) => t.id === workspaceId);
+  if (!isUuid(workspaceId) || !terminal) return { success: false, error: 'forbidden' };
+  // Building pipelines only when the member ticked it, and may build there.
+  const canWrite = body.canWrite === true && terminal.canBuild === true;
   const code = newSecret('psmco_');
   try {
     await asUser(ctx.executor, ctx.identity, '/oauth/authorize', (tx) =>
-      tx.query('SELECT public.ps_oauth_approve($1, $2, $3, $4, $5)', [
+      tx.query('SELECT public.ps_oauth_approve_v2($1, $2, $3, $4, $5, $6)', [
         clientId,
         redirect,
         body.code_challenge,
         workspaceId,
         sha256Hex(code),
+        canWrite,
       ])
     );
   } catch (error) {

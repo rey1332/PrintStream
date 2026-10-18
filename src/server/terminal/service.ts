@@ -120,7 +120,7 @@ export async function overview(ctx: TerminalContext, workspaceId: unknown) {
 
 // What needs attention (the overview's health cards). Everything is read as
 // the member: what they cannot see is not counted.
-async function healthOf(tx: SqlTx, ws: string) {
+export async function healthOf(tx: SqlTx, ws: string) {
   const all = async (sql: string, params: unknown[] = [ws]) => (await tx.query(sql, params)).rows;
   const [worker] = await all('SELECT public.ps_worker_last_seen() AS seen', []);
   const [queue] = await all(
@@ -723,7 +723,7 @@ export async function uploadImport(
 export async function listMcpTokens(ctx: TerminalContext, body: any) {
   const ws = uuid(body.workspaceId);
   return run(ctx, async (tx) =>
-    (await tx.query('SELECT * FROM public.ps_mcp_token_list($1)', [ws])).rows.map((r: any) => ({
+    (await tx.query('SELECT * FROM public.ps_mcp_token_list_v2($1)', [ws])).rows.map((r: any) => ({
       id: r.id as string,
       name: r.name as string,
       prefix: r.token_prefix as string,
@@ -735,6 +735,7 @@ export async function listMcpTokens(ctx: TerminalContext, body: any) {
       lastUsedAt: iso(r.last_used_at),
       uses: Number(r.use_count),
       revokedAt: iso(r.revoked_at),
+      canWrite: r.can_write === true,
     }))
   );
 }
@@ -748,12 +749,13 @@ export async function createMcpToken(ctx: TerminalContext, body: any) {
     ctx,
     async (tx) =>
       (
-        await tx.query('SELECT public.ps_mcp_token_create($1, $2, $3, $4, $5) AS id', [
+        await tx.query('SELECT public.ps_mcp_token_create_v2($1, $2, $3, $4, $5, $6) AS id', [
           ws,
           text(body.name, 80),
           hash,
           token.slice(0, 12),
           days,
+          body.canWrite === true,
         ])
       ).rows[0].id as string
   );
@@ -769,18 +771,21 @@ export async function revokeMcpToken(ctx: TerminalContext, body: any) {
 export async function listMcpApps(ctx: TerminalContext, body: any) {
   const ws = uuid(body.workspaceId);
   return run(ctx, async (tx) =>
-    (await tx.query('SELECT * FROM public.ps_oauth_grant_list($1)', [ws])).rows.map((r: any) => ({
-      id: r.id as string,
-      name: r.client_name as string,
-      host: r.redirect_host as string | null,
-      mine: r.mine as boolean,
-      owner: r.owner_email as string | null,
-      createdAt: iso(r.created_at),
-      lastUsedAt: iso(r.last_used_at),
-      uses: Number(r.uses),
-      expiresAt: iso(r.refresh_expires_at),
-      revokedAt: iso(r.revoked_at),
-    }))
+    (await tx.query('SELECT * FROM public.ps_oauth_grant_list_v2($1)', [ws])).rows.map(
+      (r: any) => ({
+        id: r.id as string,
+        name: r.client_name as string,
+        host: r.redirect_host as string | null,
+        mine: r.mine as boolean,
+        owner: r.owner_email as string | null,
+        createdAt: iso(r.created_at),
+        lastUsedAt: iso(r.last_used_at),
+        uses: Number(r.uses),
+        expiresAt: iso(r.refresh_expires_at),
+        revokedAt: iso(r.revoked_at),
+        canWrite: r.can_write === true,
+      })
+    )
   );
 }
 

@@ -77,6 +77,9 @@ export interface WorkflowDetail extends Workflow {
   versions: WorkflowVersionInfo[];
   published: { id: string; version: number; draftMatches: boolean } | null;
   versionsAvailable: boolean;
+  /** Which MCP connection (an AI assistant) last wrote the draft, and when. */
+  mcp_client?: string | null;
+  mcp_edited_at?: string | null;
 }
 
 export interface RunResponse {

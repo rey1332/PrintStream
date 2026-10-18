@@ -199,6 +199,11 @@ test('MCP tokens stop working when revoked, expired, or when the member leaves',
 
 test('rollback removes tokens, retries and the worker report', async () => {
   const d = await createDb();
+  // Later migrations first, newest first.
+  for (const later of ['20261012000057_mcp_pipeline_builder', '20261012000056_mcp_oauth'])
+    await d.exec(
+      readFileSync(new URL(`../../db/rollback/rollback_${later}.sql`, import.meta.url), 'utf8')
+    );
   await d.exec(
     readFileSync(
       new URL(

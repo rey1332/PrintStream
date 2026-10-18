@@ -10,13 +10,14 @@ import {
   handleMessage,
   type JsonRpcResponse,
 } from '@/server/mcp/protocol';
-import { MCP_TOOLS, type McpContext } from '@/server/mcp/tools';
+import { toolsFor, type McpContext } from '@/server/mcp/tools';
 import { issuerOf } from '@/server/mcp/oauth';
 
 // MCP for AI assistants (Streamable HTTP): POST /api/mcp with
 //   Authorization: Bearer psmcp_…   (a Terminal → AI → MCP access token)
-// and one JSON-RPC message. Read-only tools over the token's Terminal, as
-// the member who made the token (docs/TERMINAL.md, "MCP access"). No cookies:
+// and one JSON-RPC message. Tools over the token's Terminal, as the member
+// who made the token; building pipelines (drafts) only when the token or
+// connection was allowed to write (docs/TERMINAL.md, "MCP access"). No cookies:
 // the token is the only credential, so browsers' cross-site requests carry
 // nothing; requests from a web page of another origin are refused anyway.
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
   const hash = createHash('sha256').update(token).digest('hex');
   const found = await auth.executor.transaction(
-    async (tx) => (await tx.query('SELECT * FROM auth.mcp_token_use($1)', [hash])).rows[0]
+    async (tx) => (await tx.query('SELECT * FROM auth.mcp_token_use_v2($1)', [hash])).rows[0]
   );
   if (!found) {
     if (!(await requestAllowed(auth, 'mcp_bad', ip, 30, 60)))
@@ -121,9 +122,12 @@ export async function POST(request: NextRequest) {
     executor: getAppExecutor(),
     identity: { userId: found.user_id, email: found.email ?? '', aal: found.aal },
     workspaceId: found.workspace_id,
+    tokenId: found.token_id,
+    canWrite: found.can_write === true,
+    allow: (bucket, max, seconds) => requestAllowed(auth, bucket, found.token_id, max, seconds),
   };
   try {
-    const response = await handleMessage(message, ctx, MCP_TOOLS);
+    const response = await handleMessage(message, ctx, toolsFor(ctx));
     if (!response) return new NextResponse(null, { status: 202, headers: NO_STORE });
     return json(response);
   } catch (error) {

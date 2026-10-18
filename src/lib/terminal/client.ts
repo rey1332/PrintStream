@@ -171,6 +171,8 @@ export interface McpToken {
   lastUsedAt: string | null;
   uses: number;
   revokedAt: string | null;
+  /** May build pipelines (drafts), chosen when the token was made. */
+  canWrite: boolean;
 }
 
 /** An app connected through OAuth (Claude's connectors and others). */
@@ -185,6 +187,8 @@ export interface McpApp {
   uses: number;
   expiresAt: string | null;
   revokedAt: string | null;
+  /** May build pipelines (drafts), chosen on the consent page. */
+  canWrite: boolean;
 }
 
 export interface PipelineSummary {

@@ -7,6 +7,9 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 
 export const SCOPE = 'mcp:read';
+/** Building pipelines (drafts); the member still chooses it on the consent page. */
+export const WRITE_SCOPE = 'mcp:write';
+export const SCOPES = [SCOPE, WRITE_SCOPE];
 export const ACCESS_TOKEN_SECONDS = 3600;
 
 // Claude's connectors (claude.ai, Claude Desktop, the apps) come back here.
@@ -46,7 +49,7 @@ export function protectedResourceMetadata(issuer: string) {
   return {
     resource: resourceOf(issuer),
     authorization_servers: [issuer],
-    scopes_supported: [SCOPE],
+    scopes_supported: SCOPES,
     bearer_methods_supported: ['header'],
     resource_name: 'PrintStream Terminal',
   };
@@ -58,7 +61,7 @@ export function authorizationServerMetadata(issuer: string) {
     authorization_endpoint: `${issuer}/oauth/authorize`,
     token_endpoint: `${issuer}/api/oauth/token`,
     registration_endpoint: `${issuer}/api/oauth/register`,
-    scopes_supported: [SCOPE],
+    scopes_supported: SCOPES,
     response_types_supported: ['code'],
     grant_types_supported: ['authorization_code', 'refresh_token'],
     code_challenge_methods_supported: ['S256'],

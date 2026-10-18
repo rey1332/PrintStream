@@ -71,6 +71,52 @@ export function datasetReader(
   };
 }
 
+/**
+ * What a run reads (ERP records, summaries, datasets), as the user; without
+ * the writes, a run only shows what it would write (the editor, MCP test runs).
+ */
+export function readingContext(
+  executor: Executor,
+  identity: RequestIdentity,
+  workspaceId: string,
+  path: string,
+  deadline: number
+): RuntimeContext {
+  const db = userClient(executor, identity);
+  return {
+    query: async (spec, erp) => {
+      try {
+        const ws = await erpWorkspaceFor(db as any, workspaceId, erp);
+        const scope = await resolveScope(db as any, identity.userId, ws, spec);
+        return await executeQuery(db as any, spec, scope, deadline);
+      } catch (e) {
+        throw asWorkflowError(e);
+      }
+    },
+    summarize: async (spec, erp) => {
+      try {
+        const scope = await resolveScopeFor(
+          db as any,
+          identity.userId,
+          await erpWorkspaceFor(db as any, workspaceId, erp),
+          summaryEntities(spec)
+        );
+        const built = buildSummarySql(spec, scope);
+        const raw = await asUser(
+          executor,
+          identity,
+          '/analytics/summary',
+          async (tx) => (await tx.query(built.sql, built.params)).rows
+        );
+        return { ...shapeSummary(spec, raw), fetchedAt: new Date().toISOString() };
+      } catch (e) {
+        throw asWorkflowError(e);
+      }
+    },
+    readDataset: datasetReader(executor, identity, path),
+  };
+}
+
 export interface PipelineJob {
   id: string;
   workspace_id: string;
@@ -133,36 +179,7 @@ export async function runPipelineJob(
   const outcome = await executeWorkflow(graph, {
     deadline,
     ctx: {
-      query: async (spec, erp) => {
-        try {
-          const ws = await erpWorkspaceFor(db as any, pipeline.workspace_id, erp);
-          const scope = await resolveScope(db as any, identity.userId, ws, spec);
-          return await executeQuery(db as any, spec, scope, deadline);
-        } catch (e) {
-          throw asWorkflowError(e);
-        }
-      },
-      summarize: async (spec, erp) => {
-        try {
-          const scope = await resolveScopeFor(
-            db as any,
-            identity.userId,
-            await erpWorkspaceFor(db as any, pipeline.workspace_id, erp),
-            summaryEntities(spec)
-          );
-          const built = buildSummarySql(spec, scope);
-          const raw = await asUser(
-            executor,
-            identity,
-            '/analytics/summary',
-            async (tx) => (await tx.query(built.sql, built.params)).rows
-          );
-          return { ...shapeSummary(spec, raw), fetchedAt: new Date().toISOString() };
-        } catch (e) {
-          throw asWorkflowError(e);
-        }
-      },
-      readDataset: datasetReader(executor, identity, path),
+      ...readingContext(executor, identity, pipeline.workspace_id, path, deadline),
       writeDataset: async ({ datasetId, mode }, table) => {
         try {
           const r = await writeTable(

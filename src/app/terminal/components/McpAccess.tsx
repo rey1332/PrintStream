@@ -57,9 +57,12 @@ export function McpAccess({
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [days, setDays] = useState(90);
+  const [canWrite, setCanWrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<{ name: string; token: string } | null>(null);
   const allowed = permissions.includes('pipelines.view');
+  const mayBuild =
+    permissions.includes('pipelines.create') || permissions.includes('pipelines.edit');
 
   const load = useCallback(async () => {
     try {
@@ -88,10 +91,12 @@ export function McpAccess({
         workspaceId,
         name,
         days,
+        canWrite: mayBuild && canWrite,
       });
       setCreating(false);
       setCreated({ name, token: r.token });
       setName('');
+      setCanWrite(false);
       await load();
     } catch (err) {
       toast.error(errorMessage(err, t));
@@ -162,6 +167,11 @@ export function McpAccess({
               <li key={a.id} className="flex flex-wrap items-center gap-2 py-2 text-[0.75rem]">
                 <span className="font-medium text-foreground">{a.name}</span>
                 {a.host && <span className="text-[0.66rem] text-muted-foreground">{a.host}</span>}
+                {a.canWrite && (
+                  <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[0.62rem] font-medium text-amber-700 dark:text-amber-300">
+                    {t('ps.mcpAccess.canBuild')}
+                  </span>
+                )}
                 {!a.mine && a.owner && (
                   <span className="text-[0.68rem] text-muted-foreground">{a.owner}</span>
                 )}
@@ -200,6 +210,11 @@ export function McpAccess({
             <li key={x.id} className="flex flex-wrap items-center gap-2 py-2 text-[0.75rem]">
               <span className="font-medium text-foreground">{x.name}</span>
               <code className="text-[0.66rem] text-muted-foreground">{x.prefix}…</code>
+              {x.canWrite && (
+                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[0.62rem] font-medium text-amber-700 dark:text-amber-300">
+                  {t('ps.mcpAccess.canBuild')}
+                </span>
+              )}
               {!x.mine && x.owner && (
                 <span className="text-[0.68rem] text-muted-foreground">{x.owner}</span>
               )}
@@ -262,6 +277,22 @@ export function McpAccess({
                 ))}
               </select>
             </label>
+            {mayBuild && (
+              <label className="flex items-start gap-2 text-[0.72rem] text-foreground">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={canWrite}
+                  onChange={(e) => setCanWrite(e.target.checked)}
+                />
+                <span>
+                  {t('ps.mcpAccess.allowBuild')}
+                  <span className="block text-[0.66rem] text-muted-foreground">
+                    {t('ps.mcpAccess.allowBuildHint')}
+                  </span>
+                </span>
+              </label>
+            )}
             <p className="text-[0.68rem] text-muted-foreground">{t('ps.mcpAccess.rights')}</p>
             <div className="flex justify-end gap-2">
               <button type="button" className={buttonCls} onClick={() => setCreating(false)}>

@@ -1,5 +1,5 @@
 // The Model Context Protocol over Streamable HTTP, server side, as far as a
-// read-only tool server needs it: initialize, ping, tools/list and tools/call
+// tool server needs it: initialize, ping, tools/list and tools/call
 // (JSON-RPC 2.0, one message per POST, answered with JSON; no server-sent
 // events, no sessions). See /api/mcp and src/server/mcp/tools.ts.
 
@@ -15,6 +15,8 @@ export interface McpTool<C> {
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  /** Changes something (pipeline drafts); only for connections allowed to write. */
+  write?: boolean;
   run: (ctx: C, args: Record<string, unknown>) => Promise<unknown>;
 }
 
@@ -93,8 +95,9 @@ export async function handleMessage<C>(
         protocolVersion: version,
         capabilities: { tools: { listChanged: false } },
         serverInfo: SERVER_INFO,
-        instructions:
-          'Read-only access to one PrintStream Terminal: its pipelines (graphs, schedules, chains), their runs and its datasets, with the rights of the member who made the access token. Start with list_pipelines.',
+        instructions: tools.some((t) => t.write)
+          ? 'Access to one PrintStream Terminal with the rights of the member who connected it: its pipelines, runs and datasets, insights into datasets, and building pipelines. Pipelines you create or change are drafts: a person reviews and publishes them in PrintStream; nothing you build runs on its own. To build: list_node_types (and list_datasets, list_erp_fields), then validate_pipeline, test_pipeline, create_pipeline or update_pipeline.'
+          : 'Read-only access to one PrintStream Terminal: its pipelines (graphs, schedules, chains), their runs and its datasets, insights into datasets, and checking or test-running pipeline ideas (nothing is saved), with the rights of the member who connected it. Start with list_pipelines.',
       });
     }
     case 'ping':
@@ -106,7 +109,14 @@ export async function handleMessage<C>(
           title: t.title,
           description: t.description,
           inputSchema: t.inputSchema,
-          annotations: { readOnlyHint: true, openWorldHint: false },
+          annotations: t.write
+            ? {
+                readOnlyHint: false,
+                destructiveHint: false,
+                idempotentHint: false,
+                openWorldHint: false,
+              }
+            : { readOnlyHint: true, openWorldHint: false },
         })),
       });
     case 'tools/call': {
