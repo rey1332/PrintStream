@@ -65,7 +65,7 @@ const CALLABLE = [
   'erp_fixed_assets_depreciate', 'erp_fixed_asset_dispose', 'erp_fixed_asset_schedule',
   'ps_retry_job', 'ps_worker_last_seen', 'ps_mcp_token_create', 'ps_mcp_token_list', 'ps_mcp_token_revoke',
   'ps_oauth_client_get', 'ps_oauth_approve', 'ps_oauth_grant_list', 'ps_oauth_grant_revoke',
-  'ps_mcp_pipeline_create', 'ps_mcp_pipeline_update', 'ps_mcp_token_create_v2', 'ps_mcp_token_list_v2',
+  'ps_mcp_pipeline_create', 'ps_mcp_pipeline_update', 'ps_sql_run_start', 'ps_mcp_token_create_v2', 'ps_mcp_token_list_v2',
   'ps_oauth_approve_v2', 'ps_oauth_grant_list_v2',
 ].sort();
 

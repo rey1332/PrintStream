@@ -5,6 +5,7 @@ import * as ai from '@/server/terminal/aiService';
 import * as connectors from '@/server/terminal/connectorService';
 import * as erpLinks from '@/server/terminal/erpLinkService';
 import * as terminal from '@/server/terminal/service';
+import * as sql from '@/server/terminal/sqlService';
 
 // PrintStream Terminal: one endpoint, an action per request (as /api/erp/workspace).
 
@@ -66,6 +67,10 @@ const ACTIONS: Record<string, (ctx: terminal.TerminalContext, body: any) => Prom
   'erpLinks.list': erpLinks.listErpLinks,
   'erpLink.add': erpLinks.addErpLink,
   'erpLink.remove': erpLinks.removeErpLink,
+  'sql.targets': sql.sqlTargets,
+  'sql.run': sql.sqlRun,
+  'sql.result': sql.sqlResult,
+  'sql.history': sql.sqlHistory,
 };
 
 export const POST = withAuth(async ({ request }) => {

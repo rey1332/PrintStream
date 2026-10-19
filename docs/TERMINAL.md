@@ -345,6 +345,65 @@ Not yet verified against live AI providers: tested with simulated providers.
   sync or a pipeline keeps up to date that have not changed for a week. Each
   links to where to fix it. Everything is read with the member's rights.
 
+## Query Tool (read-only SQL)
+
+The Terminal opens as a database workbench laid out like pgAdmin 4's Query
+Tool: the Object Explorer on the left (datasets and their columns, PostgreSQL
+connections and their tables, pipelines, the Terminal's other screens), the
+Query Tool in the middle, and the Terminal's other screens as tabs beside it.
+The colours follow the app's light or dark theme.
+
+- **Layout**: the connection bar (what to query, its state, test again),
+  Query / Query History, the editor's tools (open and save a .sql file, find,
+  comment, execute, explain, explain analyze, stop, save results as CSV,
+  Scratch Pad, help), the SQL editor (CodeMirror 6: line numbers, PostgreSQL
+  highlighting, completion of dataset and column names, search) with the
+  Scratch Pad beside it, and Data Output / Messages / Notifications below,
+  then the status bar (rows, time, line and column, line endings). The
+  dividers are dragged (or moved with the arrow keys when focused) and
+  remembered; the Object Explorer and the Scratch Pad can be hidden (in a
+  narrow window they start hidden).
+- **Keys**: Ctrl+Enter or F5 runs the selection, or the statement at the
+  cursor (statements are split at semicolons outside quotes, comments and
+  dollar quotes); F7 explains; Ctrl+S saves the editor as a .sql file; Ctrl+F
+  finds; Ctrl+/ comments lines. In the results: click, Shift+click, arrows,
+  Ctrl+A; Ctrl+C copies as tab-separated text (whole rows with the column
+  names). NULL is shown as [null], apart from an empty text.
+- **What a query runs on** — never PrintStream's own database: row-level
+  security there relies on session settings that SQL could change.
+  - **This Terminal's datasets** (`datasets.query`): the worker copies the
+    datasets the query names (each is a table named like the dataset, in
+    "quotes" when it has capitals or spaces), as the member sees them (masked
+    columns stay masked, datasets they may not query are skipped, each read is
+    in the data-access log), into a new in-memory PostgreSQL (PGlite) in its
+    own thread, runs the query read-only there and ends the thread. Up to
+    100,000 rows per dataset and 500,000 in all are copied; Messages says when
+    a dataset was larger (the result then covers the copied rows only).
+  - **A PostgreSQL connection** (`integrations.manage`, two-factor session):
+    the connection's own database, in a read-only transaction (the session is
+    read-only too) with a 60-second statement limit, through the same network
+    guard and TLS rules as its syncs. NOTICEs are shown in Messages,
+    notifications that arrive during the query in Notifications. Each run is in
+    the data-access log.
+- **Results**: at most 2,000 rows (and 16 MB) are kept and shown; Data Output
+  and the status bar say when there were more. Column names and PostgreSQL
+  types are shown; dates and times as PostgreSQL writes them. Errors come back
+  as PostgreSQL gave them (message, detail, hint, SQL state, position), and the
+  editor marks the place.
+- **Running**: every query is a worker job (`sql.datasets`, `sql.connection`),
+  so the background worker must run; the Query Tool says when it does not.
+  Stop cancels the job (a connection's session is ended, the sandbox thread
+  stopped). A query has 60 seconds (90 with loading the datasets). At most one
+  job per company runs at a time, so a long query delays that company's other
+  jobs.
+- **History and retention** (`ps_sql_runs`, `db/migrations/20261012000058_terminal_query_tool.sql`;
+  each member's own only): the newest 200 queries per member and Terminal
+  (SQL, target, state, rows, time); a result, its messages and its error are
+  kept for an hour, then removed.
+- **Not supported**: changing data (INSERT/UPDATE/DELETE and DDL fail as
+  read-only), several statements in one run, LISTEN across queries, graphical
+  plans (plans are shown as text), formatting SQL.
+
 ## MCP access for AI assistants
 
 An AI assistant (Claude on the web, Claude Desktop and the apps, Claude Code,
@@ -496,6 +555,7 @@ company's quota.
 | `20261012000055_terminal_jobs_health_mcp` | Job retries and who cancelled, the worker's last report, MCP access tokens                               |
 | `20261012000056_mcp_oauth`                | Signing in to MCP with OAuth: clients, codes, connections (grants)                                       |
 | `20261012000057_mcp_pipeline_builder`     | MCP connections that may build pipelines (drafts only)                                                   |
+| `20261012000058_terminal_query_tool`      | The Query Tool: runs and history (`ps_sql_runs`), its jobs                                               |
 
 Each has a rollback in `db/rollback/` (apply them newest first; rolling back
 036 drops every dataset).

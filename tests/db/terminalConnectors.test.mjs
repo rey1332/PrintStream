@@ -70,7 +70,8 @@ test('a sync creates its dataset; schedules and three failures switch it off; th
 
 test('rollback removes connectors', async () => {
   const d = await createDb();
-  // MCP tools refer to connections: rolled back first.
+  // The Query Tool's runs and MCP tools refer to connections: rolled back first.
+  await d.exec(readFileSync(new URL('../../db/rollback/rollback_20261012000058_terminal_query_tool.sql', import.meta.url), 'utf8'));
   await d.exec(readFileSync(new URL('../../db/rollback/rollback_20261012000048_terminal_mcp.sql', import.meta.url), 'utf8'));
   await d.exec(readFileSync(new URL('../../db/rollback/rollback_20261012000041_terminal_connectors.sql', import.meta.url), 'utf8'));
   const { rows } = await d.query(`select to_regclass('public.ps_connections') is null as gone, to_regclass('etna_platform.connection_secrets') is null as secrets_gone`);

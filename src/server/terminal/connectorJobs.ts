@@ -44,7 +44,7 @@ export interface ConnectorJobEnv {
   beat: () => Promise<boolean>;
 }
 
-async function connection(env: ConnectorJobEnv, id: unknown) {
+export async function connection(env: ConnectorJobEnv, id: unknown) {
   const [row] = await env.db('select ps_worker.connection_get($1) as c', [id]);
   const c = row?.c;
   if (!c) throw new TerminalError('notFound');
@@ -61,7 +61,7 @@ async function connection(env: ConnectorJobEnv, id: unknown) {
   };
 }
 
-function contextOf(
+export function contextOf(
   env: ConnectorJobEnv,
   c: Awaited<ReturnType<typeof connection>>
 ): ConnectorContext {

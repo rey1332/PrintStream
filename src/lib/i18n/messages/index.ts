@@ -53,6 +53,7 @@ import { terminalAiMessages } from './terminalAi';
 import { taxMessages } from './tax';
 import { financeMessages } from './finance';
 import { terminalOpsMessages } from './terminalOps';
+import { terminalQueryMessages } from './terminalQuery';
 
 export const messages = {
   ...commonMessages,
@@ -92,6 +93,7 @@ export const messages = {
   ...taxMessages,
   ...financeMessages,
   ...terminalOpsMessages,
+  ...terminalQueryMessages,
   ...payrollIdMessages,
   ...workspaceRoleMessages,
   ...workspaceGovernanceMessages,

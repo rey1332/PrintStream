@@ -36,6 +36,7 @@ import {
 } from './connectorJobs';
 import { runAnalysis, testProvider, type AiJobEnv } from './aiJobs';
 import { runPipelineJob, type PipelineJob } from './pipelines';
+import { runSqlJob } from './sqlJobs';
 import { TerminalError, asUser, terminalErrorOf, type RequestIdentity } from './session';
 
 export interface WorkerOptions {
@@ -303,6 +304,12 @@ const HANDLERS: Record<string, Handler> = {
   },
   async 'ai.analyze'(ctx, job, beat) {
     return runAnalysis(await aiEnv(ctx, job, beat), job.payload);
+  },
+  async 'sql.datasets'(ctx, job, beat) {
+    return runSqlJob(await connectorEnv(ctx, job, beat), job);
+  },
+  async 'sql.connection'(ctx, job, beat) {
+    return runSqlJob(await connectorEnv(ctx, job, beat), job);
   },
 
   async 'workspace.export'(ctx, job, beat) {

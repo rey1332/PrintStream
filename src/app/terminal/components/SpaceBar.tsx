@@ -16,7 +16,16 @@ import { useErpDirectory } from '@/lib/workspaces/directory';
 import { terminalApi } from '@/lib/terminal/client';
 import { Dialog, buttonCls, errorMessage, inputCls, primaryCls } from './shared';
 
-export function SpaceBar({ space, onGone }: { space: TerminalSpace; onGone: () => void }) {
+export function SpaceBar({
+  space,
+  onGone,
+  compact = false,
+}: {
+  space: TerminalSpace;
+  onGone: () => void;
+  /** In the workbench's tab strip: small, without a row of its own. */
+  compact?: boolean;
+}) {
   const { t } = useI18n();
   const { active } = useWorkspace();
   const [members, setMembers] = useState(false);
@@ -25,11 +34,27 @@ export function SpaceBar({ space, onGone }: { space: TerminalSpace; onGone: () =
   // An ERP's members are managed in the ERP.
   if (space.kind !== 'terminal' || !active) return null;
   return (
-    <div className="mb-3 flex flex-wrap justify-end gap-1.5">
-      <button type="button" className={buttonCls} onClick={() => setMembers(true)}>
+    <div
+      className={
+        compact
+          ? 'flex shrink-0 items-center gap-0.5 [&_button]:h-6 [&_button]:gap-1 [&_button]:rounded-[2px] [&_button]:border-0 [&_button]:px-1.5 [&_button]:py-0 [&_button]:text-[11px] [&_button]:font-normal [&_button]:text-[var(--wb-text-2)] [&_button:hover]:bg-[var(--wb-hover)] [&_button:hover]:text-[var(--wb-text)]'
+          : 'mb-3 flex flex-wrap justify-end gap-1.5'
+      }
+    >
+      <button
+        type="button"
+        className={buttonCls}
+        onClick={() => setMembers(true)}
+        title={t('terminal.members')}
+      >
         <Users size={12} /> {t('terminal.members')}
       </button>
-      <button type="button" className={buttonCls} onClick={() => setLinking(true)}>
+      <button
+        type="button"
+        className={buttonCls}
+        onClick={() => setLinking(true)}
+        title={t('terminal.erps')}
+      >
         <Link2 size={12} /> {t('terminal.erps')}
       </button>
       {space.isOwner && (
@@ -37,6 +62,7 @@ export function SpaceBar({ space, onGone }: { space: TerminalSpace; onGone: () =
           type="button"
           className={`${buttonCls} hover:text-red-500`}
           onClick={() => setDeleting(true)}
+          title={t('settings.deleteTerminal')}
         >
           <Trash2 size={12} /> {t('settings.deleteTerminal')}
         </button>

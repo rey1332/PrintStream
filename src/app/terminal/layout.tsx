@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Building2, TerminalSquare } from 'lucide-react';
@@ -11,6 +11,7 @@ import { useErpDirectory } from '@/lib/workspaces/directory';
 import { useTerminalSpaces } from '@/lib/workspaces/terminalSpaces';
 import { NewTerminalButton } from '@/components/sidebar/NewTerminal';
 import { SpaceBar } from './components/SpaceBar';
+import { WorkbenchChrome } from './components/WorkbenchChrome';
 import { WorkspaceProvider } from '@/app/erp/lib/WorkspaceContext';
 import { SuspendedNotice } from '@/app/erp/components/shell/SuspendedNotice';
 import { GovernanceBanner } from '@/app/erp/components/shell/GovernanceBanner';
@@ -32,6 +33,14 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const space = terminals.spaces.find((s) => s.id === terminals.activeId) ?? null;
+  // The Terminal's own screen is a workbench that fills the window (no page scroll).
+  const workbench = pathname === '/terminal';
+  // The workbench uses the whole window: the sidebar folds to its icons (it
+  // can still be opened) and the header bar is left out (except on phones,
+  // where it holds the menu button).
+  useEffect(() => {
+    if (workbench) setCollapsed(true);
+  }, [workbench]);
 
   let body: React.ReactNode;
   if (!terminals.ready) {
@@ -62,9 +71,37 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
     // A new provider per Terminal: choosing another one in the sidebar loads it.
     body = (
       <WorkspaceProvider key={space.id} workspaceId={space.id}>
-        <SpaceBar space={space} onGone={() => void terminals.refresh()} />
-        <GovernanceBanner />
-        <SuspendedNotice pathname={pathname}>{children}</SuspendedNotice>
+        {workbench ? (
+          // The Terminal's actions go in the workbench's tab strip.
+          <WorkbenchChrome.Provider
+            value={
+              <>
+                <SpaceBar space={space} onGone={() => void terminals.refresh()} compact />
+                {space.kind === 'erp' && (
+                  <Link
+                    href="/erp"
+                    onClick={() => directory.select(space.id)}
+                    title={t('terminal.openErp')}
+                    className="inline-flex h-6 items-center gap-1 rounded-[2px] px-1.5 text-[11px] text-[var(--wb-text-2)] hover:bg-[var(--wb-hover)] hover:text-[var(--wb-text)]"
+                  >
+                    <Building2 size={12} aria-hidden /> {t('terminal.openErp')}
+                  </Link>
+                )}
+              </>
+            }
+          >
+            <GovernanceBanner />
+            <div className="min-h-0 flex-1">
+              <SuspendedNotice pathname={pathname}>{children}</SuspendedNotice>
+            </div>
+          </WorkbenchChrome.Provider>
+        ) : (
+          <>
+            <SpaceBar space={space} onGone={() => void terminals.refresh()} />
+            <GovernanceBanner />
+            <SuspendedNotice pathname={pathname}>{children}</SuspendedNotice>
+          </>
+        )}
       </WorkspaceProvider>
     );
   }
@@ -94,7 +131,7 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
         }
       >
         <header
-          className="box-content flex items-center h-12 border-b border-border bg-card px-1.5 lg:px-4 gap-1 lg:gap-3 flex-shrink-0"
+          className={`box-content flex items-center h-12 border-b border-border bg-card px-1.5 lg:px-4 gap-1 lg:gap-3 flex-shrink-0 ${workbench && space ? 'lg:hidden' : ''}`}
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <button
@@ -142,8 +179,16 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
           )}
         </header>
         <main
-          className="flex-1 overflow-y-auto overscroll-contain px-3 pt-4 sm:px-5 sm:pt-5"
-          style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+          className={
+            workbench && space
+              ? 'terminal-wb flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--wb-app)]'
+              : 'flex-1 overflow-y-auto overscroll-contain px-3 pt-4 sm:px-5 sm:pt-5'
+          }
+          style={
+            workbench && space
+              ? { paddingBottom: 'env(safe-area-inset-bottom)' }
+              : { paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }
+          }
         >
           {body}
         </main>

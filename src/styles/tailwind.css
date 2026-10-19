@@ -604,3 +604,78 @@ html[data-ui-pending] body {
   background: color-mix(in srgb, var(--primary) 10%, transparent);
   box-shadow: inset 3px 0 0 var(--primary);
 }
+
+/* PrintStream Terminal as a database workbench (pgAdmin 4 Query Tool layout):
+   dense, neutral surfaces, thin borders; light and dark follow the app. The
+   app's own tokens are set too, so the Terminal's other screens match. */
+.terminal-wb {
+  --background: #f3f3f3;
+  --card: #ffffff;
+  --border: #c9c9c9;
+  --surface-3: #e6e6e6;
+  --muted-foreground: #5f5f5f;
+  --radius: 2px;
+  --wb-app: #f3f3f3;
+  --wb-editor: #ffffff;
+  --wb-toolbar: #e7e7e7;
+  --wb-panel: #f7f7f7;
+  --wb-border: #c9c9c9;
+  --wb-text: #1f1f1f;
+  --wb-text-2: #555555;
+  --wb-muted: #8a8a8a;
+  --wb-hover: rgba(0, 0, 0, 0.06);
+  --wb-active: #d9e2ec;
+  --wb-accent: #3a6a96;
+  --wb-selection: rgba(58, 106, 150, 0.18);
+  --wb-gutter: #f0f0f0;
+  --wb-null: #9a9a9a;
+  --wb-ok: #2e7d32;
+  --wb-warn: #a05a00;
+  --wb-error: #c62828;
+  --wb-syn-keyword: #0b4f9e;
+  --wb-syn-string: #a31515;
+  --wb-syn-number: #098658;
+  --wb-syn-comment: #6a8a6a;
+  --wb-syn-name: #1f1f1f;
+  --wb-syn-type: #267f99;
+  --wb-syn-operator: #555555;
+}
+.dark .terminal-wb {
+  --background: #1e1e1e;
+  --foreground: #d4d4d4;
+  --card: #252526;
+  --card-foreground: #d4d4d4;
+  --border: #454545;
+  --input: #1f1f1f;
+  --surface-3: #2d2d2d;
+  --muted-foreground: #a0a0a0;
+  --wb-app: #1e1e1e;
+  --wb-editor: #1f1f1f;
+  --wb-toolbar: #303030;
+  --wb-panel: #252526;
+  --wb-border: #454545;
+  --wb-text: #d4d4d4;
+  --wb-text-2: #a0a0a0;
+  --wb-muted: #777777;
+  --wb-hover: rgba(255, 255, 255, 0.06);
+  --wb-active: #37414b;
+  --wb-accent: #7aa2c7;
+  --wb-selection: rgba(122, 162, 199, 0.22);
+  --wb-gutter: #1f1f1f;
+  --wb-null: #7a7a7a;
+  --wb-ok: #81c784;
+  --wb-warn: #e0b060;
+  --wb-error: #ef6c6c;
+  --wb-syn-keyword: #569cd6;
+  --wb-syn-string: #ce9178;
+  --wb-syn-number: #b5cea8;
+  --wb-syn-comment: #6a9955;
+  --wb-syn-name: #d4d4d4;
+  --wb-syn-type: #4ec9b0;
+  --wb-syn-operator: #c0c0c0;
+}
+.terminal-wb .rounded-xl,
+.terminal-wb .rounded-2xl,
+.terminal-wb .rounded-lg {
+  border-radius: 3px;
+}

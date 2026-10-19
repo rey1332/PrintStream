@@ -89,7 +89,7 @@ test('cancelling stops the job; old files are listed for removal', async () => {
 test('rollback removes imports', async () => {
   const d = await createDb();
   // Later migrations depend on this one: they are rolled back first.
-  for (const name of ['20261012000049_terminal_ai', '20261012000048_terminal_mcp', '20261012000042_terminal_db_sources', '20261012000041_terminal_connectors', '20261012000040_company_export', '20261012000039_terminal_module', '20261012000038_terminal_pipelines', '20261012000037_terminal_imports']) {
+  for (const name of ['20261012000058_terminal_query_tool', '20261012000049_terminal_ai', '20261012000048_terminal_mcp', '20261012000042_terminal_db_sources', '20261012000041_terminal_connectors', '20261012000040_company_export', '20261012000039_terminal_module', '20261012000038_terminal_pipelines', '20261012000037_terminal_imports']) {
     await d.exec(readFileSync(new URL(`../../db/rollback/rollback_${name}.sql`, import.meta.url), 'utf8'));
   }
   const { rows } = await d.query(`select to_regclass('public.ps_imports') is null as gone`);
