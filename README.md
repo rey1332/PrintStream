@@ -16,7 +16,7 @@ The longer term goal is to help companies connect data across their systems. Gen
 
 # What’s still in progress
 
-PrintStream is stil in evolving stafe. Some parts of the broader vision are not built yet:
+PrintStream is stil in evolving stage. Some parts of the broader vision are not built yet:
 
 - General integrations for external ERPs, databases, APIs, and files.
 - Wider analytics coverage for operational data.
