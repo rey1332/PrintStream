@@ -27,6 +27,7 @@ import {
   clientIp,
   isSameOrigin,
   refreshHintCookie,
+  forgetSession,
   sessionFromCookies,
   sessionToken,
   setSessionCookies,
@@ -131,7 +132,7 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
   const deps = getAuthDeps();
 
   if (request.method === 'GET') {
-    const session = await sessionFromCookies(request.cookies);
+    const session = await sessionFromCookies(request.cookies, { fresh: true });
     if (action === 'session') {
       // A fresh hint with every check, so pages open again for a session that
       // outlived its hint (or carries one from before hints named their session).
@@ -217,13 +218,14 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
   }
 
   if (action === 'logout') {
+    forgetSession(sessionToken(request.cookies));
     await signOut(deps, sessionToken(request.cookies), meta);
     const response = json({ ok: true });
     clearSessionCookies(response);
     return response;
   }
 
-  const session = await sessionFromCookies(request.cookies);
+  const session = await sessionFromCookies(request.cookies, { fresh: true });
   if (!session) {
     const response = fail(401, 'Not signed in', 'no_session');
     clearSessionCookies(response);
@@ -250,6 +252,7 @@ async function handle(request: NextRequest, action: string): Promise<NextRespons
     case 'terms-decline': {
       const versionId = str(body.versionId, 64);
       await declineTerms(deps, session, UUID.test(versionId) ? versionId : null, meta);
+      forgetSession(sessionToken(request.cookies));
       await signOut(deps, sessionToken(request.cookies), meta);
       const response = json({ ok: true });
       clearSessionCookies(response);

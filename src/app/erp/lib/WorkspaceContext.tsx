@@ -126,7 +126,23 @@ export function WorkspaceProvider({
 
   const refresh = useCallback(async () => {
     if (!WORKSPACES_ENABLED || !userId) return;
-    const { data, error } = await createClient().rpc('erp_my_workspaces');
+    // Asked together: they go to the server as one request (src/lib/db/browser-client.ts).
+    const db = createClient();
+    const [
+      { data, error },
+      { data: suspendedIds },
+      { data: mfaRows },
+      { data: moduleRows },
+      { data: accessRows },
+      terminalOnly,
+    ] = await Promise.all([
+      db.rpc('erp_my_workspaces'),
+      db.rpc('erp_my_suspended_workspaces'),
+      db.rpc('erp_my_mfa_required_workspaces'),
+      db.rpc('erp_my_workspace_modules'),
+      db.rpc('erp_my_workspace_access'),
+      workspaceId ? Promise.resolve(new Set<string>()) : terminalSpaceIds(),
+    ]);
     if (error) {
       // Missing function = migration not applied yet; fall back to legacy mode.
       setUnavailableReason('unavailable');
@@ -136,19 +152,16 @@ export function WorkspaceProvider({
       return;
     }
     // Missing function = suspension not installed yet: nothing is suspended.
-    const { data: suspendedIds } = await createClient().rpc('erp_my_suspended_workspaces');
     const suspended = new Set<string>(
       Array.isArray(suspendedIds) ? suspendedIds.map((r: any) => String(r.workspace_id)) : []
     );
     // Missing function = role rule not installed yet: only the ERP-wide switch applies.
-    const { data: mfaRows } = await createClient().rpc('erp_my_mfa_required_workspaces');
     const needsTwoFactor = new Map<string, 'role' | 'erp'>(
       Array.isArray(mfaRows)
         ? mfaRows.map((r: any) => [String(r.workspace_id), r.by_role ? 'role' : 'erp'])
         : []
     );
     // Missing function = modules not installed yet: General, no modules.
-    const { data: moduleRows } = await createClient().rpc('erp_my_workspace_modules');
     const modules = new Map<string, { industry: Industry; modules: ModuleCode[] }>(
       Array.isArray(moduleRows)
         ? moduleRows.map((r: any) => [
@@ -161,11 +174,9 @@ export function WorkspaceProvider({
         : []
     );
     // Missing function = custom roles not installed yet: built-in presets apply.
-    const { data: accessRows } = await createClient().rpc('erp_my_workspace_access');
     const access = new Map<string, any>(
       Array.isArray(accessRows) ? accessRows.map((r: any) => [String(r.workspace_id), r]) : []
     );
-    const terminalOnly = workspaceId ? new Set<string>() : await terminalSpaceIds();
     const rows: WorkspaceSummary[] = (data || [])
       .filter(
         (row: any) =>
