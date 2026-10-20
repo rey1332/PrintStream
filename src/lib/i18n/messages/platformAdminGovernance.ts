@@ -374,9 +374,9 @@ export const platformAdminGovernanceMessages = {
     zh: '隧道（按公司）',
   },
   'gov.tunnelsIntro': {
-    en: 'A company’s system inside its own network is reached through a zero-trust tunnel (such as Cloudflare Tunnel) that arrives at one internal host and port ETNA’s server can reach. Allow that host:port here for that company only; its Terminal connections may then reach it, and no other company’s can. The procedure is in docs/TUNNELS.md.',
-    id: 'Sistem perusahaan di dalam jaringannya sendiri dijangkau lewat tunnel zero-trust (seperti Cloudflare Tunnel) yang tiba di satu host dan port internal yang bisa dijangkau server ETNA. Izinkan host:port itu di sini hanya untuk perusahaan tersebut; koneksi Terminal-nya lalu boleh menjangkaunya, dan perusahaan lain tidak. Prosedurnya ada di docs/TUNNELS.md.',
-    zh: '公司内网中的系统通过零信任隧道（如 Cloudflare Tunnel）访问，隧道到达 ETNA 服务器可访问的某个内网主机和端口。在此仅为该公司允许该 host:port；其 Terminal 连接即可访问，其他公司不能。操作步骤见 docs/TUNNELS.md。',
+    en: 'A company’s system inside its own network is reached through a zero-trust tunnel (such as Cloudflare Tunnel) that arrives at one internal host and port ETNA’s server can reach. Allow that host:port here for that company only; its Terminal connections may then reach it, and no other company’s can. The procedure is in docs/teknis/TUNNELS.md.',
+    id: 'Sistem perusahaan di dalam jaringannya sendiri dijangkau lewat tunnel zero-trust (seperti Cloudflare Tunnel) yang tiba di satu host dan port internal yang bisa dijangkau server ETNA. Izinkan host:port itu di sini hanya untuk perusahaan tersebut; koneksi Terminal-nya lalu boleh menjangkaunya, dan perusahaan lain tidak. Prosedurnya ada di docs/teknis/TUNNELS.md.',
+    zh: '公司内网中的系统通过零信任隧道（如 Cloudflare Tunnel）访问，隧道到达 ETNA 服务器可访问的某个内网主机和端口。在此仅为该公司允许该 host:port；其 Terminal 连接即可访问，其他公司不能。操作步骤见 docs/teknis/TUNNELS.md。',
   },
   'gov.noTunnels': { en: 'No tunnels yet.', id: 'Belum ada tunnel.', zh: '暂无隧道。' },
   'gov.tunnelHost': { en: 'Host:port', id: 'Host:port', zh: '主机:端口' },

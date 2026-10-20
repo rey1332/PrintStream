@@ -1,6 +1,6 @@
 # One backup of the ETNA database (deploy/linux/etna-db-backup.sh), started
 # daily by etna-db-backup.timer. Change the database or folder with
-# `systemctl edit etna-db-backup` (docs/INSTALL-LINUX.md).
+# `systemctl edit etna-db-backup` (docs/teknis/INSTALL-LINUX.md).
 
 [Unit]
 Description=ETNA database backup

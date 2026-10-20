@@ -1,6 +1,6 @@
 import type { Entry } from './types';
 
-// Indonesian tax (/erp/tax, src/app/erp/lib/taxService.ts, docs/TAX.md).
+// Indonesian tax (/erp/tax, src/app/erp/lib/taxService.ts, docs/teknis/TAX.md).
 export const taxMessages = {
   'erp.nav.tax': { en: 'Tax', id: 'Pajak', zh: '税务' },
   'tax.item.goods': { en: 'Goods (A)', id: 'Barang (A)', zh: '商品 (A)' },

@@ -2,7 +2,7 @@
 
 ETNA reads its settings from environment variables. On every machine they live
 in **`.env.local`** in the app folder, which Next.js loads at start-up and
-which Git ignores (`.gitignore`: `.env.*`). [`.env.example`](../.env.example)
+which Git ignores (`.gitignore`: `.env.*`). [`.env.example`](../../.env.example)
 is the committed template; it never holds real values.
 
 ## Environments
@@ -42,7 +42,7 @@ passwords.
 | `SESSION_HINT_SECRET` | Signs the session hint cookie read by the middleware. Changing it signs everyone out | **Yes** | at least 32 random characters | `src/server/config.ts` | **Yes** |
 | `TRUST_PROXY` | Which client IP to use for sign-in limits: `1` = last `X-Forwarded-For` entry (behind a proxy that overwrites it, e.g. Caddy), `cloudflare` = `CF-Connecting-IP`. Unset = headers ignored, limits per account | Behind a proxy or tunnel | `1` or `cloudflare` | `src/server/auth/request.ts` | No |
 | `NEXT_PUBLIC_ERP_WORKSPACES` | Several ERPs per account, teams, sync between ERPs. **Read at build time** and sent to browsers | No (default on) | `off` | `src/app/erp/lib/workspace.ts`, ERP API routes | No (public) |
-| `ETNA_PUBLIC_URL` | The address people open ETNA at, used in password reset and invite links made in `/admin` (docs/ADMIN.md). Unset = the address the admin used | Behind a proxy or tunnel | `https://erp.example.com` | `src/server/admin/request.ts` | No |
+| `ETNA_PUBLIC_URL` | The address people open ETNA at, used in password reset and invite links made in `/admin` (docs/teknis/ADMIN.md). Unset = the address the admin used | Behind a proxy or tunnel | `https://erp.example.com` | `src/server/admin/request.ts` | No |
 | `ETNA_DATA_ROOT` | One folder for everything an installed server keeps (written by the server manager, `deploy/linux/install.sh` and the Docker setup): `documents`, `backups`, `logs` default to folders in it, and the Windows server manager keeps `app`, `config` and `postgres` there (`scripts/server/lib/layout.mjs`) | No (servers installed with the server manager or on Linux) | `D:\ETNA`, `/var/lib/etna`, `/data` (container) | `src/server/documents/storage.ts`, `scripts/db/backup-core.mjs`, `src/server/admin/system.ts`, `scripts/server/` | No |
 | `ETNA_HOST`, `ETNA_PORT` | Where the app listens when started by `scripts/server/env-run.mjs` (Linux: systemd units and the container). The service's environment wins over `etna.env` for these two | No (default `127.0.0.1` and `4028`; the container uses `0.0.0.0`) | `127.0.0.1`, `4028` | `scripts/server/env-run.mjs` | No |
 | `PGPASSFILE` | PostgreSQL password file for the schema owner (in-app backup). The server manager sets `<ETNA_DATA_ROOT>\config\pgpass.conf` | No (default `%APPDATA%\postgresql\pgpass.conf`) | `D:\ETNA\config\pgpass.conf` | `pg`, `scripts/db/backup-core.mjs` | The file it names holds the owner password |
@@ -52,14 +52,14 @@ passwords.
 | `ETNA_ADMIN_EMAILS` | Accounts that may use in-app backup/restore and account administration (two-factor required) | Only with `ETNA_BACKUP_DATABASE_URL` | `admin@example.com,ops@example.com` | `src/server/backup.ts`, `src/server/userAdmin.ts` | No |
 | `RESEND_API_KEY` | Sends workflow approval e-mails through Resend | No | `re_…` | `src/app/api/erp/workflows/route.ts` | **Yes** |
 | `EMAIL_FROM` | Sender of those e-mails (both settings are needed to send) | With `RESEND_API_KEY` | `ETNA <etna@example.com>` | `src/app/api/erp/workflows/route.ts` | No |
-| `SMTP_HOST` | Mail server for ETNA's own e-mail: invitation and password links from `/admin`, test e-mails (docs/ADMIN.md). Unset = e-mail off, links are copied by hand | No | `smtp.gmail.com` | `src/server/mail/mailer.ts` | No |
+| `SMTP_HOST` | Mail server for ETNA's own e-mail: invitation and password links from `/admin`, test e-mails (docs/teknis/ADMIN.md). Unset = e-mail off, links are copied by hand | No | `smtp.gmail.com` | `src/server/mail/mailer.ts` | No |
 | `SMTP_PORT` | `587` (STARTTLS, default) or `465` (TLS). Plain connections are refused | No | `587` | `src/server/mail/mailer.ts` | No |
 | `SMTP_SECURE` | `true` for port 465 | With port 465 | `true` | `src/server/mail/mailer.ts` | No |
 | `SMTP_USER` | Mail account name (usually its address) | With most servers | `erp@example.co.id` | `src/server/mail/mailer.ts` | No |
 | `SMTP_PASSWORD` | Its password; for Gmail / Google Workspace an *app password* (two-step verification on, then Security → App passwords) | With `SMTP_USER` | 16 characters | `src/server/mail/mailer.ts` | **Yes** |
 | `SMTP_FROM` | Sender shown to recipients (default `SMTP_USER`) | No | `ETNA <erp@example.co.id>` | `src/server/mail/mailer.ts` | No |
-| `ETNA_ALERT_EMAILS` | Who gets error alerts by e-mail (docs/OPERATIONS.md, *Error alerts*), comma-separated. Needs `SMTP_HOST` | No (default `ETNA_ADMIN_EMAILS`; neither = no alerts) | `you@example.com,ops@example.com` | `src/server/alerts.ts` | No |
-| `OFFSITE_DATABASE_URL`, `ETNA_OFFSITE_DIR`, `ETNA_OFFSITE_KEY`, `ETNA_OFFSITE_KEEP` | Off-site backups (`scripts/db/offsite.mjs`, docs/OPERATIONS.md): the schema owner's connection (password from `PGPASSWORD` or the password file, never here), the target folder, the public key, how many to keep (default 14). Set for the backup job only, not the app | For off-site backups | `postgres://etna_owner@localhost:5432/etna`, `\\nas\backup\etna`, `/etc/etna/offsite-key.pub.pem` | `scripts/db/offsite.mjs` | The folder holds encrypted backups; the private key needs the passphrase |
+| `ETNA_ALERT_EMAILS` | Who gets error alerts by e-mail (docs/teknis/OPERATIONS.md, *Error alerts*), comma-separated. Needs `SMTP_HOST` | No (default `ETNA_ADMIN_EMAILS`; neither = no alerts) | `you@example.com,ops@example.com` | `src/server/alerts.ts` | No |
+| `OFFSITE_DATABASE_URL`, `ETNA_OFFSITE_DIR`, `ETNA_OFFSITE_KEY`, `ETNA_OFFSITE_KEEP` | Off-site backups (`scripts/db/offsite.mjs`, docs/teknis/OPERATIONS.md): the schema owner's connection (password from `PGPASSWORD` or the password file, never here), the target folder, the public key, how many to keep (default 14). Set for the backup job only, not the app | For off-site backups | `postgres://etna_owner@localhost:5432/etna`, `\\nas\backup\etna`, `/etc/etna/offsite-key.pub.pem` | `scripts/db/offsite.mjs` | The folder holds encrypted backups; the private key needs the passphrase |
 | `ETNA_HEALTH_URL` | What the worker's watchdog checks every minute | No (default `http://127.0.0.1:<ETNA_PORT or 4028>/api/health`; Docker sets `http://app:4028/api/health`) | `http://127.0.0.1:4028/api/health` | `scripts/server/worker.mjs` | No |
 | `EXCHANGE_RATE_PROVIDER` | `frankfurter` (default) fetches rates on the server; `off` = manual rates only | No | `off` | `src/server/currency/frankfurter.ts` | No |
 | `FRANKFURTER_URL` | Frankfurter API address | No | `https://api.frankfurter.dev/v2` | `src/server/currency/frankfurter.ts` | No |

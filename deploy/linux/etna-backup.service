@@ -6,7 +6,7 @@
 
 [Unit]
 Description=ETNA encrypted backup
-Documentation=file:///opt/etna/current/docs/INSTALL-LINUX.md
+Documentation=file:///opt/etna/current/docs/teknis/INSTALL-LINUX.md
 After=network-online.target postgresql.service
 Wants=network-online.target
 

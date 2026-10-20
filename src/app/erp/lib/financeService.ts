@@ -6,7 +6,7 @@ import type { BankFormat, StatementLine } from '@/lib/finance/bankCsv';
 import { rpcWorkspaceId } from './workspace';
 
 // Cash and bank accounts, bank reconciliation and fixed assets
-// (db/migrations/20261012000054_erp_finance.sql, docs/FINANCE.md).
+// (db/migrations/20261012000054_erp_finance.sql, docs/teknis/FINANCE.md).
 
 export interface CashAccount {
   id: string;

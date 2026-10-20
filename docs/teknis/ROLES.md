@@ -98,7 +98,7 @@ ETNA's own staff (platform roles: super admin, support, auditor, **security
 officer**) are not members of an ERP. A super admin can open a company only
 through a time-boxed staff session (reason, ticket, at most 8 hours, the Owner
 is e-mailed), which acts with the Owner's rights and is logged; see
-`docs/ADMIN.md`.
+`docs/teknis/ADMIN.md`.
 
 ## Where it lives
 

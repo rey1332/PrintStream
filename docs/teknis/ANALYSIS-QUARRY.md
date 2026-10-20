@@ -438,10 +438,10 @@ What to add or decide:
 | S2 | **Run the checks locally** before every release, since CI is gone: `npm run check` and `npm run build` | P0 |
 | S3 | **Require two-factor for the quarry's workspace** (the setting exists) and for every Owner / Admin / Finance account | P0 |
 | S4 | **Data-processing agreement** with the quarry: you host their data (UU PDP No. 27/2022). Covers what is stored, retention (the security log and kept ERP audit trails keep personal data forever by your choice), backups, access by your admins, breach notification within 3×24 hours | P0 |
-| S5 | Done: `scripts/db/offsite.mjs` (docs/OPERATIONS.md, *Off-site backups*), restore tested in CI. **Off-site encrypted backups** of the database **and** the documents folder, and a **restore test** (quarterly). `.env.local` (especially `MFA_ENCRYPTION_KEY`) stored in a password manager | P0 |
+| S5 | Done: `scripts/db/offsite.mjs` (docs/teknis/OPERATIONS.md, *Off-site backups*), restore tested in CI. **Off-site encrypted backups** of the database **and** the documents folder, and a **restore test** (quarterly). `.env.local` (especially `MFA_ENCRYPTION_KEY`) stored in a password manager | P0 |
 | S6 | **Weighbridge integrity**: no edit after print, gap-free numbers, photo evidence, tare checks, operator accountability (§3.2). Weighbridge fraud is the main money risk in a quarry | P0 with §3.2 |
 | S7 | ~~Shorter sessions for admins and finance (e.g. 8 hours idle) and an automatic sign-out on shared PCs (weighbridge)~~ Done (20261012000052): 8 hours idle for company owners, admins, finance and platform admins; "This is a shared computer" at sign-in signs out after 15 minutes | P1 |
-| S8 | Done: e-mail alerts (docs/OPERATIONS.md, *Error alerts*). Error alerts: send `[db]`, `[auth]`, `[admin]` and other error lines and `/api/health` failures to you (e-mail or Telegram / WhatsApp) | P1 |
+| S8 | Done: e-mail alerts (docs/teknis/OPERATIONS.md, *Error alerts*). Error alerts: send `[db]`, `[auth]`, `[admin]` and other error lines and `/api/health` failures to you (e-mail or Telegram / WhatsApp) | P1 |
 | S9 | Malware scan of uploaded documents (e.g. ClamAV) since staff will upload files from phones | P2 |
 | S10 | Remove the dead `origin` remote (`github.com/rey1332/ETNA`) or point it at the new backup location | P2 |
 
@@ -451,7 +451,7 @@ What to add or decide:
 
 | Need | Today | To do |
 |---|---|---|
-| Server | Install guide for Windows + PostgreSQL + Cloudflare Tunnel (docs/INSTALL-SERVER.md) | Decide where it runs (your PC is not a server). A small VPS or a dedicated machine with UPS. Separate DB and app if possible, as the guide describes |
+| Server | Install guide for Windows + PostgreSQL + Cloudflare Tunnel (docs/teknis/INSTALL-SERVER.md) | Decide where it runs (your PC is not a server). A small VPS or a dedicated machine with UPS. Separate DB and app if possible, as the guide describes |
 | Domain and TLS | Via Cloudflare | Set `ETNA_PUBLIC_URL`, `TRUST_PROXY=cloudflare` |
 | Staging | Described in the docs | Keep a staging copy for trying migrations before the client's data |
 | Backups | Daily `pg_dump` script on the DB server | Off-site copy, documents folder too, restore test (S5) |
@@ -474,7 +474,7 @@ stockpiles, equipment hours / fuel / services, monthly and daily pay with the
 Indonesian payroll rules (PPh 21 TER, BPJS with caps, overtime, THR), and in
 the admin panel new client companies, ERP limits, usage and modules,
 announcements, system and backups, e-mail (SMTP) and CSV exports. See
-docs/INDUSTRY-MODULES.md and docs/ADMIN.md. Still open from the list below:
+docs/teknis/INDUSTRY-MODULES.md and docs/teknis/ADMIN.md. Still open from the list below:
 PPN / Coretax export, supplier bills with PPh 23, Pajak MBLB, permits and K3,
 fixed assets, bank reconciliation, offline weighbridge and a connected scale,
 notifications, and the off-site code backup.

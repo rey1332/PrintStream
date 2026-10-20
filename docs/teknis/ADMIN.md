@@ -131,7 +131,7 @@ members instead.
   logs. The page removes it from the address bar right after reading it.
 - A link works once. A newer link, a completed reset, disabling the account,
   or the person changing their own password cancels open links.
-- Links are built from `ETNA_PUBLIC_URL` (docs/CONFIGURATION.md) when it is
+- Links are built from `ETNA_PUBLIC_URL` (docs/teknis/CONFIGURATION.md) when it is
   set, otherwise from the address the admin used. Set it behind a tunnel or
   proxy.
 
@@ -304,7 +304,7 @@ their own device. Withdrawing ends it at once.
 
 Database response time and size, free disk space on the backup drive, the
 list of backups, and the e-mail set-up. A super admin can run a backup now
-(where in-app backups are configured, docs/CONFIGURATION.md); every role can
+(where in-app backups are configured, docs/teknis/CONFIGURATION.md); every role can
 send a test e-mail. Both need a fresh two-factor code and are logged.
 
 **Copy backups somewhere else regularly** (USB drive, cloud folder): a backup
@@ -312,7 +312,7 @@ on the same computer is lost with it.
 
 ## E-mail
 
-With `SMTP_*` set (docs/CONFIGURATION.md) invitation links, password links and
+With `SMTP_*` set (docs/teknis/CONFIGURATION.md) invitation links, password links and
 new company invitations can be e-mailed (Indonesian and English); the link is
 still shown in the panel, so a failed e-mail loses nothing. ETNA sends over
 TLS only.
@@ -382,7 +382,7 @@ for the command line), which account was affected, the session, IP address,
 browser and a small JSON `metadata` object. It never stores passwords,
 two-factor codes, secrets or session tokens; tests check this.
 
-IP addresses come from `TRUST_PROXY` (docs/CONFIGURATION.md). Without it they
+IP addresses come from `TRUST_PROXY` (docs/teknis/CONFIGURATION.md). Without it they
 are empty.
 
 ### Tamper resistance
@@ -396,7 +396,7 @@ are empty.
 - Rows have no foreign keys, so deleting an account or a workspace leaves its
   history in place.
 - Limits: the schema owner and PostgreSQL superusers can still disable the
-  trigger. Keep those passwords off the app server (docs/OPERATIONS.md) and
+  trigger. Keep those passwords off the app server (docs/teknis/OPERATIONS.md) and
   back up the database.
 
 ### ERP audit trails

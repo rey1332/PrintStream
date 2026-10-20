@@ -23,7 +23,7 @@ PrintStream is stil in evolving stage. Some parts of the broader vision are not 
 - Machine learning pipelines.
 - Sandboxed execution of user-written code.
 
-See the [project documentation](docs/) for current feature details and limitations.
+**Panduan (Bahasa Indonesia): [docs/PANDUAN.md](docs/PANDUAN.md)**: cara memasang di Ubuntu Server dan Windows, pemakaian sehari-hari, backup, restore, dan pindah server. Technical details: [docs/teknis/](docs/teknis/).
 
 # How it works
 

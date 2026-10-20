@@ -1,7 +1,7 @@
 import type { Entry } from './types';
 
 // Cash and bank accounts, bank reconciliation and fixed assets (/erp/cash-bank,
-// /erp/fixed-assets, src/app/erp/lib/financeService.ts, docs/FINANCE.md).
+// /erp/fixed-assets, src/app/erp/lib/financeService.ts, docs/teknis/FINANCE.md).
 export const financeMessages = {
   'erp.nav.cashBank': { en: 'Cash & bank', id: 'Kas & bank', zh: '现金与银行' },
   'pay.cashAccountIn': { en: 'Received into', id: 'Diterima di', zh: '收款账户' },

@@ -105,9 +105,9 @@ export const platformAdminDashboardMessages = {
     zh: '此期间没有失败的尝试。',
   },
   'padmin.dash.noIps': {
-    en: 'No IP addresses were recorded. They are recorded only when TRUST_PROXY is set (docs/CONFIGURATION.md).',
-    id: 'Tidak ada alamat IP yang tercatat. Alamat IP hanya dicatat jika TRUST_PROXY diatur (docs/CONFIGURATION.md).',
-    zh: '未记录 IP 地址。仅在设置 TRUST_PROXY 时才会记录（见 docs/CONFIGURATION.md）。',
+    en: 'No IP addresses were recorded. They are recorded only when TRUST_PROXY is set (docs/teknis/CONFIGURATION.md).',
+    id: 'Tidak ada alamat IP yang tercatat. Alamat IP hanya dicatat jika TRUST_PROXY diatur (docs/teknis/CONFIGURATION.md).',
+    zh: '未记录 IP 地址。仅在设置 TRUST_PROXY 时才会记录（见 docs/teknis/CONFIGURATION.md）。',
   },
   'padmin.dash.failures': { en: 'Failures', id: 'Gagal', zh: '失败次数' },
   'padmin.dash.lastAttempt': { en: 'Last attempt', id: 'Percobaan terakhir', zh: '最近一次尝试' },
@@ -171,9 +171,9 @@ export const platformAdminDashboardMessages = {
     zh: '{count} 个未应用',
   },
   'padmin.dash.migrationsHelp': {
-    en: 'This version of PrintStream has database updates that are not applied yet. Run npm run db:migrate as the schema owner (docs/OPERATIONS.md).',
-    id: 'Versi PrintStream ini memiliki pembaruan basis data yang belum diterapkan. Jalankan npm run db:migrate sebagai pemilik skema (docs/OPERATIONS.md).',
-    zh: '此版本的 PrintStream 有尚未应用的数据库更新。请以架构所有者身份运行 npm run db:migrate（见 docs/OPERATIONS.md）。',
+    en: 'This version of PrintStream has database updates that are not applied yet. Run npm run db:migrate as the schema owner (docs/teknis/OPERATIONS.md).',
+    id: 'Versi PrintStream ini memiliki pembaruan basis data yang belum diterapkan. Jalankan npm run db:migrate sebagai pemilik skema (docs/teknis/OPERATIONS.md).',
+    zh: '此版本的 PrintStream 有尚未应用的数据库更新。请以架构所有者身份运行 npm run db:migrate（见 docs/teknis/OPERATIONS.md）。',
   },
   'padmin.dash.backups': { en: 'Backups', id: 'Cadangan', zh: '备份' },
   'padmin.dash.backupsUnknown': {

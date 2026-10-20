@@ -1,9 +1,9 @@
 # ETNA (the web app) on 127.0.0.1:4028, behind Caddy or a Cloudflare Tunnel.
-# Installed by deploy/linux/install.sh; docs/INSTALL-LINUX.md.
+# Installed by deploy/linux/install.sh; docs/teknis/INSTALL-LINUX.md.
 
 [Unit]
 Description=ETNA app
-Documentation=file:///opt/etna/current/docs/INSTALL-LINUX.md
+Documentation=file:///opt/etna/current/docs/teknis/INSTALL-LINUX.md
 After=network-online.target postgresql.service
 Wants=network-online.target
 

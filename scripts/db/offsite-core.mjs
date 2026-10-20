@@ -1,4 +1,4 @@
-// Off-site backup files (scripts/db/offsite.mjs, docs/OPERATIONS.md §3).
+// Off-site backup files (scripts/db/offsite.mjs, docs/teknis/OPERATIONS.md §3).
 //
 // One file holds everything a restore needs: the database dump, the uploaded
 // documents and company folders, and optionally the settings (etna.env). It

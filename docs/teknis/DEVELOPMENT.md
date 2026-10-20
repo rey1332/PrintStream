@@ -97,7 +97,7 @@ another device; use a tunnel or a reverse proxy as in INSTALL-SERVER.md.
 | `npm run verify` | Everything CI ran: `check`, lint, a production build and `npm audit` for critical issues. **Run it before every release** |
 
 The GitHub repository was removed in October 2026, so
-[.github/workflows/ci.yml](../.github/workflows/ci.yml) no longer runs
+[.github/workflows/ci.yml](../../.github/workflows/ci.yml) no longer runs
 anywhere. `npm run verify` runs the same steps locally; nothing else checks
 a change before it is released.
 

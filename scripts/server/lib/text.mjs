@@ -126,7 +126,7 @@ const en = {
   'install.writeDown': 'Write these down now in a password manager (shown only this once):',
   'install.writeDownWhy': 'ETNA does not need them day to day; they are for PostgreSQL maintenance.',
   'install.next': 'Next: open {url}, sign in as {email}, and turn on two-factor in ERP → Settings.',
-  'install.tunnelNext': 'Cloudflare Tunnel: install cloudflared, create a tunnel in the Cloudflare dashboard and point its public hostname at http://127.0.0.1:{port} (see docs/HOW TO ETNA.md).',
+  'install.tunnelNext': 'Cloudflare Tunnel: install cloudflared, create a tunnel in the Cloudflare dashboard and point its public hostname at http://127.0.0.1:{port} (see docs/teknis/HOW TO ETNA.md).',
 
   starting: 'Starting ETNA',
   started: 'ETNA is running (http://127.0.0.1:{port}).',
@@ -247,7 +247,7 @@ const en = {
   'h.pgListen.fix': 'Set listen_addresses = \'localhost\' at the end of postgresql.conf and restart etna-postgres.',
   'h.tunnel': 'Cloudflare Tunnel',
   'h.tunnel.problem': 'cloudflared is not running ({state}): nobody outside this server reaches ETNA.',
-  'h.tunnel.fix': 'Install/start cloudflared (see docs/HOW TO ETNA.md).',
+  'h.tunnel.fix': 'Install/start cloudflared (see docs/teknis/HOW TO ETNA.md).',
 
   'backup.running': 'Making a full backup...',
   'backup.part.database': 'Database',
@@ -515,7 +515,7 @@ const id = {
   'install.writeDown': 'Catat sekarang di password manager (hanya ditampilkan sekali ini):',
   'install.writeDownWhy': 'ETNA tidak membutuhkannya sehari-hari; ini untuk pemeliharaan PostgreSQL.',
   'install.next': 'Berikutnya: buka {url}, masuk sebagai {email}, lalu aktifkan two-factor di ERP → Settings.',
-  'install.tunnelNext': 'Cloudflare Tunnel: pasang cloudflared, buat tunnel di dashboard Cloudflare, arahkan public hostname-nya ke http://127.0.0.1:{port} (lihat docs/HOW TO ETNA.md).',
+  'install.tunnelNext': 'Cloudflare Tunnel: pasang cloudflared, buat tunnel di dashboard Cloudflare, arahkan public hostname-nya ke http://127.0.0.1:{port} (lihat docs/teknis/HOW TO ETNA.md).',
 
   starting: 'Menjalankan ETNA',
   started: 'ETNA berjalan (http://127.0.0.1:{port}).',
@@ -636,7 +636,7 @@ const id = {
   'h.pgListen.fix': 'Isi listen_addresses = \'localhost\' di akhir postgresql.conf lalu restart etna-postgres.',
   'h.tunnel': 'Cloudflare Tunnel',
   'h.tunnel.problem': 'cloudflared tidak berjalan ({state}): tidak ada yang bisa mencapai ETNA dari luar server ini.',
-  'h.tunnel.fix': 'Pasang/jalankan cloudflared (lihat docs/HOW TO ETNA.md).',
+  'h.tunnel.fix': 'Pasang/jalankan cloudflared (lihat docs/teknis/HOW TO ETNA.md).',
 
   'backup.running': 'Membuat backup lengkap...',
   'backup.part.database': 'Database',

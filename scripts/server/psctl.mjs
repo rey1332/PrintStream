@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// psctl — runs an ETNA server on Linux (docs/INSTALL-LINUX.md, "psctl").
+// psctl — runs an ETNA server on Linux (docs/teknis/INSTALL-LINUX.md, "psctl").
 // Installed as /usr/local/bin/psctl by deploy/linux/install.sh; run as root.
 //
 //   psctl status [--json]           services, health, version, database, backups, disk

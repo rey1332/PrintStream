@@ -1,5 +1,5 @@
 #!/bin/sh
-# psctl: runs this ETNA server (docs/INSTALL-LINUX.md, "psctl"). Installed as
+# psctl: runs this ETNA server (docs/teknis/INSTALL-LINUX.md, "psctl"). Installed as
 # /usr/local/bin/psctl by deploy/linux/install.sh; the commands are in
 # /opt/etna/current/scripts/server/psctl.mjs, so they always match the running version.
 exec /usr/bin/env node /opt/etna/current/scripts/server/psctl.mjs "$@"

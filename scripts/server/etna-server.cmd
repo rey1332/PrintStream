@@ -1,7 +1,7 @@
 @echo off
 rem Runs ETNA as a server: production mode on 127.0.0.1 only, for a Cloudflare
 rem Tunnel or reverse proxy (Caddy) in front. Task Scheduler starts it at boot
-rem (docs/INSTALL-SERVER.md). Build first with "npm run build" after every update.
+rem (docs/teknis/INSTALL-SERVER.md). Build first with "npm run build" after every update.
 rem   etna-server.cmd          port 4028 (production)
 rem   etna-server.cmd 4029     another port (staging)
 rem If the server stops on its own, it is started again after 10 seconds.

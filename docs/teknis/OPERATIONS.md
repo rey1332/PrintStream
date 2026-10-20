@@ -2,10 +2,10 @@
 
 How to run ETNA safely for a real business: environments, releasing database
 changes, backups, monitoring, accounts and incidents. ETNA runs on plain
-PostgreSQL with its own sign-in (history: docs/BACKEND_MIGRATION.md).
+PostgreSQL with its own sign-in (history: docs/teknis/BACKEND_MIGRATION.md).
 Installing servers, updating and rolling back step by step:
-docs/INSTALL-SERVER.md. Local development: docs/DEVELOPMENT.md. Settings:
-docs/CONFIGURATION.md.
+docs/teknis/INSTALL-SERVER.md. Local development: docs/teknis/DEVELOPMENT.md. Settings:
+docs/teknis/CONFIGURATION.md.
 
 ## 1. Environments
 
@@ -17,7 +17,7 @@ docs/CONFIGURATION.md.
 
 - Never point a local or staging app at the production database.
 - Each environment has its own roles, passwords, `MFA_ENCRYPTION_KEY` and
-  `SESSION_HINT_SECRET` (see docs/CONFIGURATION.md). `.env*` files are not
+  `SESSION_HINT_SECRET` (see docs/teknis/CONFIGURATION.md). `.env*` files are not
   committed.
 - Staging and production need separate PostgreSQL services, not two databases
   in one: the role names are fixed, and roles are shared by every database of
@@ -51,7 +51,7 @@ itself must go back, after the previous app is live, and read its header
 first — some remove data that only the new feature used. Rollback scripts do
 not touch `etna_meta.schema_migrations`: delete the migration's row there too
 (`name = 'migrations/<file>.sql'`), or it will never be applied again.
-Commands: docs/INSTALL-SERVER.md sections 14–15.
+Commands: docs/teknis/INSTALL-SERVER.md sections 14–15.
 
 ## 3. Backups and recovery
 
@@ -99,9 +99,9 @@ the file is refused.
    - Linux: `sudo psctl backup-setup --copy-to <NAS folder>` sets this up with
      `etna-backup.timer`; `psctl backup`, `psctl verify` and `psctl restore`
      (into a new database, then a confirmed switch) wrap the commands below
-     (docs/INSTALL-LINUX.md, A5, A9, A10). The older `etna-offsite.timer` still works.
+     (docs/teknis/INSTALL-LINUX.md, A5, A9, A10). The older `etna-offsite.timer` still works.
    - Docker: `docker compose --profile offsite run --rm offsite` from cron
-     (docs/INSTALL-LINUX.md, B5).
+     (docs/teknis/INSTALL-LINUX.md, B5).
    - Windows: a Task Scheduler task at night running
      `node <ETNA_DATA_ROOT>\app\current\scripts\db\offsite.mjs run --settings <ETNA_DATA_ROOT>\config\etna.env`
      as an account that may read `<ETNA_DATA_ROOT>`, with the settings above
@@ -147,11 +147,11 @@ the file is refused.
   in the server log are `[API Error]`, `[auth]`, `[data]`, `[db]`,
   `[analytics query]`, `[analytics summary]`, `[ontology]`, `[currency]`,
   `[Export`, `[workspace]`, `[worker]` and `[health]`.
-  Workflow runs are listed in `workflow_runs` (see docs/WORKFLOWS.md).
+  Workflow runs are listed in `workflow_runs` (see docs/teknis/WORKFLOWS.md).
 
 ### Error alerts
 
-With SMTP set up (`SMTP_HOST`, docs/CONFIGURATION.md) and
+With SMTP set up (`SMTP_HOST`, docs/teknis/CONFIGURATION.md) and
 `ETNA_ALERT_EMAILS=you@example.com,ops@example.com` in the settings (else the
 server admins in `ETNA_ADMIN_EMAILS` get them), the app and the Terminal
 worker e-mail every error they log:
@@ -172,9 +172,9 @@ A server that is down cannot send anything: keep an external uptime check on
 - **Security:** review `erp_workspace_audit_log` (membership, two-factor,
   recovery codes, renames), `erp_audit_log` (record changes), `erp_access_log`
   (ERP → Search: who searched which record types and opened which records;
-  never the search text — see docs/ONTOLOGY.md), `erp_currency_audit` (base
+  never the search text — see docs/teknis/ONTOLOGY.md), `erp_currency_audit` (base
   currency confirmations, exchange rates added or imported — see
-  docs/CURRENCY.md) and repeated failures in
+  docs/teknis/CURRENCY.md) and repeated failures in
   `auth.login_attempts` and `auth.mfa_attempts` weekly.
 
 ## 5. Accounts and security checklist
@@ -188,7 +188,7 @@ A server that is down cannot send anything: keep an external uptime check on
 
 - **In-app console** (backtick on any page; header button on phones): only for
   Finance members and Owners of shared workspaces, checked by `/api/console` on
-  every request (see docs/CONSOLE.md). Its data commands run on the server as
+  every request (see docs/teknis/CONSOLE.md). Its data commands run on the server as
   the user, so row-level security, table grants and the audit triggers decide
   what happens. Its delete commands clear master data in the workspace it is
   open in; financial records and the audit log cannot be deleted through it
@@ -215,7 +215,7 @@ A server that is down cannot send anything: keep an external uptime check on
 - **In-app backup and account administration** exist only where
   `npm run db:backup -- setup` was run (`ETNA_BACKUP_DATABASE_URL`), which
   stores the owner password on that machine. Production servers leave them
-  off (docs/CONFIGURATION.md); there, backups run on the database server and
+  off (docs/teknis/CONFIGURATION.md); there, backups run on the database server and
   accounts are managed with `etna_admin.*` / `scripts/admin/users.mjs`.
   Where they are on: only `ETNA_ADMIN_EMAILS` who completed two-factor in the
   session may back up or restore (a restore also needs the password), and the
@@ -239,7 +239,7 @@ A server that is down cannot send anything: keep an external uptime check on
   `scripts/admin/users.mjs` (create-user, set-password, revoke-sessions,
   reset-mfa, lock/unlock). Hand over temporary passwords through a separate
   channel. Each of these is recorded in the security log; platform admins
-  (`grant-admin`) read it under `/admin` (docs/ADMIN.md). Enforced server-side: `/api/auth` refuses sign-up actions (403),
+  (`grant-admin`) read it under `/admin` (docs/teknis/ADMIN.md). Enforced server-side: `/api/auth` refuses sign-up actions (403),
   and the app's database roles (`etna_auth`, `etna_app`, `anon`,
   `authenticated`) cannot insert into `auth.users`
   (migration `20261003000000_auth_no_self_signup`). Workspace access codes only

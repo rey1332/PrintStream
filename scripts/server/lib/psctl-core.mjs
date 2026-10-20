@@ -78,7 +78,7 @@ export function tlsProblem(url) {
   const mode = new URL(url).searchParams.get('sslmode');
   return mode === 'verify-full' || mode === 'verify-ca'
     ? null
-    : `${host} is another machine: add ?sslmode=verify-full to the URL (docs/CONFIGURATION.md, "Database connections across the network").`;
+    : `${host} is another machine: add ?sslmode=verify-full to the URL (docs/teknis/CONFIGURATION.md, "Database connections across the network").`;
 }
 
 /** One ~/.pgpass line; ':' and '\' are escaped. Any database of that server and role. */

@@ -10,7 +10,7 @@
 //
 // Verify the element names, the unit codes (UNIT_CODES below) and the goods /
 // services codes against DJP's current Coretax template before the first real
-// import (docs/TAX.md).
+// import (docs/teknis/TAX.md).
 
 export interface FakturBuyer {
   tax_id_type: 'npwp' | 'nik' | 'passport' | 'other' | null;

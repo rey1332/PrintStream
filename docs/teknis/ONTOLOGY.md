@@ -23,7 +23,7 @@ Supabase APIs), run through ETNA's own executor.
 
 All objects are owned by a workspace (`workspace_id`) and read under row-level
 security by area (`erp_can_read(workspace, area)`, which also enforces the
-workspace two-factor rule; see docs/ROLES.md): Owner, Admin and Finance read
+workspace two-factor rule; see docs/teknis/ROLES.md): Owner, Admin and Finance read
 everything, Sales and Inventory only their areas. People always see their own
 rows (`user_id`). Order, receipt and journal lines have no workspace of their
 own and are read through their parent.
@@ -141,7 +141,7 @@ restore; `REINDEX` is enough if an index is ever damaged.
   search text or field values. People see their own entries; owners and
   admins (the `audit` permission) see the workspace's. Nobody can write or
   delete entries directly; `erp_log_access` writes them. Review it with the
-  other audit logs (docs/OPERATIONS.md).
+  other audit logs (docs/teknis/OPERATIONS.md).
 - Search is read-only. Changes still go through the module pages and their
   validated business functions.
 

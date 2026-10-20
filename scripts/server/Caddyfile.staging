@@ -1,4 +1,4 @@
-# Caddy reverse proxy for ETNA staging (docs/INSTALL-SERVER.md, langkah 9).
+# Caddy reverse proxy for ETNA staging (docs/teknis/INSTALL-SERVER.md, langkah 9).
 # Copy to C:\caddy\Caddyfile and replace staging.example.com with your name.
 #
 # Caddy obtains and renews the HTTPS certificate by itself: the DNS record must

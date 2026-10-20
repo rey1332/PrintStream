@@ -1,4 +1,4 @@
-# ETNA with Docker Compose on Linux (docs/INSTALL-LINUX.md, part B):
+# ETNA with Docker Compose on Linux (docs/teknis/INSTALL-LINUX.md, part B):
 #
 #   cd deploy/docker
 #   cp .env.example .env        # then set the two passwords

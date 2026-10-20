@@ -1,4 +1,4 @@
-# Caddy in front of ETNA on Linux (docs/INSTALL-LINUX.md). Copy to
+# Caddy in front of ETNA on Linux (docs/teknis/INSTALL-LINUX.md). Copy to
 # /etc/caddy/Caddyfile, replace erp.example.com with your name and run
 # `systemctl reload caddy`.
 #

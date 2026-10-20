@@ -9,7 +9,7 @@
 // and service, the app, settings and keys, a service account, scheduled tasks
 // for the app and the backups. Then starts, stops, checks, backs up, restores,
 // updates and moves it. Nothing existing is overwritten or deleted without a
-// typed confirmation. See docs/HOW TO ETNA.md and scripts/server/lib/layout.mjs.
+// typed confirmation. See docs/teknis/HOW TO ETNA.md and scripts/server/lib/layout.mjs.
 
 import fs from 'node:fs';
 import path from 'node:path';

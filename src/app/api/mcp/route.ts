@@ -17,7 +17,7 @@ import { issuerOf } from '@/server/mcp/oauth';
 //   Authorization: Bearer psmcp_…   (a Terminal → AI → MCP access token)
 // and one JSON-RPC message. Tools over the token's Terminal, as the member
 // who made the token; building pipelines (drafts) only when the token or
-// connection was allowed to write (docs/TERMINAL.md, "MCP access"). No cookies:
+// connection was allowed to write (docs/teknis/TERMINAL.md, "MCP access"). No cookies:
 // the token is the only credential, so browsers' cross-site requests carry
 // nothing; requests from a web page of another origin are refused anyway.
 

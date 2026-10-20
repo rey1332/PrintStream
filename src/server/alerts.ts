@@ -1,4 +1,4 @@
-// Error alerts by e-mail (docs/OPERATIONS.md, "Error alerts").
+// Error alerts by e-mail (docs/teknis/OPERATIONS.md, "Error alerts").
 //
 // The server already logs every failure as one redacted line: a tag and a
 // code, e.g. `[db] 57P01` or `[auth] login ECONNREFUSED`. installConsoleAlerts()

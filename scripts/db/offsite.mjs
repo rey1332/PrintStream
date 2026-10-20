@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Encrypted off-site backups of ETNA: database, documents and settings in one
-// file, copied to another disk, a NAS or a network share (docs/OPERATIONS.md,
+// file, copied to another disk, a NAS or a network share (docs/teknis/OPERATIONS.md,
 // "Off-site backups"). File format: scripts/db/offsite-core.mjs.
 //
 //   node scripts/db/offsite.mjs keys --dir <folder>          new key pair (passphrase on stdin)
@@ -261,7 +261,7 @@ async function restoreCommand() {
     console.log(`Restored the database into ${parseUrl(database).database}.`);
   }
   console.log('');
-  console.log('Next (docs/OPERATIONS.md, "Off-site backups"):');
+  console.log('Next (docs/teknis/OPERATIONS.md, "Off-site backups"):');
   if (!database) console.log(`  - database: run again with --database <url of a database prepared with this ETNA version>`);
   console.log(`  - documents: copy ${path.join(to, 'files', 'documents')} to <ETNA_DATA_ROOT>/documents and ${path.join(to, 'files', 'companies')} to <ETNA_DATA_ROOT>/companies`);
   console.log(`  - settings: ${manifest.entries.some((e) => e.name === 'settings/etna.env') ? `${path.join(to, 'settings', 'etna.env')} holds the keys (MFA_ENCRYPTION_KEY)` : 'not in this backup: use the etna.env kept in your password manager'}`);

@@ -2,7 +2,7 @@
 # documents and settings into ETNA_OFFSITE_DIR. Started nightly by
 # etna-offsite.timer. The manual setup, kept for servers that use it: on new
 # servers `psctl backup-setup` (etna-backup.timer) does the same with no
-# password readable by the etna user (docs/INSTALL-LINUX.md, A5).
+# password readable by the etna user (docs/teknis/INSTALL-LINUX.md, A5).
 #
 # /etc/etna/offsite.env (etna:etna, 0600) holds:
 #   OFFSITE_DATABASE_URL=postgres://etna_owner@localhost:5432/etna

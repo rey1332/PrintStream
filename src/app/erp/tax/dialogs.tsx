@@ -22,7 +22,7 @@ import { financeService, type CashAccount } from '../lib/financeService';
 
 // Object codes of PPh 23 most often met by a quarry (rental of equipment,
 // services, transport); any other code can be typed. Check the current list
-// in Coretax (docs/TAX.md).
+// in Coretax (docs/teknis/TAX.md).
 export const PPH23_OBJECTS = [
   { code: '24-104-01', key: 'tax.obj.rental' },
   { code: '24-104-14', key: 'tax.obj.services' },

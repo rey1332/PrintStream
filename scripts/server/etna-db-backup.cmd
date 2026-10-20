@@ -1,6 +1,6 @@
 @echo off
 rem Daily backup of one ETNA database. Runs ON THE DATABASE SERVER from Task
-rem Scheduler (docs/INSTALL-SERVER.md, langkah 4); copy this file there.
+rem Scheduler (docs/teknis/INSTALL-SERVER.md, langkah 4); copy this file there.
 rem   etna-db-backup.cmd <database> <port> <folder>
 rem   etna-db-backup.cmd etna 5432 D:\etna-backup\production
 rem   etna-db-backup.cmd etna_staging 5433 D:\etna-backup\staging

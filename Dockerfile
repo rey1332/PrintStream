@@ -1,5 +1,5 @@
 # ETNA as a container image (Linux). Used by deploy/docker/compose.yml; see
-# docs/INSTALL-LINUX.md. The same image runs the app (default command), the
+# docs/teknis/INSTALL-LINUX.md. The same image runs the app (default command), the
 # TERMINAL worker and the one-time setup / migrations:
 #
 #   node scripts/server/env-run.mjs /config/etna.env app

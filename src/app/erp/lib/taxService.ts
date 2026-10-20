@@ -4,7 +4,7 @@ import { createClient } from '@/lib/data/client';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { rpcWorkspaceId } from './workspace';
 
-// Indonesian tax (db/migrations/20261012000053_erp_indonesian_tax.sql, docs/TAX.md).
+// Indonesian tax (db/migrations/20261012000053_erp_indonesian_tax.sql, docs/teknis/TAX.md).
 
 export const TRX_CODES = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'] as const;
 export type TaxIdType = 'npwp' | 'nik' | 'passport' | 'other';

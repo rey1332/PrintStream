@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installs, reinstalls or updates ETNA on a Linux server with systemd
-# (docs/INSTALL-LINUX.md). Run as root from the folder of an ETNA checkout or
+# (docs/teknis/INSTALL-LINUX.md). Run as root from the folder of an ETNA checkout or
 # release. Running it again is always safe: it never drops, empties or
 # recreates a database, and never replaces existing keys.
 #
@@ -387,7 +387,7 @@ fi
 
 cat <<EOF
 
-Done. Next steps (docs/INSTALL-LINUX.md):
+Done. Next steps (docs/teknis/INSTALL-LINUX.md):
   - state:           psctl status    (and psctl doctor)
   - first account:   psctl users create-user --email you@example.com
   - backups:         psctl backup-setup --copy-to <mounted NAS folder>, then psctl backup

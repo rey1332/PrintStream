@@ -270,9 +270,9 @@ export const platformAdminOpsMessages = {
   'padmin.sys.backupDone': { en: 'Backup finished.', id: 'Pencadangan selesai.', zh: '备份完成。' },
   'padmin.sys.backupNone': { en: 'No backups yet.', id: 'Belum ada cadangan.', zh: '暂无备份。' },
   'padmin.sys.backupOff': {
-    en: 'Backups are not set up on this server (see docs/OPERATIONS.md).',
-    id: 'Pencadangan belum diatur di server ini (lihat docs/OPERATIONS.md).',
-    zh: '本服务器尚未设置备份（见 docs/OPERATIONS.md）。',
+    en: 'Backups are not set up on this server (see docs/teknis/OPERATIONS.md).',
+    id: 'Pencadangan belum diatur di server ini (lihat docs/teknis/OPERATIONS.md).',
+    zh: '本服务器尚未设置备份（见 docs/teknis/OPERATIONS.md）。',
   },
   'padmin.sys.offsite': {
     en: 'Copy the backups to another place regularly (USB drive, cloud folder): a backup on the same computer is lost with it.',
@@ -286,9 +286,9 @@ export const platformAdminOpsMessages = {
     zh: '发件人：{sender}',
   },
   'padmin.sys.emailOff': {
-    en: 'Not set up. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM to .env.local and restart PrintStream (docs/CONFIGURATION.md).',
-    id: 'Belum diatur. Tambahkan SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, dan SMTP_FROM ke .env.local lalu mulai ulang PrintStream (docs/CONFIGURATION.md).',
-    zh: '尚未设置。请在 .env.local 中添加 SMTP_HOST、SMTP_PORT、SMTP_USER、SMTP_PASSWORD 和 SMTP_FROM，然后重启 PrintStream（见 docs/CONFIGURATION.md）。',
+    en: 'Not set up. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM to .env.local and restart PrintStream (docs/teknis/CONFIGURATION.md).',
+    id: 'Belum diatur. Tambahkan SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, dan SMTP_FROM ke .env.local lalu mulai ulang PrintStream (docs/teknis/CONFIGURATION.md).',
+    zh: '尚未设置。请在 .env.local 中添加 SMTP_HOST、SMTP_PORT、SMTP_USER、SMTP_PASSWORD 和 SMTP_FROM，然后重启 PrintStream（见 docs/teknis/CONFIGURATION.md）。',
   },
   'padmin.sys.testTo': {
     en: 'Send a test e-mail to',
