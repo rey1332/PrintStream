@@ -158,7 +158,7 @@ jobs:
           grep -q 'already holds ETNA' err.txt
           test "$(readlink -f /opt/etna/current)" = "$before"
           sudo env -u PGPASSWORD "PATH=$PATH" deploy/linux/install.sh --yes --settings-from /root/etna.env.saved
-          sudo cmp <(sudo grep '^MFA_ENCRYPTION_KEY=' /root/etna.env.saved) <(sudo grep '^MFA_ENCRYPTION_KEY=' /etc/etna/etna.env)
+          test "$(sudo grep '^MFA_ENCRYPTION_KEY=' /root/etna.env.saved)" = "$(sudo grep '^MFA_ENCRYPTION_KEY=' /etc/etna/etna.env)"
           $SMOKE
       - name: Restore into a new database, then the switch
         run: |
@@ -173,7 +173,7 @@ jobs:
           test "$(users "$new")" = 0
           # The old database is untouched.
           test "$(users etna)" = 1
-          sudo cmp <(echo "invoice 42") /var/lib/etna/documents/ci/invoice.txt
+          test "$(sudo cat /var/lib/etna/documents/ci/invoice.txt)" = "invoice 42"
           sudo ls -d /var/lib/etna/before-restore-*
           if sudo ls -d /var/lib/etna/.restore-* 2>/dev/null; then echo "the unpacked backup was left behind"; exit 1; fi
           $SMOKE
