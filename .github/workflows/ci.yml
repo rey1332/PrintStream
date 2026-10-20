@@ -174,8 +174,9 @@ jobs:
           # The old database is untouched.
           test "$(users etna)" = 1
           test "$(sudo cat /var/lib/etna/documents/ci/invoice.txt)" = "invoice 42"
-          sudo ls -d /var/lib/etna/before-restore-*
-          if sudo ls -d /var/lib/etna/.restore-* 2>/dev/null; then echo "the unpacked backup was left behind"; exit 1; fi
+          # Globs inside root's shell: /var/lib/etna is not readable by the runner user.
+          sudo sh -c 'ls -d /var/lib/etna/before-restore-*'
+          if sudo sh -c 'ls -d /var/lib/etna/.restore-*' 2>/dev/null; then echo "the unpacked backup was left behind"; exit 1; fi
           $SMOKE
           sudo psctl databases
           sudo psctl doctor
