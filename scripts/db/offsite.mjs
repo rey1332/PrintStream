@@ -31,6 +31,7 @@ import { findTool, parseUrl, restoreList } from './backup-core.mjs';
 import { bundleName, bundlesToPrune, filesUnder, listBundles, readBundle, readHeader, writeBundle } from './offsite-core.mjs';
 import { readEnvFile } from '../server/lib/envfile.mjs';
 import { MIN_PASSPHRASE, newBackupKeys } from '../server/lib/sealed.mjs';
+import { readPassphrase } from '../server/lib/secret-input.mjs';
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -72,32 +73,6 @@ const passwordEnv = (url) => {
   const password = decodeURIComponent(new URL(url).password || '');
   return password ? { PGPASSWORD: password } : {};
 };
-
-async function readPassphrase(prompt) {
-  if (!process.stdin.isTTY) {
-    const chunks = [];
-    for await (const chunk of process.stdin) chunks.push(chunk);
-    return Buffer.concat(chunks).toString('utf8').replace(/\r?\n$/, '');
-  }
-  process.stderr.write(prompt);
-  return new Promise((resolve) => {
-    let value = '';
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-    process.stdin.setEncoding('utf8');
-    process.stdin.on('data', function onData(ch) {
-      if (ch === '\r' || ch === '\n' || ch === '\u0004') {
-        process.stdin.setRawMode(false);
-        process.stdin.pause();
-        process.stdin.off('data', onData);
-        process.stderr.write('\n');
-        resolve(value);
-      } else if (ch === '\u0003') process.exit(130);
-      else if (ch === '\u007f' || ch === '\b') value = value.slice(0, -1);
-      else value += ch;
-    });
-  });
-}
 
 function offsiteDir() {
   const dir = env.ETNA_OFFSITE_DIR;

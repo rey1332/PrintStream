@@ -96,7 +96,10 @@ the file is refused.
    node scripts/db/offsite.mjs run --settings /etc/etna/etna.env
    ```
 
-   - Linux: `etna-offsite.timer` (docs/INSTALL-LINUX.md, A6).
+   - Linux: `sudo psctl backup-setup --copy-to <NAS folder>` sets this up with
+     `etna-backup.timer`; `psctl backup`, `psctl verify` and `psctl restore`
+     (into a new database, then a confirmed switch) wrap the commands below
+     (docs/INSTALL-LINUX.md, A5, A9, A10). The older `etna-offsite.timer` still works.
    - Docker: `docker compose --profile offsite run --rm offsite` from cron
      (docs/INSTALL-LINUX.md, B5).
    - Windows: a Task Scheduler task at night running

@@ -1,0 +1,29 @@
+# One encrypted backup of this ETNA server (psctl backup): database, documents
+# and settings in one file in ETNA_BACKUP_DIR (/var/backups/etna), copied to
+# ETNA_BACKUP_COPY_DIR when set. Started nightly by etna-backup.timer, which
+# `psctl backup-setup` enables. Runs as root: it reads the schema owner's
+# password (/etc/etna/owner.pgpass), which the app's services never can.
+
+[Unit]
+Description=ETNA encrypted backup
+Documentation=file:///opt/etna/current/docs/INSTALL-LINUX.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/psctl backup
+Nice=10
+IOSchedulingClass=idle
+# Logs go to the journal: journalctl -u etna-backup
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+UMask=0077

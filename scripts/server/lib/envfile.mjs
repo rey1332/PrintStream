@@ -33,7 +33,10 @@ export function updateEnv(text, changes) {
   for (const [key, value] of Object.entries(changes)) {
     if (!done.has(key) && value !== null && value !== undefined) out.push(`${key}=${value}`);
   }
-  return `${out.join('\r\n')}\r\n`;
+  // The file's own line endings (Linux settings stay LF); a new file: the system's.
+  const raw = String(text || '');
+  const eol = raw.includes('\r\n') || (!raw && process.platform === 'win32') ? '\r\n' : '\n';
+  return `${out.join(eol)}${eol}`;
 }
 
 export function readEnvFile(file) {
