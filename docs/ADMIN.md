@@ -37,7 +37,6 @@ may have chosen a port other than 5432). The owner's password comes from
 `PGPASSWORD` or, if `setup-local` saved it, from `%APPDATA%\postgresql\pgpass.conf`.
 
 ```powershell
-$env:ADMIN_DATABASE_URL = "postgres://etna_owner@localhost:5432/etna"   # your host:port
 node scripts/admin/users.mjs grant-admin --email you@example.com              # super_admin
 node scripts/admin/users.mjs grant-admin --email ops@example.com --role auditor
 node scripts/admin/users.mjs list-admins
@@ -50,8 +49,10 @@ After that, super admins manage the other admins under `/admin/admins`.
 `ETNA_ADMIN_EMAILS` (Settings → Backup and Settings → User accounts) is a
 separate, older mechanism and is unchanged.
 
-In Command Prompt (cmd) instead of PowerShell: `set ADMIN_DATABASE_URL=postgres://...`
-(no `$env:`, no quotes).
+The owner connection comes from `.env.local` (saved by `node scripts/setup-local.mjs`
+or `npm run db:backup -- setup`) and its password from your PostgreSQL password
+file, so nothing has to be set. Another database: set `ADMIN_DATABASE_URL` first
+(cmd: `set "ADMIN_DATABASE_URL=postgres://..."`). On Linux: `sudo psctl users …`.
 
 ## Dashboard (`/admin`)
 

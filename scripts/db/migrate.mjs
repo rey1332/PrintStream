@@ -2,11 +2,13 @@
 
 import pg from 'pg';
 import { migrate } from './migrator.mjs';
+import { NO_OWNER, loadOwnerUrl } from './owner.mjs';
 
 const dryRun = process.argv.includes('--dry-run');
-const url = process.env.MIGRATION_DATABASE_URL;
+// MIGRATION_DATABASE_URL, else the owner connection saved in .env.local.
+const url = loadOwnerUrl();
 if (!url) {
-  console.error('Set MIGRATION_DATABASE_URL (owner role). Nothing was changed.');
+  console.error(NO_OWNER);
   process.exit(2);
 }
 

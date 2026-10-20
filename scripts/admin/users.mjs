@@ -19,6 +19,7 @@
 import { randomBytes } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import pg from 'pg';
+import { NO_OWNER, loadOwnerUrl } from '../db/owner.mjs';
 
 const [command, ...rest] = process.argv.slice(2);
 const options = {};
@@ -36,8 +37,9 @@ function usage(message) {
   process.exit(2);
 }
 
-const url = process.env.ADMIN_DATABASE_URL;
-if (!url) usage('Set ADMIN_DATABASE_URL (schema owner). Nothing was changed.');
+// ADMIN_DATABASE_URL, else the owner connection saved in .env.local.
+const url = loadOwnerUrl(['ADMIN_DATABASE_URL']);
+if (!url) usage(NO_OWNER);
 if (!command) usage();
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

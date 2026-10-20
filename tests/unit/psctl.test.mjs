@@ -189,3 +189,12 @@ test('env files on Linux stay LF when updated (systemd, grep and sed read them)'
   const { updateEnv } = await import('../../scripts/server/lib/envfile.mjs');
   assert.equal(updateEnv('A=1\nB=2\n', { B: '3', C: '4' }), 'A=1\nB=3\nC=4\n');
 });
+
+test('owner connection for the tools: the environment first, then what .env.local saved', async () => {
+  const { ownerUrl } = await import('../../scripts/db/owner.mjs');
+  const saved = { ETNA_BACKUP_DATABASE_URL: 'postgres://etna_owner@localhost:3000/etna' };
+  assert.equal(ownerUrl(['ADMIN_DATABASE_URL'], saved), saved.ETNA_BACKUP_DATABASE_URL);
+  assert.equal(ownerUrl([], { ...saved, MIGRATION_DATABASE_URL: 'postgres://m@h/etna' }), 'postgres://m@h/etna');
+  assert.equal(ownerUrl(['ADMIN_DATABASE_URL'], { ...saved, ADMIN_DATABASE_URL: 'postgres://a@h/etna' }), 'postgres://a@h/etna');
+  assert.equal(ownerUrl([], {}), '');
+});
