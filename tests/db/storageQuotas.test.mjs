@@ -94,7 +94,7 @@ test('the Owner may ask for more room once a day; outsiders see nothing', async 
   const stranger = await createUser(db, 'sq-stranger');
   await expectError(run(db, stranger, `select erp_storage_usage($1)`, [ws]), /not allowed/);
   await expectError(run(db, stranger, `select erp_reserve_storage($1, 1, 'import', 'file')`, [ws]), /not a member/);
-  // The folder is set only by the schema owner (etna.bat).
+  // The folder is set only by the schema owner (the server manager).
   await expectError(run(db, owner, `select etna_admin.set_workspace_storage_dir($1, 'D:\\x')`, [ws]), /permission denied/);
   await admin(db, `select etna_admin.set_workspace_storage_dir($1, 'E:\\ETNAStorage\\PT Kuota')`, [ws]);
   assert.equal((await run(db, owner, `select erp_workspace_storage_dir($1) d`, [ws]))[0].d, 'E:\\ETNAStorage\\PT Kuota');

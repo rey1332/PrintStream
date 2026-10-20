@@ -229,7 +229,7 @@ const quoteArg = (a) => `"${String(a).replace(/"/g, '')}"`;
 /** Starts ETNA when Windows starts, and keeps it running (no time limit). */
 export function serverTaskXml({ node, runner, root, workDir }) {
   return taskXml({
-    description: 'ETNA server (starts at boot; restarts the app if it stops). Managed by etna.bat.',
+    description: 'ETNA server (starts at boot; restarts the app if it stops). Managed by the ETNA server manager.',
     trigger: '<BootTrigger><Enabled>true</Enabled><Delay>PT30S</Delay></BootTrigger>',
     command: node,
     args: `${quoteArg(runner)} --root ${quoteArg(root)}`,
@@ -242,7 +242,7 @@ export function serverTaskXml({ node, runner, root, workDir }) {
 export function backupTaskXml({ node, manager, root, workDir, time }) {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error('Time must be HH:MM');
   return taskXml({
-    description: 'ETNA daily full backup. Managed by etna.bat.',
+    description: 'ETNA daily full backup. Managed by the ETNA server manager.',
     trigger: `<CalendarTrigger><StartBoundary>2026-01-01T${time}:00</StartBoundary><Enabled>true</Enabled><ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay></CalendarTrigger>`,
     command: node,
     args: `${quoteArg(manager)} backup --auto --root ${quoteArg(root)}`,

@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// ETNA_DOCUMENTS_DIR, else <ETNA_DATA_ROOT>\documents (set by etna.bat), else
+// ETNA_DOCUMENTS_DIR, else <ETNA_DATA_ROOT>\documents (set by the server manager), else
 // storage/documents in the app folder.
 export function documentsRoot(): string {
   const configured = process.env.ETNA_DOCUMENTS_DIR?.trim();
@@ -18,7 +18,7 @@ export function documentsRoot(): string {
 
 /**
  * Where a company's files live: its own storage folder when ETNA assigned one
- * (etna.bat → Company storage; erp_workspace_storage_dir), else the shared
+ * (server manager → Company storage; erp_workspace_storage_dir), else the shared
  * locations under ETNA_DATA_ROOT. `kind` is the sub-folder: documents,
  * imports, artifacts or tmp.
  */
@@ -75,7 +75,7 @@ export async function removeDocumentFile(
   await fs.rm(filePath(workspaceId, documentId, storageDir), { force: true });
 }
 
-/** Removes a deleted ERP's documents from the shared folder (an assigned company folder is etna.bat's to clear). */
+/** Removes a deleted ERP's documents from the shared folder (an assigned company folder is the server manager's to clear). */
 export async function removeWorkspaceDocuments(workspaceId: string): Promise<void> {
   if (!UUID.test(workspaceId)) throw new Error('Invalid document location');
   await fs.rm(path.join(documentsRoot(), workspaceId.toLowerCase()), {

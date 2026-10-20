@@ -83,12 +83,12 @@ const inside = (child, parent) => {
 export function appFolderProblem(root, appDir) {
   const from = path.resolve(appDir);
   const candidates = [from];
-  // A package's app folder: the package folder (with etna.bat) counts too.
-  if (path.basename(from).toLowerCase() === 'app' && fs.existsSync(path.join(path.dirname(from), 'etna.bat'))) {
+  // A package's app folder (with etna-package.json): the package folder counts too.
+  if (path.basename(from).toLowerCase() === 'app' && fs.existsSync(path.join(from, 'etna-package.json'))) {
     candidates.push(path.dirname(from));
   }
   if (candidates.some((dir) => inside(root, dir) || inside(dir, root))) return 'root_is_app';
-  for (const marker of ['package.json', '.git', 'src', 'etna.bat', path.join('app', 'etna-package.json')]) {
+  for (const marker of ['package.json', '.git', 'src', path.join('app', 'etna-package.json')]) {
     if (fs.existsSync(path.join(root, marker))) return 'root_is_app';
   }
   return null;

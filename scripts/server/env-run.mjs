@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Starts the app or the Terminal worker with the settings of an etna.env file,
-// read exactly as etna.bat reads them (scripts/server/lib/envfile.mjs: values
+// read exactly as the server manager reads them (scripts/server/lib/envfile.mjs: values
 // are never quoted, expanded or escaped). Used on Linux by the systemd units
 // (deploy/linux) and the container (Dockerfile):
 //

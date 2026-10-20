@@ -10,7 +10,7 @@
 //     queue and the fixed functions in ps_worker and ps_admin.
 //   * Schedules are checked every 30 seconds; maintenance runs daily.
 //
-// Started by scripts/server/worker.mjs (etna.bat runs it beside the app).
+// Started by scripts/server/worker.mjs (the server manager runs it beside the app).
 
 import { createWriteStream, promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -406,7 +406,7 @@ const HANDLERS: Record<string, Handler> = {
     let deleted = 0;
     for (const { workspace_id } of await one(ctx, 'select * from ps_worker.pending_deletions()')) {
       const [dir] = await one(ctx, 'select ps_worker.company_dir($1) as d', [workspace_id]);
-      // The company's files first (its own folder keeps its root: etna.bat manages it).
+      // The company's files first (its own folder keeps its root: the server manager manages it).
       for (const kind of ['documents', 'imports', 'artifacts', 'tmp'] as const)
         await fs.rm(companyFolder(workspace_id, dir?.d ?? null, kind), {
           recursive: true,

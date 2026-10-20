@@ -5,7 +5,7 @@
 //   node scripts/server/worker.mjs                 (settings from the environment)
 //   node scripts/server/worker.mjs --root <root>   (settings from <root>\config\etna.env)
 //
-// Needs WORKER_DATABASE_URL (the role etna_worker; written by etna.bat and
+// Needs WORKER_DATABASE_URL (the role etna_worker; written by the server manager and
 // scripts/setup-local.mjs). On a server, run.mjs starts it beside the app.
 // Exit code 3: this Node.js cannot run TypeScript (22.6 or newer is needed).
 
@@ -50,7 +50,7 @@ if (at < 0 && fs.existsSync(local)) {
 
 const url = process.env.WORKER_DATABASE_URL;
 if (!url) {
-  console.error('[worker] WORKER_DATABASE_URL is not set (run etna.bat → Update, or scripts/setup-local.mjs).');
+  console.error('[worker] WORKER_DATABASE_URL is not set (in .env.local: run scripts/setup-local.mjs; on a server: the server manager → Update).');
   process.exit(2);
 }
 

@@ -104,7 +104,7 @@ export async function applyAcls(inst) {
 export async function refreshTasks(inst) {
   const p = paths(inst.root, inst.backupDir);
   const password = randomPassword();
-  await setLocalUser(SERVICE_USER, password, 'Runs ETNA (etna.bat)');
+  await setLocalUser(SERVICE_USER, password, 'Runs ETNA (ETNA server manager)');
   await powershell(`Add-LocalGroupMember -SID 'S-1-5-32-545' -Member ${psq(SERVICE_USER)} -ErrorAction SilentlyContinue`);
   const scripts = path.join(p.current, 'scripts', 'server');
   await registerTask(TASK_FOLDER, SERVER_TASK, serverTaskXml({ node: inst.node, runner: path.join(scripts, 'run.mjs'), root: inst.root, workDir: p.current }), SERVICE_USER, password);

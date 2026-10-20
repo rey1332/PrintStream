@@ -5,11 +5,11 @@
 //   npm run package -- --zip      the same, plus a .zip of it
 //   npm run package -- --no-build package the existing .next build
 //
-// The package holds etna.bat and app\ (the built app, production
-// node_modules, migrations, scripts, docs). Never .env.local, storage\,
-// tests or the source of the pages. Copy the folder (or zip) to the server
-// and double-click etna.bat; it installs Node.js and PostgreSQL when
-// missing (from the internet, or from prereqs\ for an offline server).
+// The package holds app\ (the built app, production node_modules,
+// migrations, scripts, docs). Never .env.local, storage\, tests or the
+// source of the pages. Copy the folder (or zip) to the server, install
+// Node.js 24 LTS and PostgreSQL 18 there, and run the server manager as
+// administrator: node app\scripts\server\manager.mjs
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -59,9 +59,6 @@ copy('.next', (src) => !/[\\/]\.next[\\/](cache|trace)([\\/]|$)/.test(src));
 for (const rel of ['public', 'db', 'scripts', 'src', 'docs', 'package.json', 'package-lock.json', 'next.config.mjs', 'image-hosts.config.mjs', '.env.example', 'LICENSE', 'README.md']) {
   copy(rel);
 }
-fs.copyFileSync(path.join(root, 'etna.bat'), path.join(out, 'etna.bat'));
-// Optional offline installers for a server without internet (see prereqs\README.txt).
-if (fs.existsSync(path.join(root, 'prereqs'))) fs.cpSync(path.join(root, 'prereqs'), path.join(out, 'prereqs'), { recursive: true });
 
 // Production dependencies only, exactly as locked.
 sh('npm ci --omit=dev --ignore-scripts --no-audit --no-fund', app);
@@ -79,4 +76,4 @@ fs.writeFileSync(path.join(app, 'etna-package.json'), `${JSON.stringify(manifest
 if (args.includes('--zip')) sh(`"${path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe')}" -a -cf "${name}.zip" "${name}"`, path.join(root, 'dist'));
 
 console.log(`\nPackage ready: ${out}`);
-console.log('Copy it to the server and double-click etna.bat (it installs Node.js and PostgreSQL when missing).');
+console.log('Copy it to the server, install Node.js 24 LTS and PostgreSQL 18 there, then run as administrator: node app\\scripts\\server\\manager.mjs');

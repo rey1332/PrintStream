@@ -1,4 +1,4 @@
-// Company storage folders (etna.bat → [14] Company storage).
+// Company storage folders (server manager → [14] Company storage).
 //
 // Each company (workspace) keeps its files — documents, import files, pipeline
 // artifacts, temporary files — either in the shared places under

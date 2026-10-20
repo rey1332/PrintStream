@@ -511,7 +511,7 @@ connect again. The lists show such connections as **Builds pipelines**.
 
 `scripts/server/worker.mjs` signs in as `etna_worker` (`WORKER_DATABASE_URL`).
 On a server, the `\ETNA\Server` task's runner (`run.mjs`) starts it beside the
-app and restarts it if it stops; **etna.bat → Health check** shows whether it
+app and restarts it if it stops; **the server manager → Health check** shows whether it
 reports and whether jobs wait too long. Locally: `npm run worker`.
 
 - Jobs are claimed under a 60-second lease kept by a heartbeat; a lost
@@ -530,7 +530,7 @@ reports and whether jobs wait too long. Locally: `npm run worker`.
 ## Files
 
 Uploads are streamed to `<company folder>\imports\<id>.csv|xlsx` (the
-company's own storage folder from **etna.bat → Company storage**, else
+company's own storage folder from **the server manager → Company storage**, else
 `<ETNA_DATA_ROOT>\companies\<id>\imports`) after room is reserved against the
 company's quota.
 

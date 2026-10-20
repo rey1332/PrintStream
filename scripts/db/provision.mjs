@@ -1,6 +1,6 @@
 // Prepares an ETNA database for the app, as its schema owner: applies the
 // migrations and gives the app's two login roles (etna_app, etna_auth) and the
-// Terminal worker's (etna_worker) new random passwords. Shared by scripts/setup-local.mjs and etna.bat
+// Terminal worker's (etna_worker) new random passwords. Shared by scripts/setup-local.mjs and the server manager
 // (scripts/server/manager.mjs).
 
 import { randomBytes } from 'node:crypto';

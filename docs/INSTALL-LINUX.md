@@ -11,7 +11,7 @@ ETNA berjalan di Linux dengan dua cara. Keduanya diuji di CI setiap push
 | Update | `sudo deploy/linux/install.sh` dari versi baru | `git pull` lalu `docker compose up -d --build` |
 | Kembali ke versi sebelumnya | Ganti symlink `/opt/etna/current` | Build ulang dari versi sebelumnya |
 
-Di Windows tetap pakai `etna.bat` ([INSTALL-SERVER.md](INSTALL-SERVER.md)).
+Di Windows: pengelola server (`node scripts\server\manager.mjs`, sebagai administrator; [HOW TO ETNA.md](HOW%20TO%20ETNA.md) bagian 0) atau [INSTALL-SERVER.md](INSTALL-SERVER.md).
 Pengaturan aplikasi sama di semua sistem: [CONFIGURATION.md](CONFIGURATION.md).
 
 ---

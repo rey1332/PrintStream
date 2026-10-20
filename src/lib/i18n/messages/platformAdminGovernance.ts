@@ -145,9 +145,9 @@ export const platformAdminGovernanceMessages = {
   'gov.maxUpload': { en: 'Largest upload', id: 'Unggahan terbesar', zh: '最大上传' },
   'gov.storageDir': { en: 'Company folder', id: 'Folder perusahaan', zh: '公司文件夹' },
   'gov.storageDirDefault': {
-    en: 'Shared default (set in etna.bat)',
-    id: 'Bawaan bersama (diatur di etna.bat)',
-    zh: '共享默认值（在 etna.bat 中设置）',
+    en: 'Shared default (set in the server manager)',
+    id: 'Bawaan bersama (diatur di pengelola server)',
+    zh: '共享默认值（在服务器管理器中设置）',
   },
   'gov.measuredAt': { en: 'Measured', id: 'Diukur', zh: '测量时间' },
   'gov.request': {

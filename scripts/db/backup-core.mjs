@@ -18,7 +18,7 @@ export function loadEnvFile(file = path.join(ROOT, '.env.local')) {
   }
 }
 
-// ETNA_BACKUP_DIR, else <ETNA_DATA_ROOT>\backups (set by etna.bat), else
+// ETNA_BACKUP_DIR, else <ETNA_DATA_ROOT>\backups (set by the server manager), else
 // storage/backups in the app folder.
 export function backupDir(env = process.env) {
   if (env.ETNA_BACKUP_DIR) return path.resolve(env.ETNA_BACKUP_DIR);

@@ -97,7 +97,7 @@ export function listenAddresses(dataDir) {
 
 export async function registerService({ bin, dataDir, name }) {
   await mustRun(tool(bin, 'pg_ctl'), ['register', '-N', name, '-U', SERVICE_ACCOUNT, '-D', dataDir, '-S', 'auto', '-w']);
-  await run('sc.exe', ['description', name, 'PostgreSQL for ETNA (managed by etna.bat)']);
+  await run('sc.exe', ['description', name, 'PostgreSQL for ETNA (managed by the ETNA server manager)']);
 }
 
 export async function unregisterService({ bin, name }) {

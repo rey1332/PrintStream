@@ -14,10 +14,10 @@ lain. Ganti nilai contoh: `ETNA-SRV` (nama server), `erp.contoh.com` (domain),
 
 ---
 
-## 0. Cara cepat: satu server dengan etna.bat
+## 0. Cara cepat: satu server dengan pengelola server
 
 Untuk layout A (ETNA dan PostgreSQL di satu PC/server, tanpa Docker) semua
-langkah di bawah dikerjakan oleh **etna.bat**. Bagian 1–13 tetap
+langkah di bawah dikerjakan oleh **pengelola server** (`scripts\server\manager.mjs`). Bagian 1–13 tetap
 berlaku sebagai penjelasan dan untuk layout dua server.
 
 **Di PC development**
@@ -26,18 +26,18 @@ berlaku sebagai penjelasan dan untuk layout dua server.
 npm run package
 ```
 
-Hasilnya folder `dist\ETNA-<versi>-<tanggal>\` berisi `etna.bat` dan
+Hasilnya folder `dist\ETNA-<versi>-<tanggal>\` berisi
 `app\` (aplikasi yang sudah di-build, `node_modules` produksi, migrasi,
 skrip, dokumen). Tidak ada `.env.local`, `storage\`, atau test di dalamnya.
 `npm run package -- --zip` juga membuat file `.zip`.
 
 **Di server** (sekali saja, sebagai administrator)
 
-1. Salin folder paket ke server (USB, jaringan), lalu klik dua kali
-   `etna.bat`. Ia memeriksa Windows, lalu memasang **Node.js 24 LTS** dan
-   program **PostgreSQL 18** kalau belum ada (setelah bertanya; dari
-   internet, atau dari folder `prereqs\` untuk server tanpa internet).
-2. Di menu manager pilih **[1] Pasang / Setup ETNA**.
+1. Pasang **Node.js 24 LTS** (nodejs.org) dan program **PostgreSQL 18**
+   (postgresql.org) di server. ETNA membuat service database-nya sendiri.
+2. Salin folder paket ke server (USB, jaringan), buka **Command Prompt
+   sebagai administrator** di folder paket, lalu jalankan
+   `node app\scripts\server\manager.mjs` dan pilih **[1] Pasang / Setup ETNA**.
 3. Jawab pertanyaannya: drive atau folder data (`ETNA_DATA_ROOT`, mis.
    `D:\ETNA`), lokasi backup (sebaiknya disk lain), alamat publik
    (`https://erp.perusahaan.com`), super admin pertama (e-mail dan kata
@@ -73,7 +73,7 @@ pengguna harus mengatur two-factor lagi. Satu backup kira-kira sebesar
 database + dokumen + ±150 MB aplikasi (terkompresi); atur jumlah yang
 disimpan di menu [9]. Salin backup ke tempat lain secara rutin.
 
-**Menu sesudahnya** (`<root>\etna.bat`): jalankan/hentikan/restart,
+**Menu sesudahnya** (sebagai administrator: `node <root>\app\current\scripts\server\manager.mjs`): jalankan/hentikan/restart,
 cek kesehatan (dengan penjelasan masalah dan solusinya), backup sekarang,
 daftar backup, pulihkan (selalu membuat backup kondisi sekarang dulu dan
 meminta nama database diketik), jadwal backup, lihat log, update (dari paket
@@ -320,7 +320,7 @@ Register-ScheduledTask -TaskName "ETNA Worker" -Action $worker -Trigger $trigger
 Start-ScheduledTask -TaskName "ETNA Worker"
 ```
 
-Dengan etna.bat (bagian 0) ini tidak perlu: task `\ETNA\Server` sudah
+Dengan pengelola server (bagian 0) ini tidak perlu: task `\ETNA\Server` sudah
 menjalankan worker di samping aplikasi.
 
 Kalau tugas gagal jalan, akun `etna-svc` mungkin butuh hak "Log on as a batch

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// ETNA server manager — what etna.bat opens (as administrator).
+// ETNA server manager, run as administrator: node scripts\server\manager.mjs
+// (from a package: node app\scripts\server\manager.mjs).
 //
 //   node manager.mjs                         the menu
 //   node manager.mjs backup --auto --root R  the nightly full backup (task \ETNA\Backup)
@@ -125,11 +126,6 @@ function fromPackage(inst) {
   return realOrNull(APP_DIR) !== realOrNull(paths(inst.root).current);
 }
 
-/** etna.bat next to the data (it replaces an older ETNA.bat: Windows names ignore case). */
-function copyLaunchers(fromDir, toDir) {
-  const file = path.join(fromDir, 'etna.bat');
-  if (fs.existsSync(file)) fs.copyFileSync(file, path.join(toDir, 'etna.bat'));
-}
 
 // ─── Pickers ─────────────────────────────────────────────────────────────────
 
@@ -393,7 +389,7 @@ async function install() {
         PGPASSFILE: p.pgpass,
       };
       if (!Object.values(settings).every((v) => v === null || safeValue(v))) throw new Error('invalid setting');
-      fs.writeFileSync(p.envFile, '# ETNA server settings — written by etna.bat. Secret: never copy elsewhere.\r\n');
+      fs.writeFileSync(p.envFile, '# ETNA server settings — written by the ETNA server manager. Secret: never copy elsewhere.\r\n');
       writeEnvFile(p.envFile, settings);
       const backupKeys = newBackupKeys(passphrase);
       fs.writeFileSync(p.publicKey, backupKeys.publicKey);
@@ -410,7 +406,7 @@ async function install() {
            values ($1, $2, jsonb_build_object('full_name', $3::text), now())`,
           [adminEmail, hash, adminName || adminEmail.split('@')[0]]
         );
-        await client.query('select etna_admin.log_event($1, $2, $3)', ['USER_CREATED', adminEmail, JSON.stringify({ via: 'etna.bat' })]);
+        await client.query('select etna_admin.log_event($1, $2, $3)', ['USER_CREATED', adminEmail, JSON.stringify({ via: 'server-manager' })]);
         await client.query(`select etna_admin.grant_platform_admin($1, 'super_admin')`, [adminEmail]);
         await client.query('commit');
       } catch (error) {
@@ -422,7 +418,6 @@ async function install() {
     });
     await stage('do.record', async () => {
       writeInstall(inst);
-      copyLaunchers(path.dirname(APP_DIR), root);
     });
     await stage('do.permissions', () => applyAcls(inst));
     await stage('do.tasks', () => refreshTasks(inst));
@@ -461,7 +456,7 @@ async function whereThings(inst) {
   console.log(`  ${t('where.logs')}: ${p.logs}  (server-YYYYMMDD.log, manager.log)`);
   console.log(`  ${t('where.services')}: ${PG_SERVICE} = ${await serviceState(PG_SERVICE)} · ${TASK_FOLDER}${SERVER_TASK} · ${TASK_FOLDER}${BACKUP_TASK}`);
   console.log(`\n${t('where.backupHow', { time: inst.backupTime ?? '02:00' })}`);
-  console.log(t('where.recovery', { launcher: path.join(inst.root, 'etna.bat') }));
+  console.log(t('where.recovery', { launcher: `node "${path.join(p.current, 'scripts', 'server', 'manager.mjs')}"` }));
 }
 
 async function undoInstall({ root, rootExisted, p, done, pgBin }) {
@@ -485,7 +480,6 @@ async function undoInstall({ root, rootExisted, p, done, pgBin }) {
   // Only what this installation made; the folder itself only if it did not exist.
   await quiet(() => icacls(root, ['/reset', '/T']));
   for (const dir of [p.app, p.config, p.postgres, p.documents, p.logs, p.fullBackups]) await quiet(() => fs.rmSync(dir, { recursive: true, force: true }));
-  await quiet(() => fs.rmSync(path.join(root, 'etna.bat'), { force: true }));
   for (const dir of [p.backups, root]) {
     if (dir === root && rootExisted) continue;
     await quiet(() => fs.rmdirSync(dir));
@@ -805,7 +799,6 @@ async function update(inst) {
     ui.step(t('do.migrate'));
     await migrateWith(p.current, inst);
     ui.stepDone();
-    copyLaunchers(path.dirname(source), inst.root);
     await applyAcls(inst);
     ui.step(t('starting'));
     if (await startEtna(inst)) {
@@ -1073,7 +1066,7 @@ async function limits(inst) {
     );
     await client.query('select etna_admin._log($1, null, $2)', [
       'STORAGE_DEFAULTS_CHANGED',
-      JSON.stringify({ default_quota_bytes: quotaBytes, default_max_upload_bytes: uploadBytes, xlsx_max_upload_bytes: xlsxBytes, via: 'etna.bat' }),
+      JSON.stringify({ default_quota_bytes: quotaBytes, default_max_upload_bytes: uploadBytes, xlsx_max_upload_bytes: xlsxBytes, via: 'server-manager' }),
     ]);
     await client.query('commit');
     managerLog(inst, `limits: quota ${quotaBytes ?? 'unlimited'}, upload ${uploadBytes}, xlsx ${xlsxBytes}`);
@@ -1090,7 +1083,7 @@ async function limits(inst) {
 // ─── Menu ────────────────────────────────────────────────────────────────────
 
 async function chooseLanguage() {
-  // Chosen already by etna.bat (its first screen) for this run.
+  // Chosen already for this run (ETNA_LANG).
   if (process.env.ETNA_LANG === 'id' || process.env.ETNA_LANG === 'en') {
     setLanguage(process.env.ETNA_LANG);
     const inst = readInstall();
@@ -1260,7 +1253,11 @@ const MENU = [
 
 async function menu() {
   if (!(await isAdmin())) {
-    console.log(ui.red('Run etna.bat as administrator. / Jalankan etna.bat sebagai administrator.'));
+    console.log(
+      ui.red(
+        'Run this from a Command Prompt opened as administrator. / Jalankan dari Command Prompt yang dibuka sebagai administrator.'
+      )
+    );
     process.exitCode = 1;
     return;
   }

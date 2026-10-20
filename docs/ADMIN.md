@@ -261,7 +261,7 @@ ERP → Settings. When full, new uploads, imports and pipeline
 writes are refused, but **daily ERP work is never blocked**. The largest
 upload is 200 MB (CSV) and 50 MB (Excel) by default. The Owner can ask for
 more from ERP → Settings (once a day); requests appear on the dashboard.
-On a server, etna.bat → Company storage can give a company its own folder on
+On a server, the server manager (`node scripts\server\manager.mjs`) → Company storage can give a company its own folder on
 another drive.
 
 ## New client company (`/admin/workspaces` → New company)
