@@ -612,21 +612,23 @@ async function restoreCommand() {
 
   const work = path.join(PATHS.dataRoot, `.restore-${stamp()}`);
   fs.mkdirSync(work, { mode: 0o700 });
+  // readBundle makes this folder itself (it refuses one that exists).
+  const unpacked = path.join(work, 'bundle');
   try {
     say(`Opening ${path.basename(file)}`);
     let manifest;
     try {
-      manifest = await readBundle(file, passphrase, { into: work });
+      manifest = await readBundle(file, passphrase, { into: unpacked });
     } catch (error) {
       fail(`Not restored: ${explainBundleError(error)}`);
     }
     const files = manifest.entries.filter((e) => e.name.startsWith('files/')).length;
-    const fromBackup = fs.existsSync(path.join(work, 'settings', 'etna.env')) ? readEnvFile(path.join(work, 'settings', 'etna.env')) : null;
+    const fromBackup = fs.existsSync(path.join(unpacked, 'settings', 'etna.env')) ? readEnvFile(path.join(unpacked, 'settings', 'etna.env')) : null;
     console.log(`Made ${manifest.createdAt} on ${manifest.host ?? '?'} by ETNA ${manifest.appVersion ?? '?'}: ${manifest.migrations?.length ?? '?'} migrations, ${files} document file(s), settings ${fromBackup ? 'included' : 'NOT included'}.`);
     if (!fromBackup) warn('Without the settings, the two-factor key stays this server\'s: users of the backup must enrol their authenticator again.');
 
     const target = await prepareTarget(url, env, into, control.ETNA_LOCAL_POSTGRES === '1');
-    const { applied, state } = await fillDatabase(target, env, path.join(work, 'database.dump'), manifest.migrations);
+    const { applied, state } = await fillDatabase(target, env, path.join(unpacked, 'database.dump'), manifest.migrations);
     console.log(`Database ${databaseOf(target)}: ${state.migrations} migrations${applied.length ? ` (${applied.length} newer applied)` : ''}, ${state.users ?? '?'} user(s), ${state.tables} tables.`);
 
     const live = readEnvFile(PATHS.envFile);
@@ -650,8 +652,8 @@ async function restoreCommand() {
       urls,
       fromBackup,
       files: [
-        { from: path.join(work, 'files', 'documents'), to: documents },
-        { from: path.join(work, 'files', 'companies'), to: path.join(PATHS.dataRoot, 'companies') },
+        { from: path.join(unpacked, 'files', 'documents'), to: documents },
+        { from: path.join(unpacked, 'files', 'companies'), to: path.join(PATHS.dataRoot, 'companies') },
       ],
     });
     say(`Restored. The app runs on ${databaseOf(target)}.`);
