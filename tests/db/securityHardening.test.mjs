@@ -8,7 +8,7 @@ const CALLABLE = [
   'erp_adjust_stock', 'erp_can_read', 'erp_cancel_purchase_order', 'erp_cancel_sales_order', 'erp_check_request',
   'erp_company_profile_get', 'erp_company_profile_set', 'erp_confirm_base_currency','erp_create_gl_account', 'erp_create_invoice_v5', 'erp_create_invoice_v6', 'erp_create_purchase_order_v3',
   'erp_create_erp', 'erp_create_erp_v2', 'erp_create_sales_order_v3', 'erp_create_warehouse',
-  'erp_create_workspace_invitation', 'erp_currency_preview', 'erp_currency_settings_get', 'erp_dashboard_metrics', 'erp_decide_po_approval',
+  'erp_create_workspace_invitation', 'erp_currency_preview', 'erp_currency_settings_get', 'erp_dashboard_metrics', 'erp_dashboard_insights', 'erp_decide_po_approval',
   'erp_delete_erp', 'erp_deliver_sales_order', 'erp_empty_erp', 'erp_document_delete', 'erp_document_get', 'erp_document_register',
   'erp_documents_list', 'erp_exchange_rate_lookup', 'erp_has_permission', 'erp_hr_access', 'erp_hr_attendance',
   'erp_hr_attendance_correct', 'erp_hr_clock_in', 'erp_hr_clock_out', 'erp_hr_employee_delete',

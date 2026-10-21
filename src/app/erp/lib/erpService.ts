@@ -1,5 +1,6 @@
 'use client';
 
+import { parseInsights, type DashboardInsights } from './dashboardInsights';
 import { createClient } from '@/lib/data/client';
 import { containsPattern } from '@/lib/db/pattern';
 import {
@@ -1407,6 +1408,15 @@ export const dashboardService = {
     ]);
 
     return computeFinancialMetrics({ invoices, payments, purchaseOrders, products });
+  },
+
+  /** Receivables, aging, credit, top lists and 12 months (erp_dashboard_insights). */
+  async getInsights(): Promise<DashboardInsights> {
+    const { data, error } = await createClient().rpc('erp_dashboard_insights', {
+      p_workspace_id: rpcWorkspaceId(),
+    });
+    if (error) throw safeERPError('load dashboard insights', error);
+    return parseInsights(data);
   },
 
   async getRecentTransactions(userId: string, limit = 7) {

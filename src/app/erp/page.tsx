@@ -13,6 +13,17 @@ import { useConsolePageContext } from '@/lib/console/bridge';
 import { useDisplayConversion, type DisplayConversion } from './lib/useCurrency';
 import { ConvertedAmount, DisplayBasis } from './components/CurrencyFields';
 import {
+  AgingDonut,
+  BankBalances,
+  KpiTile,
+  MonthlyTrend,
+  RankedBars,
+  Widget,
+  WidgetState,
+} from './components/DashboardWidgets';
+import { AGING_KEYS, type DashboardInsights } from './lib/dashboardInsights';
+import { financeService, type CashAccount } from './lib/financeService';
+import {
   TrendingUp,
   CreditCard,
   Wallet,
@@ -207,6 +218,9 @@ export default function ERPDashboard() {
   const [realtimeActive, setRealtimeActive] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
+  // null = not available (a role without that read, or a database without the function).
+  const [insights, setInsights] = useState<DashboardInsights | null>(null);
+  const [accounts, setAccounts] = useState<CashAccount[] | null>(null);
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const statusTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -216,12 +230,20 @@ export default function ERPDashboard() {
   const fetchMetrics = useCallback(async (uid: string) => {
     try {
       const db = createClient();
-      const [m, recentTxns, settingsResult] = await Promise.all([
+      const [m, recentTxns, settingsResult, insightsResult, accountsResult] = await Promise.all([
         dashboardService.getMetrics(uid),
         dashboardService.getRecentTransactions(uid, 7),
         // Thresholds of the open ERP (db/migrations/20261012000005_erp_workspace_settings.sql).
         db.rpc('erp_workspace_settings_get', { p_workspace_id: rpcWorkspaceId() }),
+        // Each widget group fails on its own: an empty state, never invented figures.
+        dashboardService.getInsights().catch((err) => {
+          console.error('[dashboard insights]', err);
+          return null;
+        }),
+        financeService.accounts().catch(() => null),
       ]);
+      setInsights(insightsResult);
+      setAccounts(accountsResult);
 
       const savedSettings = settingsResult.data;
       const activeThresholds = savedSettings
@@ -451,6 +473,133 @@ export default function ERPDashboard() {
       <DisplayBasis convert={convert} display={display} base={base} />
 
       {!loading && <AlertBanner alerts={visibleAlerts} onDismiss={dismissAlert} />}
+
+      {/* Receivables, revenue and trends: dense, widget by widget. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="lg:col-span-2 space-y-3 min-w-0">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-3">
+            <KpiTile
+              loading={loading}
+              label={t('dash.kpi.customersPastDue')}
+              value={insights ? fmt.number(insights.receivables.customersPastDue) : '—'}
+              hint={
+                insights
+                  ? t('dash.kpi.customersPastDueHint', {
+                      n: fmt.number(insights.receivables.invoicesPastDue),
+                    })
+                  : t('dash.unavailable')
+              }
+              tone={insights && insights.receivables.customersPastDue > 0 ? 'warning' : null}
+            />
+            <KpiTile
+              loading={loading}
+              label={t('dash.kpi.balanceDue')}
+              value={insights ? fmt.moneyCompact(insights.receivables.balanceDue) : '—'}
+              hint={
+                insights
+                  ? t('dash.kpi.balanceDueHint', {
+                      amount: fmt.money(insights.receivables.pastDue),
+                    })
+                  : t('dash.unavailable')
+              }
+            />
+            <KpiTile
+              loading={loading}
+              label={t('dash.kpi.overLimit')}
+              value={insights ? fmt.moneyCompact(insights.credit.overLimit) : '—'}
+              hint={
+                !insights
+                  ? t('dash.unavailable')
+                  : insights.credit.customersWithLimit === 0
+                    ? t('dash.kpi.noLimits')
+                    : t('dash.kpi.overLimitHint', {
+                        n: fmt.number(insights.credit.customersOver),
+                        total: fmt.number(insights.credit.customersWithLimit),
+                      })
+              }
+              tone={insights && insights.credit.overLimit > 0 ? 'critical' : null}
+            />
+            <KpiTile
+              loading={loading}
+              label={t('dash.kpi.revenue')}
+              value={insights ? fmt.moneyCompact(insights.revenue.total) : '—'}
+              hint={
+                insights
+                  ? t('dash.kpi.revenueHint', { n: fmt.number(insights.revenue.invoices) })
+                  : t('dash.unavailable')
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            <Widget
+              title={t('dash.w.topProducts')}
+              subtitle={t('dash.w.last12')}
+              href="/erp/products"
+            >
+              {loading || !insights || insights.topProducts.length === 0 ? (
+                <WidgetState
+                  loading={loading}
+                  empty={insights ? t('dash.empty.products') : t('dash.unavailable')}
+                />
+              ) : (
+                <RankedBars items={insights.topProducts} />
+              )}
+            </Widget>
+            <Widget
+              title={t('dash.w.topCustomers')}
+              subtitle={t('dash.w.last12')}
+              href="/erp/customers"
+            >
+              {loading || !insights || insights.topCustomers.length === 0 ? (
+                <WidgetState
+                  loading={loading}
+                  empty={insights ? t('dash.empty.customers') : t('dash.unavailable')}
+                />
+              ) : (
+                <RankedBars items={insights.topCustomers} />
+              )}
+            </Widget>
+          </div>
+        </div>
+
+        <div className="space-y-3 min-w-0">
+          <Widget title={t('dash.w.aging')} href="/erp/invoices">
+            {loading || !insights || AGING_KEYS.every((k) => insights.aging[k] === 0) ? (
+              <WidgetState
+                loading={loading}
+                height={150}
+                empty={insights ? t('dash.empty.aging') : t('dash.unavailable')}
+              />
+            ) : (
+              <AgingDonut aging={insights.aging} />
+            )}
+          </Widget>
+          <Widget
+            title={t('dash.w.bank')}
+            subtitle={base ? t('dash.w.ledgerBase', { currency: base }) : undefined}
+            href="/erp/cash-bank"
+          >
+            {loading || !accounts || accounts.length === 0 ? (
+              <WidgetState
+                loading={loading}
+                height={120}
+                empty={accounts ? t('dash.empty.bank') : t('dash.unavailable')}
+              />
+            ) : (
+              <BankBalances accounts={accounts} currency={base ?? ''} />
+            )}
+          </Widget>
+        </div>
+      </div>
+
+      <Widget title={t('dash.w.trend')} subtitle={t('dash.w.last12')} href="/erp/cash-flow">
+        {loading || !insights ? (
+          <WidgetState loading={loading} height={220} empty={t('dash.unavailable')} />
+        ) : (
+          <MonthlyTrend months={insights.months} />
+        )}
+      </Widget>
 
       <section className="space-y-2">
         <h2 className="text-[0.68rem] font-semibold uppercase tracking-widest text-muted-foreground">

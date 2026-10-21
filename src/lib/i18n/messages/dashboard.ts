@@ -30,6 +30,133 @@ export const dashboardMessages = {
   'dash.or': { en: 'or', id: 'atau', zh: '或' },
   'dash.recordPayment': { en: 'record a payment', id: 'catat pembayaran', zh: '记录付款' },
 
+  // Receivables, revenue and trend widgets (erp_dashboard_insights)
+  'dash.kpi.customersPastDue': {
+    en: 'Customers past due',
+    id: 'Pelanggan lewat jatuh tempo',
+    zh: '逾期客户',
+  },
+  'dash.kpi.customersPastDueHint': {
+    en: '{n} overdue invoices',
+    id: '{n} invoice lewat jatuh tempo',
+    zh: '{n} 张逾期发票',
+  },
+  'dash.kpi.balanceDue': {
+    en: 'Customers balance due',
+    id: 'Saldo piutang pelanggan',
+    zh: '客户应收余额',
+  },
+  'dash.kpi.balanceDueHint': {
+    en: '{amount} past due',
+    id: '{amount} lewat jatuh tempo',
+    zh: '逾期 {amount}',
+  },
+  'dash.kpi.overLimit': {
+    en: 'Amount over credit limit',
+    id: 'Melebihi limit kredit',
+    zh: '超出信用额度金额',
+  },
+  'dash.kpi.overLimitHint': {
+    en: '{n} of {total} customers with a limit',
+    id: '{n} dari {total} pelanggan berlimit',
+    zh: '{total} 个有额度客户中的 {n} 个',
+  },
+  'dash.kpi.noLimits': {
+    en: 'No credit limits set',
+    id: 'Belum ada limit kredit',
+    zh: '未设置信用额度',
+  },
+  'dash.kpi.revenue': {
+    en: 'Revenue · last 12 months',
+    id: 'Pendapatan · 12 bulan terakhir',
+    zh: '收入 · 近 12 个月',
+  },
+  'dash.kpi.revenueHint': {
+    en: 'Net of tax · {n} invoices',
+    id: 'Tanpa pajak · {n} invoice',
+    zh: '不含税 · {n} 张发票',
+  },
+  'dash.w.topProducts': {
+    en: 'Top 10 products by revenue',
+    id: '10 produk teratas menurut pendapatan',
+    zh: '收入前 10 产品',
+  },
+  'dash.w.topCustomers': {
+    en: 'Top 10 customers by revenue',
+    id: '10 pelanggan teratas menurut pendapatan',
+    zh: '收入前 10 客户',
+  },
+  'dash.w.aging': {
+    en: 'Customer aged balances',
+    id: 'Umur piutang pelanggan',
+    zh: '客户账龄余额',
+  },
+  'dash.w.bank': { en: 'Balance by bank account', id: 'Saldo per rekening', zh: '各账户余额' },
+  'dash.w.trend': {
+    en: 'Revenue and cash by month',
+    id: 'Pendapatan dan kas per bulan',
+    zh: '每月收入与现金',
+  },
+  'dash.w.last12': {
+    en: 'Last 12 months · net of tax',
+    id: '12 bulan terakhir · tanpa pajak',
+    zh: '近 12 个月 · 不含税',
+  },
+  'dash.w.ledgerBase': {
+    en: 'Ledger balance in {currency}',
+    id: 'Saldo buku besar dalam {currency}',
+    zh: '以 {currency} 计的总账余额',
+  },
+  'dash.aging.current': { en: 'Not yet due', id: 'Belum jatuh tempo', zh: '未到期' },
+  'dash.aging.days30': { en: '1–30 days', id: '1–30 hari', zh: '1–30 天' },
+  'dash.aging.days60': { en: '31–60 days', id: '31–60 hari', zh: '31–60 天' },
+  'dash.aging.days90': { en: '61–90 days', id: '61–90 hari', zh: '61–90 天' },
+  'dash.aging.over90': { en: 'Over 90 days', id: 'Lebih dari 90 hari', zh: '90 天以上' },
+  'dash.aging.total': { en: 'Open', id: 'Terbuka', zh: '未结' },
+  'dash.series.revenue': {
+    en: 'Revenue (invoiced)',
+    id: 'Pendapatan (ditagih)',
+    zh: '收入（已开票）',
+  },
+  'dash.series.cashIn': { en: 'Cash in', id: 'Kas masuk', zh: '现金流入' },
+  'dash.series.cashOut': { en: 'Cash out', id: 'Kas keluar', zh: '现金流出' },
+  'dash.empty.products': {
+    en: 'No invoice lines with products in the last 12 months',
+    id: 'Belum ada baris invoice berproduk dalam 12 bulan terakhir',
+    zh: '近 12 个月没有含产品的发票行',
+  },
+  'dash.empty.customers': {
+    en: 'No invoices in the last 12 months',
+    id: 'Belum ada invoice dalam 12 bulan terakhir',
+    zh: '近 12 个月没有发票',
+  },
+  'dash.empty.aging': {
+    en: 'No open receivables',
+    id: 'Tidak ada piutang terbuka',
+    zh: '没有未结应收款',
+  },
+  'dash.empty.bank': {
+    en: 'No cash or bank accounts',
+    id: 'Belum ada akun kas atau bank',
+    zh: '没有现金或银行账户',
+  },
+  'dash.empty.trend': {
+    en: 'No invoices or payments in the last 12 months',
+    id: 'Belum ada invoice atau pembayaran dalam 12 bulan terakhir',
+    zh: '近 12 个月没有发票或付款',
+  },
+  'dash.unavailable': {
+    en: 'Not available for your role or this ERP',
+    id: 'Tidak tersedia untuk peran Anda atau ERP ini',
+    zh: '您的角色或此 ERP 不可用',
+  },
+  'dash.bank.account': { en: 'Account', id: 'Akun', zh: '账户' },
+  'dash.bank.balance': { en: 'Balance', id: 'Saldo', zh: '余额' },
+  'dash.bank.subtotal': { en: 'Total', id: 'Total', zh: '合计' },
+  'dash.bank.total': { en: 'All accounts', id: 'Semua akun', zh: '全部账户' },
+  'dash.bank.inactive': { en: 'inactive', id: 'nonaktif', zh: '停用' },
+  'dash.more': { en: 'Open', id: 'Buka', zh: '打开' },
+
   // KPI labels
   'metric.cashIn': {
     en: 'Cash In (payments received)',
