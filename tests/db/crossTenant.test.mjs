@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createDb, createUser, run, admin, items } from './harness.mjs';
 
+// A Monday and Tuesday two weeks ahead: a fixed offset from today could land on a weekend.
+const NEXT_WORKDAYS = `(date_trunc('week', current_date) + interval '14 days')::date, (date_trunc('week', current_date) + interval '15 days')::date`;
+
 const MARK = 'VICTIMSECRET';
 let db;
 let victim;
@@ -52,7 +55,7 @@ before(async () => {
   await admin(db, `update erp_attendance set clock_in = now() - interval '9 hours', work_date = current_date - 1 where id = $1`, [ids.attendance]);
   await run(db, V, `select erp_hr_clock_out($1, $2, '')`, [ws, ids.employee]);
   ids.holiday = await one(V, `select erp_hr_holiday_save($1, current_date + 30, '${MARK}', true)`, [ws]);
-  ids.leave = await one(V, `select erp_hr_leave_request($1, $2, 'annual', current_date + 10, current_date + 11, '${MARK}')`, [ws, ids.employee]);
+  ids.leave = await one(V, `select erp_hr_leave_request($1, $2, 'annual', ${NEXT_WORKDAYS}, '${MARK}')`, [ws, ids.employee]);
   ids.payItem = await one(V, `select erp_hr_pay_item_save($1, $2, null, $3::jsonb)`, [ws, ids.employee, JSON.stringify({ kind: 'allowance', name: MARK, method: 'fixed', amount: 1000 })]);
   ids.payroll = await one(V, `select erp_hr_payroll_run($1, current_date - 5, current_date - 1, current_date, 'cash')`, [ws]);
   ids.invitation = (await run(db, V, `select * from erp_create_workspace_invitation($1, 'admin', 24, '${MARK}')`, [ws]))[0].invitation_id;
