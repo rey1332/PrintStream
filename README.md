@@ -1,104 +1,150 @@
-# PrintStream
 
-**Version 1.0.1** · by ETNA (Enterprise Transformation & Intelligence Architecture)
+# ETNA PrintStream
 
-PrintStream is where a company's day to day work and its data live together.
-Sales, purchasing, stock, accounting, tax, HR and payroll sit next to the tools
-you use to understand them: datasets, pipelines, charts and SQL. We run it on our
-own server, so your data stays with you.
+**Version 1.0.1** by ETNA  
+*Enterprise Transformation & Intelligence Architecture*
 
-> Looking for the Indonesian guide (install, daily use, backup, moving
-> servers)? Start at **[docs/PANDUAN.md](docs/PANDUAN.md)**.
-> Technical notes live in [docs/teknis/](docs/teknis/).
+PrintStream brings your company's operations and data together in one place.
 
----
+Manage sales, purchasing, inventory, accounting, tax, HR, and payroll while working with the datasets, pipelines, charts, and SQL tools that help you understand your business.
 
-## Why it exists
+PrintStream runs on our server, giving you control over your infrastructure and how your data is managed.
 
-Most companies end up with their numbers scattered across an ERP, a few
-spreadsheets and someone's inbox. Answering a simple question ("which
-customers are paying late, and is it getting worse?") means exporting,
-copying and hoping nothing changed in between.
+**Documentation:** [Indonesian User Guide](docs/PANDUAN.md) · [Technical Documentation](docs/teknis/)
 
-PrintStream keeps the records and the analysis in one place, under one set of
-permissions, so the answer is a pipeline you build once and rerun whenever
-you want.
+## What is PrintStream?
 
-## What you can do with it
+Business data often ends up scattered across ERP systems, spreadsheets, databases, and disconnected tools. Getting a clear answer means exporting files, combining data, and hoping everything matches.
 
-**Run the business**
+PrintStream brings these workflows closer together. You can manage daily operations, connect data from different sources, build reusable pipelines, and explore results without constantly switching between tools.
 
-- Sales, purchasing, inventory, accounting, tax, HR and payroll modules.
-- Several companies (workspaces) on one server, each fully separated.
-- Roles such as Owner, Admin and Finance, plus custom roles with exactly the
-  rights you choose.
-- A dashboard with receivables, revenue and trends at a glance.
+The goal is simple: spend less time moving data around and more time putting it to use.
 
-**Understand the data**
+## Features
 
-- Import files, connect databases and APIs, and keep it all as datasets.
-- Build pipelines visually: filter, join, aggregate, pivot, then schedule them.
-- Twelve chart types inside a pipeline, from bar, line and area to scatter,
-  histogram, heatmap and pivot tables, shaped on the server so large data
-  stays fast.
-- A JavaScript step for logic that doesn't fit a box: scoring, tiered rules,
-  cleaning messy imports. It runs in a sandbox with no network, files or
-  server access, and it stays off until the Owner switches it on.
-- A Query Tool for when SQL is simply quicker.
+### Business Operations
 
-**Work with AI assistants, safely**
+Manage everyday business processes through a single platform.
 
-- Connect Claude or another assistant through MCP. It can read datasets,
-  profile them and draft pipelines for you.
-- You choose, per connection, which tools it may use and which datasets it
-  may see. Assistants can never write code steps.
+• Sales, purchasing, inventory, accounting, tax, HR, and payroll modules.
 
-**Stay in control**
+• Multiple company workspaces on one server, with access controls for each workspace.
 
-- Password plus two-factor sign-in; sensitive actions require two-factor.
-- Every important change goes into an audit log.
-- One command for backups, encrypted off-site copies, restores and moving
-  to a new server.
+• Built in roles for Owners, Admins, and Finance, with support for custom permissions.
 
-## How it fits together
+• A dashboard for monitoring revenue, receivables, and business trends.
 
+### Data & Analytics
+
+Bring your data together and make it easier to work with.
+
+• Import files and connect databases and APIs.
+
+• Organize imported information into reusable datasets.
+
+• Build visual pipelines with filtering, joins, aggregation, and pivot operations.
+
+• Create visualizations using twelve chart types, including bar, line, area, scatter, histogram, heatmap, and pivot tables.
+
+• Use the SQL Query Tool when you need more direct control over your data.
+
+• Run optional JavaScript transformations for custom logic, scoring, and data cleaning inside a restricted sandbox.
+
+### AI Integration
+
+Connect AI assistants to your data workflows through the Model Context Protocol (MCP).
+
+• Connect Claude and other compatible assistants.
+
+• Let assistants inspect datasets, profile data, and draft pipelines through supported tools.
+
+• Choose which tools and datasets each connection can access.
+
+• Keep JavaScript code execution outside the capabilities granted to AI assistants.
+
+### Security & Control
+
+Your business data deserves more than a login screen.
+
+• Password authentication and two factor authentication (2FA).
+
+• Additional verification for sensitive actions.
+
+• Audit logs for important system changes.
+
+• Application permissions backed by PostgreSQL Row Level Security (RLS).
+
+• Self hosted infrastructure that keeps deployment and data storage under your control.
+
+### Deployment & Recovery
+
+Run PrintStream on infrastructure you manage.
+
+• Production installation on Ubuntu Server.
+
+• Windows support for development.
+
+• Command line management through `psctl`.
+
+• Tools for backups, encrypted off site copies, restoration, and server migration.
+
+## Architecture
+
+```text
+Browser
+   |
+   v
+PrintStream App
+   |
+   +---- PostgreSQL
+   |       Row Level Security
+   |
+   +---- Worker
+   |       Imports, pipelines, schedules
+   |
+   +---- Data Folder
+           Documents and uploaded files
 ```
-Browser ──► PrintStream app ──► PostgreSQL
-                 │                  (row-level security per workspace)
-                 ├──► Worker        (imports, pipelines, schedules)
-                 └──► Data folder   (documents, uploaded files)
-```
 
-Access is checked twice: the app checks who you are and what your role allows,
-then PostgreSQL checks again with row-level security, so one company never
-sees another's rows, even if the app had a bug.
+The application checks user permissions before allowing access to resources. PostgreSQL adds another layer of protection through Row Level Security, helping keep company workspaces separated.
 
-## Getting started
+## Getting Started
 
-| Where                      | What to read                                                                                                                    |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Ubuntu Server (production) | [docs/PANDUAN.md §3](docs/PANDUAN.md#3-pasang-di-ubuntu-server-untuk-dipakai-kantor): `install.sh`, then manage it with `psctl` |
-| Windows (development)      | [docs/PANDUAN.md §4](docs/PANDUAN.md#4-pasang-di-windows-pc-development)                                                        |
-| Updating                   | [docs/PANDUAN.md §6](docs/PANDUAN.md#6-update-ke-versi-baru)                                                                    |
+| Environment | Guide |
+|---|---|
+| Ubuntu Server | [Production installation](docs/PANDUAN.md#3-pasang-di-ubuntu-server-untuk-dipakai-kantor) |
+| Windows | [Development setup](docs/PANDUAN.md#4-pasang-di-windows-pc-development) |
+| Updating PrintStream | [Update guide](docs/PANDUAN.md#6-update-ke-versi-baru) |
+| Technical documentation | [Technical reference](docs/teknis/) |
 
-Built with Next.js, PostgreSQL and Node.js. No cloud service is required:
-sign-in, two-factor and your business data never leave your server.
+**Built with:** Next.js, Node.js, and PostgreSQL.
 
-## What's next
+PrintStream is designed to run on your own infrastructure without requiring a managed cloud platform for its core application and database.
 
-We're honest about what isn't there yet:
+## What's New in 1.0.1
 
-- Ready-made connectors for other ERPs.
-- Machine learning in pipelines (forecasting, anomaly detection).
-- Several app servers sharing one database, for larger offices.
+• Added a chart node with twelve visualization types for data pipelines.
 
-## What's new in 1.0.1
+• Added optional sandboxed JavaScript transformations with owner controlled activation and audit logging.
 
-- Chart node in pipelines, with twelve chart kinds.
-- Sandboxed JavaScript step, switched on by the Owner and fully audited.
-- Per-connection MCP access: choose the tools and the data.
-- A denser ERP dashboard.
+• Added configurable MCP permissions for individual connections.
 
----
+• Updated the ERP dashboard layout to make better use of available space.
 
-Proprietary software © 2026 ETNA. See [LICENSE](LICENSE).
+## What's Next
+
+PrintStream is still evolving. Some areas we want to develop further include:
+
+• Ready made connectors for external ERP systems.
+
+• Machine learning for forecasting and anomaly detection.
+
+• Support for multiple application servers sharing a database.
+
+• More tools for data intelligence and business automation.
+
+## License
+
+Proprietary software. Copyright © 2026 ETNA.
+
+All rights reserved. See [LICENSE](LICENSE) for the applicable terms.
