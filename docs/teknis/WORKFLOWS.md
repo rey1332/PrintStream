@@ -37,6 +37,19 @@ the catalog.
   never code), join, aggregate, data-quality validation, branch, describe,
   fit distribution.
 - Outputs: table, KPI, bar and line charts, CSV download, named dataset.
+- **Chart** (`out.chart`, `src/lib/workflow/chartData.ts`): one node for bar,
+  stacked bar, line, area, stacked area, bars + lines (one axis, never two
+  scales), pie, donut, scatter, histogram, heatmap and pivot table. Settings:
+  the x column, value columns (up to 8; empty with *count* counts rows), an
+  optional column that splits a value into series, aggregation, order, bins,
+  number format (number, short, currency, percent) and a title. The data is
+  shaped on the server with the same currency and repeated-value rules as
+  Aggregate, so only the points leave it: at most 8 series (the palette's
+  colours; the rest fold into *Other*), 50 bar categories, 1,000 points over
+  time, 2,000 scatter points (evenly sampled), 40 × 40 heatmap cells. Series
+  colours are `--series-1…8` (src/styles/tailwind.css), checked for
+  colour-blind separation on the light and dark surfaces; every chart has a
+  legend (two or more series), a table view and an *Open large* view.
 
 The editor shows each field's business name, module, type, meaning and how it
 relates to the source, before and after running.

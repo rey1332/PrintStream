@@ -63,12 +63,14 @@ const COLUMN_KEYS: Record<string, string[]> = {
   'out.barChart': ['categoryColumn', 'valueColumn'],
   'out.lineChart': ['xColumn', 'yColumn'],
   'out.kpi': ['column'],
+  'out.chart': ['xColumn', 'seriesColumn'],
   ...UNIFY_COLUMN_KEYS,
 };
 
 const LIST_KEYS: Record<string, string[]> = {
   'tf.select': ['columns'],
   'tf.validate': ['requiredColumns', 'numericColumns', 'dateColumns', 'uniqueKey'],
+  'out.chart': ['measures'],
   ...UNIFY_LIST_KEYS,
 };
 

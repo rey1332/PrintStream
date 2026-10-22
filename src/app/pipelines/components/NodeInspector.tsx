@@ -1,5 +1,7 @@
 'use client';
 
+import { ChartOutput } from './ChartOutput';
+import { CHART_FORMATS, CHART_KINDS, CHART_SORTS } from '@/lib/workflow/chartData';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NODE_REGISTRY } from '@/lib/workflow/registry';
 import type { WorkflowNode, DataTable } from '@/lib/workflow/types';
@@ -575,6 +577,8 @@ function OutputRenderer({ node, result }: { node: WorkflowNode; result: any }) {
       return <LineChartOutput data={data} xColumn={cfg.xColumn} yColumn={cfg.yColumn} />;
     case 'out.kpi':
       return <KPIOutput data={data} />;
+    case 'out.chart':
+      return <ChartOutput data={data} />;
     case 'out.csv':
       return <CSVOutput data={data} filename={cfg.filename || 'export.csv'} />;
     default:
@@ -682,6 +686,7 @@ const COLUMN_PICKERS: Record<string, number> = {
   colB: 0,
   categoryColumn: 0,
   valueColumn: 0,
+  seriesColumn: 0,
   xColumn: 0,
   yColumn: 0,
   uniqueKey: 0,
@@ -708,6 +713,7 @@ const COLUMN_LISTS = new Set([
   'keyColumns',
   'idColumns',
   'valueColumns',
+  'measures',
   'bring',
 ]);
 /** Lists of columns of the second input (the others list the first's). */
@@ -797,6 +803,12 @@ export default function NodeInspector({
     outlierMethod: ['iqr', 'zscore'],
     list: ['customers', 'suppliers', 'products'],
     erpMode: ['add_new', 'add_or_update'],
+    chartKind: [...CHART_KINDS],
+    chartSort: [...CHART_SORTS],
+    numberFormat: [...CHART_FORMATS],
+    ...(node.data.type === 'out.chart'
+      ? { aggregation: ['sum', 'avg', 'count', 'min', 'max'] }
+      : {}),
   };
 
   const isOutput = def.category === 'output';

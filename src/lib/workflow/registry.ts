@@ -1,4 +1,5 @@
 import {
+  PieChart,
   Users,
   Truck,
   Package,
@@ -190,6 +191,7 @@ const ICONS: Record<string, any> = {
   'out.table': TableIcon,
   'out.barChart': BarChart3,
   'out.lineChart': LineChart,
+  'out.chart': PieChart,
   'out.kpi': Hash,
   'out.csv': Download,
   'out.psDataset': Database,

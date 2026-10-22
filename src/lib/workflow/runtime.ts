@@ -24,6 +24,7 @@ import { fitDistribution } from '@/lib/stats/fitting';
 import type { ColumnLineage, DataTable, DataWarning } from './types';
 import { WorkflowError } from './errors';
 import { UNIFY_RUNTIME } from './unifyNodes';
+import { shapeChart } from './chartData';
 
 export interface DatasetReadSpec {
   datasetId: string;
@@ -874,6 +875,14 @@ export const RUNTIME: Record<string, NodeRuntime> = {
         ...(measured.partial ? { partial: true } : {}),
       },
     };
+  }),
+
+  // Every chart kind in one node; shaped here like the bar chart (./chartData.ts).
+  'out.chart': output(async (cfg, [input]) => {
+    const table = requireInput(input);
+    return shapeChart(cfg, table, (groups, column, operation) =>
+      measureGroups(table, groups, column, operation)
+    );
   }),
 
   'out.lineChart': output(async (cfg, [input]) => {

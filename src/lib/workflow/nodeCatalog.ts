@@ -178,6 +178,24 @@ export const CORE_NODE_INFO: NodeInfo[] = [
     defaultConfig: { xColumn: '', yColumn: '' },
   },
   {
+    type: 'out.chart',
+    category: 'output',
+    label: 'Chart',
+    description:
+      'Bar, stacked, line, area, combo, pie, donut, scatter, histogram, heatmap or pivot table',
+    defaultConfig: {
+      chartKind: 'bar',
+      xColumn: '',
+      measures: '',
+      seriesColumn: '',
+      aggregation: 'sum',
+      chartSort: 'byValue',
+      bins: 20,
+      numberFormat: 'plain',
+      title: '',
+    },
+  },
+  {
     type: 'out.kpi',
     category: 'output',
     label: 'KPI Value',

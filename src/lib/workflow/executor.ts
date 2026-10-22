@@ -156,6 +156,7 @@ export function displayRowLimit(type: string, cfg: any): number {
     case 'out.barChart':
       return 500;
     case 'out.lineChart':
+    case 'out.chart':
       return 2000;
     case 'out.dataset':
       return 200;

@@ -1,6 +1,7 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { EntityKey, FieldType } from '@/lib/analytics/catalog';
 import type { QualityIssue, QualityReport } from './runtime';
+import type { ChartMeta } from './chartData';
 
 export type NodeCategory =
   | 'source'
@@ -45,6 +46,8 @@ export interface DataTable {
     truncated?: boolean;
     partial?: boolean;
     summary?: { entity: EntityKey; recordCount: number };
+    /** A Chart node's shaped data: what to draw (./chartData.ts). */
+    chart?: ChartMeta;
   };
 }
 
