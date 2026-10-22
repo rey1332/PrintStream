@@ -2,10 +2,10 @@
 
 **Version 1.0.1** · by ETNA (Enterprise Transformation & Intelligence Architecture)
 
-PrintStream is where a company's day-to-day work and its data live together.
+PrintStream is where a company's day to day work and its data live together.
 Sales, purchasing, stock, accounting, tax, HR and payroll sit next to the tools
-you use to understand them: datasets, pipelines, charts and SQL. You run it on
-your own server, so your data stays with you.
+you use to understand them: datasets, pipelines, charts and SQL. We run it on our
+own server, so your data stays with you.
 
 > Looking for the Indonesian guide (install, daily use, backup, moving
 > servers)? Start at **[docs/PANDUAN.md](docs/PANDUAN.md)**.
