@@ -322,3 +322,48 @@ function randomUuid() {
   const h = randomBytes(16).toString('hex');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20)}`;
 }
+
+test('a scoped connection: only its tools are offered and callable, other data does not exist for it', async () => {
+  const [{ id: other }] = await run(
+    db,
+    owner,
+    `select ps_create_dataset($1, 'Gaji', 'HR', '', '[{"label":"amount","type":"decimal"}]'::jsonb) as id`,
+    [ws]
+  );
+  const [{ id: pipeline }] = await run(
+    db,
+    owner,
+    `insert into workflows (user_id, workspace_id, name, graph) values ($1, $2, 'Lain', '{"nodes":[],"edges":[]}'::jsonb) returning id`,
+    [owner.id, ws]
+  );
+  const scoped = {
+    ...ctxFor(true),
+    scope: { tools: ['list_datasets', 'preview_dataset', 'list_pipelines', 'validate_pipeline'], datasets: [ds], pipelines: [] },
+  };
+  assert.deepEqual(
+    toolsFor(scoped).map((t) => t.name).sort(),
+    ['list_datasets', 'list_pipelines', 'preview_dataset', 'validate_pipeline']
+  );
+  // A tool outside the scope is unknown, even called by name.
+  const r = await handleMessage(
+    { jsonrpc: '2.0', id: 100, method: 'tools/call', params: { name: 'get_pipeline', arguments: { pipeline_id: pipeline } } },
+    scoped,
+    toolsFor(scoped)
+  );
+  assert.ok(r.error || r.result?.isError);
+
+  assert.deepEqual(value(await call('list_datasets', {}, scoped)).datasets.map((d) => d.id), [ds]);
+  assert.deepEqual(value(await call('list_pipelines', {}, scoped)).pipelines, []);
+  const outside = await call('preview_dataset', { dataset_id: other }, scoped);
+  assert.equal(outside.isError, true);
+  assert.match(outside.content[0].text, /not found/);
+  // A graph naming a dataset outside the scope is refused before anything reads it.
+  const refused = await call(
+    'validate_pipeline',
+    { nodes: [{ id: 'x', type: 'src.psDataset', config: { datasetId: other } }, { id: 't', type: 'out.table' }], edges: [{ from: 'x', to: 't' }] },
+    scoped
+  );
+  assert.equal(refused.isError, true);
+  assert.match(refused.content[0].text, /may not use dataset/);
+  assert.equal(value(await call('validate_pipeline', graph(), scoped)).ok, true);
+});

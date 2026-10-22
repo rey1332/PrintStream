@@ -722,7 +722,12 @@ function TerminalPage() {
               {data && tab === 'ai' && ws && (
                 <div className="space-y-4">
                   <AiSettings workspaceId={ws} permissions={data.permissions} />
-                  <McpAccess workspaceId={ws} permissions={data.permissions} />
+                  <McpAccess
+                    workspaceId={ws}
+                    permissions={data.permissions}
+                    datasets={data.datasets.map((d) => ({ id: d.id, name: d.name }))}
+                    pipelines={data.pipelines.map((p) => ({ id: p.id, name: p.name }))}
+                  />
                 </div>
               )}
 

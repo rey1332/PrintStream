@@ -1,5 +1,6 @@
 // Terminal in the browser: calls to /api/terminal and the shapes they return.
 
+import type { McpScope } from './mcpScope';
 import type { DatasetColumn, DatasetInfo, RowPage } from '@/server/terminal/datasets';
 import type { ColumnType } from './tabular';
 
@@ -173,6 +174,8 @@ export interface McpToken {
   revokedAt: string | null;
   /** May build pipelines (drafts), chosen when the token was made. */
   canWrite: boolean;
+  /** The tools and data it is limited to; null: everything the member may use. */
+  scope: McpScope | null;
 }
 
 /** An app connected through OAuth (Claude's connectors and others). */
@@ -189,6 +192,7 @@ export interface McpApp {
   revokedAt: string | null;
   /** May build pipelines (drafts), chosen on the consent page. */
   canWrite: boolean;
+  scope: McpScope | null;
 }
 
 export interface PipelineSummary {

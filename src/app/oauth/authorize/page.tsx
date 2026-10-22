@@ -7,6 +7,8 @@
 import React, { useEffect, useState } from 'react';
 import { Check, GitBranch, KeyRound, ShieldCheck, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
+import { MCP_WRITE_TOOLS, type McpScope } from '@/lib/terminal/mcpScope';
+import { McpScopeEditor, fullScope } from '@/app/terminal/components/McpScopeEditor';
 
 type Described = {
   client: { name: string; redirectHost: string };
@@ -56,6 +58,8 @@ export default function AuthorizePage() {
   const [info, setInfo] = useState<Described | null>(null);
   const [workspaceId, setWorkspaceId] = useState('');
   const [build, setBuild] = useState(false);
+  // The tools the app may call (all by default); data is limited later in the Terminal.
+  const [scope, setScope] = useState<McpScope>(fullScope);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -77,7 +81,11 @@ export default function AuthorizePage() {
     if (!request) return;
     setBusy(true);
     const canBuild = !!info?.terminals.find((x) => x.id === workspaceId)?.canBuild;
-    const res = await call(action, request, { workspaceId, canWrite: canBuild && build });
+    const res = await call(action, request, {
+      workspaceId,
+      canWrite: canBuild && build,
+      ...(scope.tools ? { tools: scope.tools } : {}),
+    });
     if (res.success && res.data?.redirect) {
       window.location.assign(res.data.redirect);
       return;
@@ -177,6 +185,27 @@ export default function AuthorizePage() {
               </label>
             )}
 
+            {info.terminals.length > 0 && (
+              <details className="rounded-lg border border-border p-3">
+                <summary className="cursor-pointer text-[0.78rem] text-foreground">
+                  {t('oauth.chooseTools')}
+                </summary>
+                <div className="mt-3">
+                  <McpScopeEditor
+                    scope={scope}
+                    onChange={setScope}
+                    canWrite={!!info.terminals.find((x) => x.id === workspaceId)?.canBuild && build}
+                    datasets={[]}
+                    pipelines={[]}
+                    dataLimits={false}
+                  />
+                  <p className="mt-2 text-[0.68rem] text-muted-foreground">
+                    {t('oauth.dataLater')}
+                  </p>
+                </div>
+              </details>
+            )}
+
             <div className="flex gap-2">
               <button
                 type="button"
@@ -188,7 +217,16 @@ export default function AuthorizePage() {
               </button>
               <button
                 type="button"
-                disabled={busy || !workspaceId}
+                disabled={
+                  busy ||
+                  !workspaceId ||
+                  (scope.tools !== null &&
+                    scope.tools.filter(
+                      (n) =>
+                        (build && info.terminals.find((x) => x.id === workspaceId)?.canBuild) ||
+                        !MCP_WRITE_TOOLS.includes(n)
+                    ).length === 0)
+                }
                 onClick={() => decide('approve')}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-[0.85rem] font-medium text-primary-foreground disabled:opacity-50"
               >

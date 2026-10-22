@@ -66,7 +66,8 @@ const CALLABLE = [
   'ps_retry_job', 'ps_worker_last_seen', 'ps_mcp_token_create', 'ps_mcp_token_list', 'ps_mcp_token_revoke',
   'ps_oauth_client_get', 'ps_oauth_approve', 'ps_oauth_grant_list', 'ps_oauth_grant_revoke',
   'ps_mcp_pipeline_create', 'ps_mcp_pipeline_update', 'ps_sql_run_start', 'ps_mcp_token_create_v2', 'ps_mcp_token_list_v2',
-  'ps_oauth_approve_v2', 'ps_oauth_grant_list_v2',
+  'ps_oauth_approve_v2', 'ps_oauth_grant_list_v2', 'ps_mcp_token_create_v3', 'ps_mcp_token_list_v3',
+  'ps_mcp_token_set_scope', 'ps_oauth_approve_v3', 'ps_oauth_grant_list_v3', 'ps_oauth_grant_set_scope',
 ].sort();
 
 let db;

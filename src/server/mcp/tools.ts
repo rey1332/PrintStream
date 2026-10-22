@@ -15,6 +15,7 @@ import { parseInsightInput } from '@/lib/terminal/insights';
 import { cleanGraph } from '@/lib/workflow/graph';
 import type { WorkflowGraph } from '@/lib/workflow/types';
 import { ToolError, type McpTool } from './protocol';
+import { scopeAllows, type McpScope } from '@/lib/terminal/mcpScope';
 import {
   GraphShapeError,
   attachDatasets,
@@ -37,11 +38,40 @@ export interface McpContext {
   canWrite?: boolean;
   /** A shared rate limit per token: false when the bucket is full. */
   allow?: (bucket: string, max: number, seconds: number) => Promise<boolean>;
+  /** The tools, datasets and pipelines the connection was limited to (null: all). */
+  scope?: McpScope | null;
 }
 
-/** The tools this connection may use: the writing ones only when it may write. */
+/**
+ * The tools this connection may use: the writing ones only when it may
+ * write, and only those its scope names. A tool outside the list is neither
+ * offered nor callable (handleMessage only knows the tools it is given).
+ */
 export const toolsFor = (ctx: McpContext) =>
-  ctx.canWrite ? MCP_TOOLS : MCP_TOOLS.filter((t) => !t.write);
+  MCP_TOOLS.filter((t) => (ctx.canWrite || !t.write) && scopeAllows(ctx.scope, 'tools', t.name));
+
+// Outside the connection's scope a pipeline or dataset does not exist for it.
+const inScope = (ctx: McpContext, key: 'datasets' | 'pipelines', id: string) =>
+  scopeAllows(ctx.scope, key, id);
+const PIPELINE_NOT_FOUND = 'Pipeline not found in this Terminal.';
+const DATASET_NOT_FOUND = 'Dataset not found in this Terminal.';
+
+/** Every dataset a graph reads or writes must be within the scope. */
+function checkGraphDatasets(ctx: McpContext, graph: WorkflowGraph) {
+  for (const n of graph.nodes) {
+    const type = String(n.data?.type ?? '');
+    if (type !== 'src.psDataset' && type !== 'out.psDataset') continue;
+    const id = String(n.data.config?.datasetId ?? '');
+    if (id && !inScope(ctx, 'datasets', id))
+      throw new ToolError(`This connection may not use dataset ${id} (see list_datasets).`);
+  }
+}
+
+/** The graph's datasets, checked against the scope, then against the Terminal. */
+async function scopedDatasets(tx: SqlTx, ctx: McpContext, graph: WorkflowGraph) {
+  checkGraphDatasets(ctx, graph);
+  return attachDatasets(tx, ctx.workspaceId, graph);
+}
 
 const PATH = '/api/mcp';
 const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
@@ -104,6 +134,7 @@ const limitArg = (args: Record<string, unknown>, fallback: number, max: number) 
 
 /** A pipeline of the token's Terminal that the member may see, or not found. */
 async function pipelineRow(tx: SqlTx, ctx: McpContext, id: string) {
+  if (!inScope(ctx, 'pipelines', id)) throw new ToolError(PIPELINE_NOT_FOUND);
   const { rows } = await tx.query(
     `SELECT w.id, w.name, w.description, w.enabled, w.access, w.graph, w.updated_at, w.published_version_id,
             w.updated_at::text AS revision, w.user_id = auth.uid() AS mine, w.mcp_client, w.mcp_edited_at,
@@ -113,7 +144,7 @@ async function pipelineRow(tx: SqlTx, ctx: McpContext, id: string) {
       WHERE w.id = $1 AND w.workspace_id = $2`,
     [id, ctx.workspaceId]
   );
-  if (!rows[0]) throw new ToolError('Pipeline not found in this Terminal.');
+  if (!rows[0]) throw new ToolError(PIPELINE_NOT_FOUND);
   return rows[0];
 }
 
@@ -132,7 +163,7 @@ async function shaped(
       throw new ToolError(`The graph cannot be used: ${error.message}`);
     throw error;
   }
-  return { graph, result: check(graph, await attachDatasets(tx, ctx.workspaceId, graph)) };
+  return { graph, result: check(graph, await scopedDatasets(tx, ctx, graph)) };
 }
 
 const REVIEW =
@@ -140,9 +171,9 @@ const REVIEW =
 
 /** A dataset of the token's Terminal that the member may query. */
 async function queryableDataset(tx: SqlTx, ctx: McpContext, id: string) {
+  if (!inScope(ctx, 'datasets', id)) throw new ToolError(DATASET_NOT_FOUND);
   const ds = await loadDataset(tx, id);
-  if (ds.workspaceId !== ctx.workspaceId)
-    throw new ToolError('Dataset not found in this Terminal.');
+  if (ds.workspaceId !== ctx.workspaceId) throw new ToolError(DATASET_NOT_FOUND);
   const ok = await tx.query(`SELECT public.ps_can_access_dataset($1, 'query') AS ok`, [ds.id]);
   if (ok.rows[0]?.ok !== true) throw new ToolError('The member may not query this dataset.');
   if (ds.status !== 'ready' && ds.status !== 'altering')
@@ -191,10 +222,10 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
              FROM public.workflows w
              LEFT JOIN public.workflow_versions v ON v.id = w.published_version_id
              LEFT JOIN public.ps_schedules s ON s.pipeline_id = w.id
-            WHERE w.workspace_id = $1
+            WHERE w.workspace_id = $1 AND ($2::uuid[] IS NULL OR w.id = ANY ($2::uuid[]))
             ORDER BY lower(w.name)
             LIMIT 500`,
-          [ctx.workspaceId]
+          [ctx.workspaceId, ctx.scope?.pipelines ?? null]
         );
         return {
           pipelines: rows.map((r: any) => ({
@@ -306,9 +337,12 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
               }
             : null,
           starts: chains
-            .filter((c: any) => c.upstream_id === w.id)
+            .filter(
+              (c: any) => c.upstream_id === w.id && inScope(ctx, 'pipelines', c.downstream_id)
+            )
             .map((c: any) => ({ id: c.downstream_id, name: c.downstream, enabled: c.enabled })),
           started_by: chains
+            .filter((c: any) => inScope(ctx, 'pipelines', c.upstream_id))
             .filter((c: any) => c.downstream_id === w.id)
             .map((c: any) => ({ id: c.upstream_id, name: c.upstream, enabled: c.enabled })),
         };
@@ -370,7 +404,8 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
           [uuidArg(args, 'run_id'), ctx.workspaceId]
         );
         const r = rows[0];
-        if (!r) throw new ToolError('Run not found in this Terminal.');
+        if (!r || !inScope(ctx, 'pipelines', r.workflow_id))
+          throw new ToolError('Run not found in this Terminal.');
         const nodes = fromEditorGraph(r.graph).nodes as {
           id: string;
           label: string;
@@ -421,24 +456,26 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     run: (ctx) =>
       read(ctx, async (tx) => ({
-        datasets: (await listDatasets(tx, ctx.workspaceId)).map((d) => ({
-          id: d.id,
-          name: d.name,
-          folder: d.folder,
-          description: d.description,
-          status: d.status,
-          rows: d.rowCount,
-          updated_at: d.updatedAt,
-          columns: d.columns
-            .filter((c) => !c.hidden)
-            .map((c) => ({
-              name: c.label,
-              type: c.type,
-              key: c.key,
-              sensitive: c.sensitive,
-              unit: c.unit || undefined,
-            })),
-        })),
+        datasets: (await listDatasets(tx, ctx.workspaceId))
+          .filter((d) => inScope(ctx, 'datasets', d.id))
+          .map((d) => ({
+            id: d.id,
+            name: d.name,
+            folder: d.folder,
+            description: d.description,
+            status: d.status,
+            rows: d.rowCount,
+            updated_at: d.updatedAt,
+            columns: d.columns
+              .filter((c) => !c.hidden)
+              .map((c) => ({
+                name: c.label,
+                type: c.type,
+                key: c.key,
+                sensitive: c.sensitive,
+                unit: c.unit || undefined,
+              })),
+          })),
       })),
   },
   {
@@ -457,9 +494,10 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
     },
     run: (ctx, args) =>
       read(ctx, async (tx) => {
-        const ds = await loadDataset(tx, uuidArg(args, 'dataset_id'));
-        if (ds.workspaceId !== ctx.workspaceId)
-          throw new ToolError('Dataset not found in this Terminal.');
+        const id = uuidArg(args, 'dataset_id');
+        if (!inScope(ctx, 'datasets', id)) throw new ToolError(DATASET_NOT_FOUND);
+        const ds = await loadDataset(tx, id);
+        if (ds.workspaceId !== ctx.workspaceId) throw new ToolError(DATASET_NOT_FOUND);
         if (ds.status !== 'ready' && ds.status !== 'altering')
           return { id: ds.id, name: ds.name, status: ds.status, rows: [] };
         const page = await readRows(tx, ds, {
@@ -559,7 +597,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
         if (args.pipeline_id !== undefined) {
           const w = await pipelineRow(tx, ctx, uuidArg(args, 'pipeline_id'));
           const graph = cleanGraph(w.graph);
-          return { graph, result: check(graph, await attachDatasets(tx, ctx.workspaceId, graph)) };
+          return { graph, result: check(graph, await scopedDatasets(tx, ctx, graph)) };
         }
         if (args.nodes === undefined) throw new ToolError('Give pipeline_id, or nodes and edges.');
         return shaped(tx, ctx, args, null);
@@ -735,6 +773,23 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
     description:
       'What needs attention in this Terminal: whether the background worker is running, waiting and failed jobs, pipelines whose last run failed, late or stopped schedules, failing syncs and datasets that stopped changing.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-    run: (ctx) => read(ctx, (tx) => healthOf(tx, ctx.workspaceId)),
+    run: (ctx) =>
+      read(ctx, async (tx) => {
+        const h = await healthOf(tx, ctx.workspaceId);
+        // Only the pipelines and datasets this connection may see.
+        const pipeline = (x: { id: string }) => inScope(ctx, 'pipelines', x.id);
+        return {
+          ...h,
+          failingPipelines: h.failingPipelines.filter(pipeline),
+          lateSchedules: h.lateSchedules.filter(pipeline),
+          stoppedSchedules: h.stoppedSchedules.filter(pipeline),
+          failingSyncs: h.failingSyncs.filter(
+            (y) =>
+              !ctx.scope?.datasets ||
+              (y.datasetId !== null && inScope(ctx, 'datasets', y.datasetId))
+          ),
+          staleDatasets: h.staleDatasets.filter((d) => inScope(ctx, 'datasets', d.id)),
+        };
+      }),
   },
 ];

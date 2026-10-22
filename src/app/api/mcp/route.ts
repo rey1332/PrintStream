@@ -11,6 +11,7 @@ import {
   type JsonRpcResponse,
 } from '@/server/mcp/protocol';
 import { toolsFor, type McpContext } from '@/server/mcp/tools';
+import { parseScope } from '@/lib/terminal/mcpScope';
 import { issuerOf } from '@/server/mcp/oauth';
 
 // MCP for AI assistants (Streamable HTTP): POST /api/mcp with
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   const hash = createHash('sha256').update(token).digest('hex');
   const found = await auth.executor.transaction(
-    async (tx) => (await tx.query('SELECT * FROM auth.mcp_token_use_v2($1)', [hash])).rows[0]
+    async (tx) => (await tx.query('SELECT * FROM auth.mcp_token_use_v3($1)', [hash])).rows[0]
   );
   if (!found) {
     if (!(await requestAllowed(auth, 'mcp_bad', ip, 30, 60)))
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
     workspaceId: found.workspace_id,
     tokenId: found.token_id,
     canWrite: found.can_write === true,
+    scope: parseScope(found.scope),
     allow: (bucket, max, seconds) => requestAllowed(auth, bucket, found.token_id, max, seconds),
   };
   try {

@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { withAuth } from '@/lib/api-safe';
 import { terminalContext } from '@/server/terminal/context';
 import { asUser, isUuid } from '@/server/terminal/session';
+import { MCP_TOOL_NAMES, MCP_WRITE_TOOLS } from '@/lib/terminal/mcpScope';
 import {
   SCOPES,
   issuerOf,
@@ -44,6 +45,7 @@ export const POST = withAuth(async ({ request }) => {
     action?: unknown;
     workspaceId?: unknown;
     canWrite?: unknown;
+    tools?: unknown;
   };
   const issuer = issuerOf(request as NextRequest);
   const clientId = str(body.client_id, 80);
@@ -117,16 +119,28 @@ export const POST = withAuth(async ({ request }) => {
   if (!isUuid(workspaceId) || !terminal) return { success: false, error: 'forbidden' };
   // Building pipelines only when the member ticked it, and may build there.
   const canWrite = body.canWrite === true && terminal.canBuild === true;
+  // The tools the member ticked (none given: all of them); datasets and
+  // pipelines can be limited later under Terminal → AI → MCP access.
+  const tools = Array.isArray(body.tools)
+    ? MCP_TOOL_NAMES.filter(
+        (n) => (body.tools as unknown[]).includes(n) && (canWrite || !MCP_WRITE_TOOLS.includes(n))
+      )
+    : null;
+  const access =
+    tools && tools.length < MCP_TOOL_NAMES.length
+      ? JSON.stringify({ tools, datasets: null, pipelines: null })
+      : null;
   const code = newSecret('psmco_');
   try {
     await asUser(ctx.executor, ctx.identity, '/oauth/authorize', (tx) =>
-      tx.query('SELECT public.ps_oauth_approve_v2($1, $2, $3, $4, $5, $6)', [
+      tx.query('SELECT public.ps_oauth_approve_v3($1, $2, $3, $4, $5, $6, $7::jsonb)', [
         clientId,
         redirect,
         body.code_challenge,
         workspaceId,
         sha256Hex(code),
         canWrite,
+        access,
       ])
     );
   } catch (error) {

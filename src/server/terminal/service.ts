@@ -2,6 +2,7 @@
 // transaction as the signed-in user. The database checks every permission;
 // this layer shapes requests and answers and keeps inputs bounded.
 
+import { parseScope } from '@/lib/terminal/mcpScope';
 import { createHash, randomBytes } from 'node:crypto';
 import { createWriteStream, promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -149,7 +150,7 @@ export async function healthOf(tx: SqlTx, ws: string) {
   );
   const failingSyncs = await all(
     `SELECT y.id, y.object, y.enabled, y.failure_streak, y.last_error_key, y.last_run_at,
-            c.name AS connection, d.name AS dataset
+            c.name AS connection, d.name AS dataset, y.dataset_id
        FROM public.ps_syncs y
        JOIN public.ps_connections c ON c.id = y.connection_id
        LEFT JOIN public.ps_datasets d ON d.id = y.dataset_id
@@ -200,6 +201,7 @@ export async function healthOf(tx: SqlTx, ws: string) {
       object: y.object as string,
       connection: y.connection as string,
       dataset: y.dataset as string | null,
+      datasetId: (y.dataset_id as string | null) ?? null,
       enabled: y.enabled as boolean,
       streak: y.failure_streak as number,
       errorKey: y.last_error_key as string | null,
@@ -720,10 +722,19 @@ export async function uploadImport(
 // ─── MCP access tokens ───────────────────────────────────────────────────────
 // The token is made here and shown once; the database keeps its SHA-256.
 
+/** A scope from the access page, as JSON for the database (which checks it); null = all. */
+function scopeJson(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'object' || Array.isArray(value)) throw new TerminalError('invalid');
+  const json = JSON.stringify(value);
+  if (json.length > 40_000) throw new TerminalError('invalid');
+  return json;
+}
+
 export async function listMcpTokens(ctx: TerminalContext, body: any) {
   const ws = uuid(body.workspaceId);
   return run(ctx, async (tx) =>
-    (await tx.query('SELECT * FROM public.ps_mcp_token_list_v2($1)', [ws])).rows.map((r: any) => ({
+    (await tx.query('SELECT * FROM public.ps_mcp_token_list_v3($1)', [ws])).rows.map((r: any) => ({
       id: r.id as string,
       name: r.name as string,
       prefix: r.token_prefix as string,
@@ -736,6 +747,7 @@ export async function listMcpTokens(ctx: TerminalContext, body: any) {
       uses: Number(r.use_count),
       revokedAt: iso(r.revoked_at),
       canWrite: r.can_write === true,
+      scope: parseScope(r.scope),
     }))
   );
 }
@@ -749,17 +761,30 @@ export async function createMcpToken(ctx: TerminalContext, body: any) {
     ctx,
     async (tx) =>
       (
-        await tx.query('SELECT public.ps_mcp_token_create_v2($1, $2, $3, $4, $5, $6) AS id', [
-          ws,
-          text(body.name, 80),
-          hash,
-          token.slice(0, 12),
-          days,
-          body.canWrite === true,
-        ])
+        await tx.query(
+          'SELECT public.ps_mcp_token_create_v3($1, $2, $3, $4, $5, $6, $7::jsonb) AS id',
+          [
+            ws,
+            text(body.name, 80),
+            hash,
+            token.slice(0, 12),
+            days,
+            body.canWrite === true,
+            scopeJson(body.scope),
+          ]
+        )
       ).rows[0].id as string
   );
   return { id, token };
+}
+
+export async function setMcpTokenScope(ctx: TerminalContext, body: any) {
+  await run(ctx, (tx) =>
+    tx.query('SELECT public.ps_mcp_token_set_scope($1, $2::jsonb)', [
+      uuid(body.id),
+      scopeJson(body.scope),
+    ])
+  );
 }
 
 export async function revokeMcpToken(ctx: TerminalContext, body: any) {
@@ -771,7 +796,7 @@ export async function revokeMcpToken(ctx: TerminalContext, body: any) {
 export async function listMcpApps(ctx: TerminalContext, body: any) {
   const ws = uuid(body.workspaceId);
   return run(ctx, async (tx) =>
-    (await tx.query('SELECT * FROM public.ps_oauth_grant_list_v2($1)', [ws])).rows.map(
+    (await tx.query('SELECT * FROM public.ps_oauth_grant_list_v3($1)', [ws])).rows.map(
       (r: any) => ({
         id: r.id as string,
         name: r.client_name as string,
@@ -784,8 +809,18 @@ export async function listMcpApps(ctx: TerminalContext, body: any) {
         expiresAt: iso(r.refresh_expires_at),
         revokedAt: iso(r.revoked_at),
         canWrite: r.can_write === true,
+        scope: parseScope(r.scope),
       })
     )
+  );
+}
+
+export async function setMcpAppScope(ctx: TerminalContext, body: any) {
+  await run(ctx, (tx) =>
+    tx.query('SELECT public.ps_oauth_grant_set_scope($1, $2::jsonb)', [
+      uuid(body.id),
+      scopeJson(body.scope),
+    ])
   );
 }
 

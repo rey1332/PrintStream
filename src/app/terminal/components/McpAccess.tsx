@@ -5,11 +5,19 @@
 // /api/mcp with the member's own rights. A token is shown once.
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Check, Copy, KeyRound, Plus, Trash2 } from 'lucide-react';
+import { Check, Copy, KeyRound, Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { terminalApi, type McpApp, type McpToken } from '@/lib/terminal/client';
+import type { McpScope } from '@/lib/terminal/mcpScope';
 import { Dialog, buttonCls, errorMessage, inputCls, primaryCls } from './shared';
+import {
+  McpScopeEditor,
+  fullScope,
+  scopeForSave,
+  scopeSummary,
+  type ScopeItem,
+} from './McpScopeEditor';
 
 const DAYS = [30, 90, 180, 365];
 
@@ -47,9 +55,14 @@ function CopyBlock({ label, text }: { label: string; text: string }) {
 export function McpAccess({
   workspaceId,
   permissions,
+  datasets,
+  pipelines,
 }: {
   workspaceId: string;
   permissions: string[];
+  /** This Terminal's datasets and pipelines, to limit a connection to some of them. */
+  datasets: ScopeItem[];
+  pipelines: ScopeItem[];
 }) {
   const { t, fmt } = useI18n();
   const [tokens, setTokens] = useState<McpToken[] | null>(null);
@@ -60,6 +73,15 @@ export function McpAccess({
   const [canWrite, setCanWrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<{ name: string; token: string } | null>(null);
+  const [scope, setScope] = useState<McpScope>(fullScope);
+  // Changing what an existing token or app may use.
+  const [editing, setEditing] = useState<{
+    kind: 'token' | 'app';
+    id: string;
+    name: string;
+    canWrite: boolean;
+    scope: McpScope;
+  } | null>(null);
   const allowed = permissions.includes('pipelines.view');
   const mayBuild =
     permissions.includes('pipelines.create') || permissions.includes('pipelines.edit');
@@ -92,11 +114,13 @@ export function McpAccess({
         name,
         days,
         canWrite: mayBuild && canWrite,
+        scope: scopeForSave(scope, mayBuild && canWrite),
       });
       setCreating(false);
       setCreated({ name, token: r.token });
       setName('');
       setCanWrite(false);
+      setScope(fullScope());
       await load();
     } catch (err) {
       toast.error(errorMessage(err, t));
@@ -115,6 +139,38 @@ export function McpAccess({
       toast.error(errorMessage(err, t));
     }
   }
+
+  async function saveScope(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setBusy(true);
+    try {
+      await terminalApi(editing.kind === 'token' ? 'mcpToken.scope' : 'mcpApp.scope', {
+        id: editing.id,
+        scope: scopeForSave(editing.scope, editing.canWrite),
+      });
+      toast.success(t('ps.mcpScope.saved'));
+      setEditing(null);
+      await load();
+    } catch (err) {
+      toast.error(errorMessage(err, t));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const edit = (kind: 'token' | 'app', x: McpToken | McpApp) =>
+    setEditing({
+      kind,
+      id: x.id,
+      name: x.name,
+      canWrite: x.canWrite,
+      scope: x.scope ? { ...x.scope } : fullScope(),
+    });
+  const noTools = (sc: McpScope, write: boolean) =>
+    sc.tools !== null &&
+    sc.tools.filter((n) => write || !['create_pipeline', 'update_pipeline'].includes(n)).length ===
+      0;
 
   async function revokeApp(app: McpApp) {
     if (!confirm(t('ps.mcpAccess.revokeConfirm', { name: app.name }))) return;
@@ -180,9 +236,23 @@ export function McpAccess({
                     ? t('ps.mcpAccess.used', { when: fmt.dateTime(a.lastUsedAt), n: a.uses })
                     : t('ps.mcpAccess.neverUsed')}
                 </span>
+                <span className="text-[0.66rem] text-muted-foreground">
+                  {scopeSummary(a.scope, t)}
+                </span>
                 <span className="ml-auto text-[0.66rem] text-muted-foreground">
                   {t('ps.mcpAccess.connected', { when: fmt.date(a.createdAt) })}
                 </span>
+                {a.mine && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label={t('ps.mcpScope.edit')}
+                    title={t('ps.mcpScope.edit')}
+                    onClick={() => edit('app', a)}
+                  >
+                    <SlidersHorizontal size={13} />
+                  </button>
+                )}
                 <button
                   type="button"
                   className="text-muted-foreground hover:text-red-500"
@@ -223,9 +293,23 @@ export function McpAccess({
                   ? t('ps.mcpAccess.used', { when: fmt.dateTime(x.lastUsedAt), n: x.uses })
                   : t('ps.mcpAccess.neverUsed')}
               </span>
+              <span className="text-[0.66rem] text-muted-foreground">
+                {scopeSummary(x.scope, t)}
+              </span>
               <span className="ml-auto text-[0.66rem] text-muted-foreground">
                 {x.expiresAt && t('ps.mcpAccess.expires', { when: fmt.date(x.expiresAt) })}
               </span>
+              {x.mine && (
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={t('ps.mcpScope.edit')}
+                  title={t('ps.mcpScope.edit')}
+                  onClick={() => edit('token', x)}
+                >
+                  <SlidersHorizontal size={13} />
+                </button>
+              )}
               <button
                 type="button"
                 className="text-muted-foreground hover:text-red-500"
@@ -246,7 +330,7 @@ export function McpAccess({
       )}
 
       {creating && (
-        <Dialog title={t('ps.mcpAccess.new')} onClose={() => setCreating(false)}>
+        <Dialog title={t('ps.mcpAccess.new')} onClose={() => setCreating(false)} wide>
           <form className="space-y-3" onSubmit={create}>
             <label className="block">
               <span className="mb-1 block text-[0.7rem] text-muted-foreground">
@@ -293,13 +377,54 @@ export function McpAccess({
                 </span>
               </label>
             )}
+            <McpScopeEditor
+              scope={scope}
+              onChange={setScope}
+              canWrite={mayBuild && canWrite}
+              datasets={datasets}
+              pipelines={pipelines}
+            />
             <p className="text-[0.68rem] text-muted-foreground">{t('ps.mcpAccess.rights')}</p>
             <div className="flex justify-end gap-2">
               <button type="button" className={buttonCls} onClick={() => setCreating(false)}>
                 {t('common.cancel')}
               </button>
-              <button type="submit" className={primaryCls} disabled={busy || !name.trim()}>
+              <button
+                type="submit"
+                className={primaryCls}
+                disabled={busy || !name.trim() || noTools(scope, mayBuild && canWrite)}
+              >
                 {t('ps.mcpAccess.create')}
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
+
+      {editing && (
+        <Dialog
+          title={t('ps.mcpScope.editTitle', { name: editing.name })}
+          onClose={() => setEditing(null)}
+          wide
+        >
+          <form className="space-y-3" onSubmit={saveScope}>
+            <McpScopeEditor
+              scope={editing.scope}
+              onChange={(next) => setEditing({ ...editing, scope: next })}
+              canWrite={editing.canWrite}
+              datasets={datasets}
+              pipelines={pipelines}
+            />
+            <div className="flex justify-end gap-2">
+              <button type="button" className={buttonCls} onClick={() => setEditing(null)}>
+                {t('common.cancel')}
+              </button>
+              <button
+                type="submit"
+                className={primaryCls}
+                disabled={busy || noTools(editing.scope, editing.canWrite)}
+              >
+                {t('common.save')}
               </button>
             </div>
           </form>

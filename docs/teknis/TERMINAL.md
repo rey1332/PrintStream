@@ -440,6 +440,17 @@ tunnel, with `ETNA_PUBLIC_URL` set to that address and `TRUST_PROXY`
 - **Tools that write** (only for a token or connection allowed to build
   pipelines; others are not offered them): `create_pipeline`,
   `update_pipeline`.
+- **What it may use** (`db/migrations/20261012000060_mcp_scopes.sql`): each
+  token and connected app can be limited to some tools and, optionally, to
+  some datasets and pipelines: chosen when the token is made (tools only on
+  the consent page) and changed later by its owner under **Terminal → AI →
+  MCP access → Change access**. Outside its scope a dataset or pipeline does
+  not exist for the assistant: lists leave it out, reads say "not found", a
+  graph that names it is refused, and the health report shows only what it
+  may see. The database checks the writes again (the tool, the pipeline and
+  every dataset of the graph). A pipeline the assistant creates joins its
+  list, so it can keep editing it. Tokens and apps made before have no
+  scope and keep everything.
 - **Rights**: the member's own, in that Terminal only: row-level security and
   the masking views as in the app, restricted pipelines hidden, dataset
   previews in the data-access log. A token needs `pipelines.view`; where the
