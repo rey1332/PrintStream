@@ -27,6 +27,7 @@ you want.
 ## What you can do with it
 
 **Run the business**
+
 - Sales, purchasing, inventory, accounting, tax, HR and payroll modules.
 - Several companies (workspaces) on one server, each fully separated.
 - Roles such as Owner, Admin and Finance, plus custom roles with exactly the
@@ -34,6 +35,7 @@ you want.
 - A dashboard with receivables, revenue and trends at a glance.
 
 **Understand the data**
+
 - Import files, connect databases and APIs, and keep it all as datasets.
 - Build pipelines visually: filter, join, aggregate, pivot, then schedule them.
 - Twelve chart types inside a pipeline, from bar, line and area to scatter,
@@ -45,12 +47,14 @@ you want.
 - A Query Tool for when SQL is simply quicker.
 
 **Work with AI assistants, safely**
+
 - Connect Claude or another assistant through MCP. It can read datasets,
   profile them and draft pipelines for you.
 - You choose, per connection, which tools it may use and which datasets it
   may see. Assistants can never write code steps.
 
 **Stay in control**
+
 - Password plus two-factor sign-in; sensitive actions require two-factor.
 - Every important change goes into an audit log.
 - One command for backups, encrypted off-site copies, restores and moving
@@ -71,11 +75,11 @@ sees another's rows, even if the app had a bug.
 
 ## Getting started
 
-| Where | What to read |
-|---|---|
+| Where                      | What to read                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Ubuntu Server (production) | [docs/PANDUAN.md §3](docs/PANDUAN.md#3-pasang-di-ubuntu-server-untuk-dipakai-kantor): `install.sh`, then manage it with `psctl` |
-| Windows (development) | [docs/PANDUAN.md §4](docs/PANDUAN.md#4-pasang-di-windows-pc-development) |
-| Updating | [docs/PANDUAN.md §6](docs/PANDUAN.md#6-update-ke-versi-baru) |
+| Windows (development)      | [docs/PANDUAN.md §4](docs/PANDUAN.md#4-pasang-di-windows-pc-development)                                                        |
+| Updating                   | [docs/PANDUAN.md §6](docs/PANDUAN.md#6-update-ke-versi-baru)                                                                    |
 
 Built with Next.js, PostgreSQL and Node.js. No cloud service is required:
 sign-in, two-factor and your business data never leave your server.
