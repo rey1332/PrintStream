@@ -719,6 +719,27 @@ export async function uploadImport(
   }
 }
 
+// ─── Pipeline code (JavaScript steps, 20261012000061) ───────────────────────
+
+export async function getPipelineCode(ctx: TerminalContext, body: any) {
+  const ws = uuid(body.workspaceId);
+  return run(ctx, async (tx) => {
+    const { rows } = await tx.query(
+      `SELECT public.ps_pipeline_code_enabled($1) AS enabled,
+              public.erp_has_permission($1, 'pipelines.code') AS can_write`,
+      [ws]
+    );
+    return { enabled: rows[0]?.enabled === true, canWrite: rows[0]?.can_write === true };
+  });
+}
+
+export async function setPipelineCode(ctx: TerminalContext, body: any) {
+  const ws = uuid(body.workspaceId);
+  await run(ctx, (tx) =>
+    tx.query('SELECT public.ps_set_pipeline_code($1, $2)', [ws, body.enabled === true])
+  );
+}
+
 // ─── MCP access tokens ───────────────────────────────────────────────────────
 // The token is made here and shown once; the database keeps its SHA-256.
 

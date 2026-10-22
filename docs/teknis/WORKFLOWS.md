@@ -51,8 +51,36 @@ the catalog.
   colour-blind separation on the light and dark surfaces; every chart has a
   legend (two or more series), a table view and an *Open large* view.
 
+- **JavaScript** (`tf.code`, `db/migrations/20261012000061_pipeline_code.sql`):
+  a step whose code a member writes, as the body of a function of `rows`,
+  `columns` and `h` (helpers: `num`, `round`, `sum`, `avg`, `groupBy`, `date`,
+  `daysBetween`) that returns an array of rows. See "Code step" below.
+
 The editor shows each field's business name, module, type, meaning and how it
 relates to the source, before and after running.
+
+## Code step
+
+- **Off by default.** The Owner switches it on per workspace (Terminal →
+  Pipelines, two-factor); switching it off stops code steps at the next run,
+  nothing else. Both are in the workspace audit log.
+- **Who writes code.** The permission *Write pipeline code*
+  (`pipelines.code`): the Owner has it; custom roles may be given it (it
+  needs two-factor); Admins do not have it. A trigger on `workflows` checks
+  every save that adds or changes a code step (removing one needs no right),
+  and writes the change to the audit log with the code's SHA-256 and length.
+  MCP connections never add or change code; they keep what a person wrote.
+- **Where it runs.** `src/server/workflow/codeRunner.ts` starts
+  `scripts/server/code-sandbox.mjs` for each step: a separate Node.js process
+  with an **empty environment** (no database addresses, keys or paths), killed
+  past its time. Inside it the code runs in **QuickJS** (WebAssembly): only the
+  rows, column names and helpers exist — no `require`/`import` of modules, no
+  `process`, files, network or timers. Limits: 10 seconds (interrupt handler),
+  128 MB of memory, 1 MB of stack, 100,000 rows in and out, 200 columns.
+- **Results.** An array of objects; nested values become JSON text, columns
+  keep the first-seen order, kept columns keep their type and lineage.
+  `console.log` lines (up to 50) show as notices. Errors give the line of the
+  member's own code. The step's columns are known only after a run.
 
 ## Auto-refresh
 

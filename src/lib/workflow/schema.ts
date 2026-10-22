@@ -287,6 +287,9 @@ function outputSchema(
       };
     case 'an.fitDistribution':
       return { out: null };
+    // The member's code decides the columns: known once it has run.
+    case 'tf.code':
+      return { out: null };
     default:
       return {};
   }

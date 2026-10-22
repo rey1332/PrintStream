@@ -51,7 +51,7 @@ const CALLABLE = [
   'ps_rows_write', 'ps_rows_finish_replace', 'ps_rows_undo_source', 'ps_row_update', 'ps_rows_delete', 'ps_record_lineage',
   'ps_can_see_import', 'ps_create_import', 'ps_reanalyze_import', 'ps_commit_import', 'ps_cancel_import',
   'ps_can_access_pipeline', 'ps_set_pipeline_enabled',
-  'erp_my_terminals', 'erp_set_terminal', 'erp_create_terminal', 'ps_my_spaces', 'ps_link_erp', 'ps_unlink_erp',
+  'erp_my_terminals', 'erp_set_terminal', 'ps_set_pipeline_code', 'ps_pipeline_code_enabled', 'erp_create_terminal', 'ps_my_spaces', 'ps_link_erp', 'ps_unlink_erp',
   'erp_request_company_export', 'erp_company_exports', 'erp_company_export_file',
   'ps_save_connection', 'ps_delete_connection', 'ps_create_sync', 'ps_set_sync', 'ps_delete_sync', 'ps_create_source_sync', 'ps_approve_mcp_tool',
   'ps_save_ai_provider', 'ps_delete_ai_provider', 'ps_set_ai_personal_key', 'ps_has_ai_personal_key', 'ps_set_ai_policy', 'ps_set_ai_settings',

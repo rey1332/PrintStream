@@ -3,6 +3,7 @@
 // runs for. The same executor as the editor's runs; here the "Write to
 // dataset" node really writes.
 
+import { runCodeStep } from '@/server/workflow/codeRunner';
 import { createHash } from 'node:crypto';
 import {
   QueryExecutionError,
@@ -72,6 +73,34 @@ export function datasetReader(
 }
 
 /**
+ * Code steps of a workspace's pipelines, in the sandbox. Whether the Owner
+ * still allows code there is asked once per run (switched off: the steps fail,
+ * the rest of the run goes on as usual).
+ */
+export function pipelineCodeRunner(
+  executor: Executor,
+  identity: RequestIdentity,
+  workspaceId: string | null,
+  path: string
+): RuntimeContext['runCode'] {
+  let allowed: Promise<boolean> | null = null;
+  return async ({ code, table }) => {
+    allowed ??= workspaceId
+      ? asUser(
+          executor,
+          identity,
+          path,
+          async (tx) =>
+            (await tx.query('SELECT public.ps_pipeline_code_enabled($1) AS on', [workspaceId]))
+              .rows[0]?.on === true
+        ).catch(() => false)
+      : Promise.resolve(false);
+    if (!(await allowed)) throw new WorkflowError('wf.err.codeOff');
+    return runCodeStep({ code, table });
+  };
+}
+
+/**
  * What a run reads (ERP records, summaries, datasets), as the user; without
  * the writes, a run only shows what it would write (the editor, MCP test runs).
  */
@@ -114,6 +143,7 @@ export function readingContext(
       }
     },
     readDataset: datasetReader(executor, identity, path),
+    runCode: pipelineCodeRunner(executor, identity, workspaceId, path),
   };
 }
 

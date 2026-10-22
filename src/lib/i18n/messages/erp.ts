@@ -289,6 +289,21 @@ export const erpMessages = {
     zh: '已创建工作区',
   },
   'audit.invitation.created': { en: 'Invitation created', id: 'Undangan dibuat', zh: '已创建邀请' },
+  'audit.pipeline.codeEnabled': {
+    en: 'Pipeline code switched on',
+    id: 'Kode pipeline dinyalakan',
+    zh: '已开启管道代码',
+  },
+  'audit.pipeline.codeDisabled': {
+    en: 'Pipeline code switched off',
+    id: 'Kode pipeline dimatikan',
+    zh: '已关闭管道代码',
+  },
+  'audit.pipeline.codeChanged': {
+    en: 'Pipeline code changed',
+    id: 'Kode pipeline diubah',
+    zh: '管道代码已修改',
+  },
   'audit.invitation.redeemed': {
     en: 'Invitation used',
     id: 'Undangan digunakan',
