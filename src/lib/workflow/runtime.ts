@@ -57,6 +57,11 @@ export interface RuntimeContext {
     spec: { datasetId: string; mode: DatasetWriteMode },
     table: DataTable
   ) => Promise<{ written: number; rejected: number }>;
+  /**
+   * Code steps (tf.code), run in the sandbox (src/server/workflow/codeRunner.ts);
+   * absent where code cannot run (the browser).
+   */
+  runCode?: (spec: { code: string; table: DataTable }) => Promise<DataTable>;
 }
 
 export const DATASET_READ_LIMIT = 100_000;
@@ -600,6 +605,13 @@ export const RUNTIME: Record<string, NodeRuntime> = {
       return direction === 'desc' ? -r : r;
     });
     return withRows(table, rows);
+  }),
+
+  // The member's own JavaScript, in the sandbox (docs/teknis/WORKFLOWS.md, "Code step").
+  'tf.code': transform(async (cfg, [input], ctx) => {
+    const table = requireInput(input);
+    if (!ctx.runCode) throw new WorkflowError('wf.err.codeUnavailable');
+    return ctx.runCode({ code: String(cfg.code ?? ''), table });
   }),
 
   'tf.limit': transform(async (cfg, [input]) => {

@@ -193,6 +193,79 @@ export const workflowMessages = {
   'wf.node.out.table': { en: 'Table View', id: 'Tampilan Tabel', zh: '表格视图' },
   'wf.node.out.barChart': { en: 'Bar Chart', id: 'Grafik Batang', zh: '柱状图' },
   'wf.node.out.chart': { en: 'Chart', id: 'Grafik', zh: '图表' },
+  'wf.node.tf.code': { en: 'JavaScript', id: 'JavaScript', zh: 'JavaScript' },
+  'wf.desc.tf.code': {
+    en: 'Your own code turns the rows into new rows (sandboxed)',
+    id: 'Kode Anda sendiri mengubah baris menjadi baris baru (di sandbox)',
+    zh: '用您自己的代码把行转换成新行（沙箱中运行）',
+  },
+  'wf.field.code': { en: 'Code', id: 'Kode', zh: '代码' },
+  'wf.hint.tf.code.code': {
+    en: 'The body of a function of rows (objects), columns (names) and h (helpers: num, round, sum, avg, groupBy, date, daysBetween). Return an array of rows. console.log lines show under the result. No network, files or modules; at most 10 seconds, 128 MB and 100,000 rows.',
+    id: 'Isi fungsi dengan rows (objek), columns (nama kolom) dan h (helper: num, round, sum, avg, groupBy, date, daysBetween). Kembalikan array baris. Baris console.log tampil di bawah hasil. Tanpa jaringan, file atau modul; paling lama 10 detik, 128 MB dan 100.000 baris.',
+    zh: '函数体，参数为 rows（对象）、columns（列名）和 h（辅助：num、round、sum、avg、groupBy、date、daysBetween）。返回行数组。console.log 输出显示在结果下方。无网络、文件或模块；最多 10 秒、128 MB、100,000 行。',
+  },
+  'wf.err.codeUnavailable': {
+    en: 'Code steps run on the server only.',
+    id: 'Langkah kode hanya berjalan di server.',
+    zh: '代码步骤仅在服务器上运行。',
+  },
+  'wf.err.codeOff': {
+    en: 'Pipeline code is switched off in this workspace (Terminal → Pipelines; the Owner switches it on).',
+    id: 'Kode pipeline dimatikan di workspace ini (Terminal → Pipelines; Owner yang menyalakannya).',
+    zh: '此工作区已关闭管道代码（Terminal → 管道；由所有者开启）。',
+  },
+  'wf.err.codeEmpty': {
+    en: 'Write the code first.',
+    id: 'Tulis kodenya dulu.',
+    zh: '请先编写代码。',
+  },
+  'wf.err.codeNotArray': {
+    en: 'The code must return an array of rows, e.g. return rows;',
+    id: 'Kode harus mengembalikan array baris, misalnya return rows;',
+    zh: '代码必须返回行数组，例如 return rows;',
+  },
+  'wf.err.codeNotRow': {
+    en: 'Row {index} of the result is not an object.',
+    id: 'Baris ke-{index} hasil bukan objek.',
+    zh: '结果的第 {index} 行不是对象。',
+  },
+  'wf.err.codeTooManyRows': {
+    en: 'At most {max} rows go in or come out of a code step.',
+    id: 'Paling banyak {max} baris masuk atau keluar dari langkah kode.',
+    zh: '代码步骤输入或输出最多 {max} 行。',
+  },
+  'wf.err.codeTooManyColumns': {
+    en: 'At most {max} columns come out of a code step.',
+    id: 'Paling banyak {max} kolom keluar dari langkah kode.',
+    zh: '代码步骤最多输出 {max} 列。',
+  },
+  'wf.err.code.syntax': {
+    en: 'Syntax error on line {line}: {message}',
+    id: 'Kesalahan penulisan di baris {line}: {message}',
+    zh: '第 {line} 行语法错误：{message}',
+  },
+  'wf.err.code.runtime': {
+    en: 'The code failed on line {line}: {message}',
+    id: 'Kode gagal di baris {line}: {message}',
+    zh: '代码在第 {line} 行出错：{message}',
+  },
+  'wf.err.code.timeout': {
+    en: 'The code took longer than {seconds} seconds and was stopped.',
+    id: 'Kode berjalan lebih dari {seconds} detik dan dihentikan.',
+    zh: '代码运行超过 {seconds} 秒，已停止。',
+  },
+  'wf.err.code.memory': {
+    en: 'The code used more than {mb} MB of memory and was stopped.',
+    id: 'Kode memakai lebih dari {mb} MB memori dan dihentikan.',
+    zh: '代码使用内存超过 {mb} MB，已停止。',
+  },
+  'wf.err.code.result': {
+    en: 'The code step did not give a usable result: {message}',
+    id: 'Langkah kode tidak memberi hasil yang bisa dipakai: {message}',
+    zh: '代码步骤没有给出可用结果：{message}',
+  },
+  'wf.notice.codeLog': { en: 'log: {line}', id: 'log: {line}', zh: '日志：{line}' },
   'wf.desc.out.chart': {
     en: 'Bar, stacked, line, area, combo, pie, donut, scatter, histogram, heatmap or pivot table',
     id: 'Batang, bertumpuk, garis, area, kombinasi, pie, donat, sebaran, histogram, heatmap atau tabel pivot',

@@ -11,7 +11,7 @@ import { buildSummarySql, shapeSummary } from '@/server/analytics/summary-sql';
 import { selectAsUser } from '@/server/analytics/summary-run';
 import { identityOf, sessionFromCookies } from '@/server/auth/request';
 import { getAppExecutor } from '@/server/config';
-import { datasetReader } from '@/server/terminal/pipelines';
+import { datasetReader, pipelineCodeRunner } from '@/server/terminal/pipelines';
 import { erpWorkspaceFor } from '@/server/terminal/erpLinks';
 import { WorkflowError } from '@/lib/workflow/errors';
 import { executeWorkflow, forDisplay, outputRowCount, summarize } from '@/lib/workflow/executor';
@@ -144,6 +144,12 @@ export const POST = withAuth(async ({ userId, request }) => {
               readDataset: datasetReader(
                 getAppExecutor(),
                 identityOf(session),
+                '/terminal/pipeline/preview'
+              ),
+              runCode: pipelineCodeRunner(
+                getAppExecutor(),
+                identityOf(session),
+                workspaceId,
                 '/terminal/pipeline/preview'
               ),
             }

@@ -40,6 +40,7 @@ import { Connections } from './components/Connections';
 import { Insights } from './components/Insights';
 import { HealthPanel } from './components/Health';
 import { JobList, JobsPanel } from './components/Jobs';
+import { PipelineCodeSetting } from './components/PipelineCodeSetting';
 import { McpAccess } from './components/McpAccess';
 import { Empty, Status, buttonCls, bytes, errorMessage, primaryCls } from './components/shared';
 import { QueryTool, type QueryToolHandle } from './query/QueryTool';
@@ -594,6 +595,7 @@ function TerminalPage() {
 
               {data && tab === 'pipelines' && (
                 <div className="space-y-3">
+                  <PipelineCodeSetting workspaceId={ws} isOwner={can('roles.manage')} />
                   {(can('pipelines.create') || can('read')) && (
                     <button type="button" className={primaryCls} onClick={newPipeline}>
                       <Plus size={13} /> {t('ps.pl.new')}

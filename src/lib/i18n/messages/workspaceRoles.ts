@@ -100,6 +100,11 @@ export const workspaceRoleMessages = {
     zh: '停用管道',
   },
   'perm.pipelines.delete': { en: 'Delete pipelines', id: 'Menghapus pipeline', zh: '删除管道' },
+  'perm.pipelines.code': {
+    en: 'Write pipeline code (JavaScript steps)',
+    id: 'Menulis kode pipeline (langkah JavaScript)',
+    zh: '编写管道代码（JavaScript 步骤）',
+  },
   'perm.approvals.decide': {
     en: 'Approve high-impact actions',
     id: 'Menyetujui tindakan berdampak besar',

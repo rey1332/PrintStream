@@ -23,6 +23,8 @@ const ACTIONS: Record<string, (ctx: terminal.TerminalContext, body: any) => Prom
   'import.cancel': terminal.cancelImport,
   'job.cancel': terminal.cancelJob,
   'job.retry': terminal.retryJob,
+  'pipelineCode.get': terminal.getPipelineCode,
+  'pipelineCode.set': terminal.setPipelineCode,
   'mcpTokens.list': terminal.listMcpTokens,
   'mcpToken.create': terminal.createMcpToken,
   'mcpToken.revoke': terminal.revokeMcpToken,

@@ -22,7 +22,7 @@ export const ERP_PERMISSIONS = [
   'audit',
 ] as const;
 
-// Mirrors public.erp_all_permissions() (db/migrations/20261012000030_workspace_custom_roles.sql).
+// Mirrors public.erp_all_permissions() (db/migrations/20261012000061_pipeline_code.sql).
 export const TERMINAL_PERMISSIONS = [
   'roles.manage',
   'policies.manage',
@@ -46,6 +46,7 @@ export const TERMINAL_PERMISSIONS = [
   'pipelines.publish',
   'pipelines.disable',
   'pipelines.delete',
+  'pipelines.code',
   'approvals.decide',
 ] as const;
 
@@ -65,6 +66,7 @@ export const SENSITIVE_PERMISSIONS: readonly Permission[] = [
   'datasets.export',
   'data.sensitive',
   'approvals.decide',
+  'pipelines.code',
 ];
 
 /** How the role editor groups permissions. */
@@ -89,7 +91,10 @@ const FULL_ACCESS: Permission[] = [...PERMISSIONS];
 
 export const ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
   owner: FULL_ACCESS,
-  admin: FULL_ACCESS.filter((p) => p !== 'roles.manage' && p !== 'data.sensitive'),
+  // Writing pipeline code is the Owner's, or a custom role's (20261012000061).
+  admin: FULL_ACCESS.filter(
+    (p) => p !== 'roles.manage' && p !== 'data.sensitive' && p !== 'pipelines.code'
+  ),
   finance: [
     'read',
     'invoicing',

@@ -121,6 +121,15 @@ export const CORE_NODE_INFO: NodeInfo[] = [
     defaultConfig: { leftKey: 'id', rightKey: 'id', joinType: 'inner' },
   },
   {
+    type: 'tf.code',
+    category: 'transform',
+    label: 'JavaScript',
+    description: 'Your own code turns the rows into new rows (sandboxed)',
+    defaultConfig: {
+      code: '// rows: the input rows; columns: their names; h: helpers\nreturn rows.map((r) => ({ ...r }));',
+    },
+  },
+  {
     type: 'tf.validate',
     category: 'transform',
     label: 'Validate Data',

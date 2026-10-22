@@ -166,6 +166,63 @@ export const terminalOpsMessages = {
     zh: '{name} 可使用的内容',
   },
   'ps.mcpScope.saved': { en: 'Access saved', id: 'Akses disimpan', zh: '访问权限已保存' },
+  'ps.err.code_off': {
+    en: 'Pipeline code is switched off in this workspace; the Owner switches it on under Terminal → Pipelines.',
+    id: 'Kode pipeline dimatikan di workspace ini; Owner menyalakannya di Terminal → Pipelines.',
+    zh: '此工作区已关闭管道代码；所有者可在 Terminal → 管道 中开启。',
+  },
+  'ps.err.code_not_allowed': {
+    en: 'Writing pipeline code needs the "Write pipeline code" permission and two-factor.',
+    id: 'Menulis kode pipeline butuh izin "Menulis kode pipeline" dan two-factor.',
+    zh: '编写管道代码需要“编写管道代码”权限和双重验证。',
+  },
+  'ps.err.code_via_mcp': {
+    en: 'An assistant cannot write pipeline code; a person adds code steps in the editor.',
+    id: 'Asisten tidak bisa menulis kode pipeline; orang yang menambahkan langkah kode di editor.',
+    zh: '助手不能编写管道代码；代码步骤需由人在编辑器中添加。',
+  },
+  'ps.code.offTitle': {
+    en: 'JavaScript steps are off',
+    id: 'Langkah JavaScript dimatikan',
+    zh: 'JavaScript 步骤已关闭',
+  },
+  'ps.code.onTitle': {
+    en: 'JavaScript steps are on',
+    id: 'Langkah JavaScript dinyalakan',
+    zh: 'JavaScript 步骤已开启',
+  },
+  'ps.code.offHint': {
+    en: 'Pipelines cannot contain code. The Owner can switch it on; then only roles with "Write pipeline code" add or change code, every change is in the audit log.',
+    id: 'Pipeline tidak bisa berisi kode. Owner bisa menyalakannya; setelah itu hanya peran dengan izin "Menulis kode pipeline" yang bisa menambah atau mengubah kode, dan setiap perubahan tercatat di log audit.',
+    zh: '管道不能包含代码。所有者可开启；之后只有拥有“编写管道代码”权限的角色可添加或修改代码，每次修改都会记入审计日志。',
+  },
+  'ps.code.onYouCan': {
+    en: 'You may add JavaScript steps. They run in a sandbox: no network, files or server access; every change is in the audit log.',
+    id: 'Anda boleh menambah langkah JavaScript. Kode berjalan di sandbox: tanpa jaringan, file atau akses server; setiap perubahan tercatat di log audit.',
+    zh: '您可以添加 JavaScript 步骤。它们在沙箱中运行：无网络、文件或服务器访问；每次修改都记入审计日志。',
+  },
+  'ps.code.onYouCannot': {
+    en: 'Code steps run; adding or changing one needs the "Write pipeline code" permission.',
+    id: 'Langkah kode berjalan; menambah atau mengubahnya butuh izin "Menulis kode pipeline".',
+    zh: '代码步骤可运行；添加或修改需要“编写管道代码”权限。',
+  },
+  'ps.code.turnOn': { en: 'Switch on', id: 'Nyalakan', zh: '开启' },
+  'ps.code.turnOff': { en: 'Switch off', id: 'Matikan', zh: '关闭' },
+  'ps.code.enableConfirm': {
+    en: 'Switch on JavaScript steps in this workspace? Members with "Write pipeline code" (the Owner, and custom roles you give it) can then add code that reads the pipeline data.',
+    id: 'Nyalakan langkah JavaScript di workspace ini? Anggota dengan izin "Menulis kode pipeline" (Owner, dan peran custom yang Anda beri izin itu) lalu bisa menambah kode yang membaca data pipeline.',
+    zh: '在此工作区开启 JavaScript 步骤？拥有“编写管道代码”权限的成员（所有者及您授予的自定义角色）将可添加读取管道数据的代码。',
+  },
+  'ps.code.enabled': {
+    en: 'JavaScript steps switched on',
+    id: 'Langkah JavaScript dinyalakan',
+    zh: 'JavaScript 步骤已开启',
+  },
+  'ps.code.disabled': {
+    en: 'JavaScript steps switched off',
+    id: 'Langkah JavaScript dimatikan',
+    zh: 'JavaScript 步骤已关闭',
+  },
   'oauth.chooseTools': {
     en: 'Choose which tools it may use (all by default)',
     id: 'Pilih tool yang boleh dipakai (bawaan: semua)',

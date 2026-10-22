@@ -997,7 +997,25 @@ export default function NodeInspector({
                       >
                         {fieldLabel(key, t)}
                       </label>
-                      {typeof defVal === 'number' ? (
+                      {def.type === 'tf.code' && key === 'code' ? (
+                        <textarea
+                          id={inputId}
+                          className={`${inputCls} font-mono text-[0.7rem] leading-relaxed`}
+                          rows={14}
+                          spellCheck={false}
+                          value={config[key] ?? defVal}
+                          onChange={(e) => update(key, e.target.value)}
+                          onKeyDown={(e) => {
+                            // Tab indents instead of leaving the editor.
+                            if (e.key !== 'Tab' || e.shiftKey) return;
+                            e.preventDefault();
+                            const el = e.currentTarget;
+                            const { selectionStart: a, selectionEnd: b, value } = el;
+                            update(key, `${value.slice(0, a)}  ${value.slice(b)}`);
+                            requestAnimationFrame(() => el.setSelectionRange(a + 2, a + 2));
+                          }}
+                        />
+                      ) : typeof defVal === 'number' ? (
                         <input
                           id={inputId}
                           type="number"

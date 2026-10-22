@@ -37,7 +37,10 @@ const strip = ({ type, category, label, description, defaultConfig }: NodeInfo):
 
 /** In the editor palette's order. */
 export const NODE_INFO: NodeInfo[] = [
-  ...CORE_NODE_INFO.filter((m) => m.category === 'source' || m.category === 'transform'),
+  // Code steps are written by a person in the editor, never through MCP.
+  ...CORE_NODE_INFO.filter(
+    (m) => (m.category === 'source' || m.category === 'transform') && m.type !== 'tf.code'
+  ),
   ...UNIFY_META.map(strip),
   ...CORE_NODE_INFO.filter((m) => m.category === 'analysis' || m.category === 'output'),
 ];

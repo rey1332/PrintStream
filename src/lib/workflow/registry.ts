@@ -1,4 +1,5 @@
 import {
+  Braces,
   PieChart,
   Users,
   Truck,
@@ -185,6 +186,7 @@ const ICONS: Record<string, any> = {
   'tf.mapColumn': Hash,
   'tf.join': TableIcon,
   'tf.validate': ShieldCheck,
+  'tf.code': Braces,
   'tf.branch': GitFork,
   'an.describe': Sigma,
   'an.fitDistribution': TrendingUp,
