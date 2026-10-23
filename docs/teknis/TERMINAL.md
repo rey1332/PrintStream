@@ -249,6 +249,43 @@ and a small HTML/XML reader with CSS selectors in `src/lib/terminal/html.ts`).
 
 Not yet verified against live sites: tested with simulated sites only.
 
+## Spreadsheets online (P2)
+
+A connection of kind **Google Sheets / Excel online**
+(`db/migrations/20261012000063_terminal_sheets.sql`,
+`src/server/connectors/sheets.ts`, `src/lib/terminal/sheetSource.ts`) reads
+tabs of spreadsheets into datasets, so nobody exports and uploads a file every
+week. **Sync a sheet** takes the sheet's address, a tab (the first one, or for
+Google the tab in the address, when empty), an optional range (`A1:H500`) and
+the header row; it reads the sheet once to show the columns and a few rows.
+
+- **Google, anyone with the link:** nothing to sign in. The tab is read as
+  CSV (`/export?format=csv&gid=…`, or `/gviz/tq` for a named tab). A private
+  sheet answers with a sign-in page, which is reported as *not shared*.
+- **Google, service account:** the sheet is shared (Viewer) with a service
+  account; its JSON key is sealed in the vault. Each run signs a JWT for the
+  read-only Sheets scope, and reads the values unformatted (numbers stay
+  numbers) with dates as shown.
+- **Microsoft (OneDrive for work, SharePoint):** an app registration in
+  Microsoft Entra with the **Files.Read.All** application permission (admin
+  consent); tenant, client id and secret (sealed). The workbook is found from
+  its sharing link (Graph `/shares/u!…/driveItem`) and read with the workbook
+  API: the used range or the given range, with number formats, so date cells
+  become dates (Excel serial days). Personal OneDrive accounts are not
+  supported.
+- **Rows:** the header row names the columns (trimmed, unique: "Ton",
+  "Ton (2)"; empty names become "Column 4"); rows above it and empty rows are
+  left out. Columns mixing numbers and numeric text are read as numbers. At
+  most 100,000 rows and 2,000,000 cells a sheet.
+- **Change detection:** like a website, each run hashes what it read and
+  leaves the dataset as it is when nothing changed; with a key column rows are
+  updated in place, without one they are replaced.
+- Syncing needs _Use approved connectors_; every request goes through the
+  network guard.
+
+Not yet verified against live Google or Microsoft accounts: tested with
+simulated answers only.
+
 ## Remote MCP servers (P2, read)
 
 A connection of kind **MCP server (remote)** is a Model Context Protocol

@@ -16,6 +16,7 @@ import {
   Plug,
   Plus,
   RefreshCw,
+  Sheet,
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ import { askWorker } from './connectorAsk';
 import { ScheduleForm } from './dialogs';
 import { RestSyncDialog } from './RestSyncDialog';
 import { WebSyncDialog } from './WebSyncDialog';
+import { SheetSyncDialog } from './SheetSyncDialog';
 import { McpSyncDialog, McpToolsDialog } from './McpDialogs';
 import { Dialog, Empty, Status, buttonCls, errorMessage, inputCls, primaryCls } from './shared';
 
@@ -332,10 +334,13 @@ export function Connections({
                     CONNECTORS[c.kind].rest ||
                     CONNECTORS[c.kind].web ||
                     CONNECTORS[c.kind].mcp ||
+                    CONNECTORS[c.kind].sheets ||
                     syncs.length < CONNECTORS[c.kind].objects.length) && (
                     <button type="button" className={buttonCls} onClick={() => setAdding(c)}>
                       {CONNECTORS[c.kind].database ? (
                         <Database size={11} />
+                      ) : CONNECTORS[c.kind].sheets ? (
+                        <Sheet size={11} />
                       ) : CONNECTORS[c.kind].rest ||
                         CONNECTORS[c.kind].web ||
                         CONNECTORS[c.kind].mcp ? (
@@ -351,7 +356,9 @@ export function Connections({
                             ? t('ps.web.add')
                             : CONNECTORS[c.kind].mcp
                               ? t('ps.mcp.add')
-                              : t('ps.sync.add')}
+                              : CONNECTORS[c.kind].sheets
+                                ? t('ps.sheet.add')
+                                : t('ps.sync.add')}
                     </button>
                   )}
               </div>
@@ -416,11 +423,22 @@ export function Connections({
           }}
         />
       )}
+      {adding && CONNECTORS[adding.kind].sheets && (
+        <SheetSyncDialog
+          connection={adding}
+          onClose={() => setAdding(null)}
+          onSaved={() => {
+            setAdding(null);
+            void load();
+          }}
+        />
+      )}
       {adding &&
         !CONNECTORS[adding.kind].database &&
         !CONNECTORS[adding.kind].rest &&
         !CONNECTORS[adding.kind].web &&
-        !CONNECTORS[adding.kind].mcp && (
+        !CONNECTORS[adding.kind].mcp &&
+        !CONNECTORS[adding.kind].sheets && (
           <SyncDialog
             connection={adding}
             taken={data.syncs

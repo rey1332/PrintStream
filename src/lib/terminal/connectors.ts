@@ -13,7 +13,8 @@ export type ConnectorKind =
   | 'postgres'
   | 'rest'
   | 'web'
-  | 'mcp';
+  | 'mcp'
+  | 'sheets';
 export const CONNECTOR_KINDS: readonly ConnectorKind[] = [
   'accurate',
   'jurnal',
@@ -23,6 +24,7 @@ export const CONNECTOR_KINDS: readonly ConnectorKind[] = [
   'rest',
   'web',
   'mcp',
+  'sheets',
 ];
 
 export type ObjectKey =
@@ -139,9 +141,46 @@ export interface ConnectorDef {
   web?: boolean;
   /** A remote MCP server: syncs call an approved tool or read a resource (src/lib/terminal/mcpSource.ts). */
   mcp?: boolean;
+  /** Spreadsheets online: syncs pick a sheet, its tab and range (src/lib/terminal/sheetSource.ts). */
+  sheets?: boolean;
 }
 
 export const CONNECTORS: Record<ConnectorKind, ConnectorDef> = {
+  // Google Sheets, or Excel workbooks in OneDrive / SharePoint (Microsoft Graph).
+  sheets: {
+    fields: [
+      { key: 'provider', kind: 'select', required: true, options: ['google', 'microsoft'] },
+      // A sheet anyone with the link may view needs nothing; a private one is
+      // shared with a service account (its JSON key).
+      {
+        key: 'google_auth',
+        kind: 'select',
+        required: true,
+        options: ['link', 'service_account'],
+        when: { provider: ['google'] },
+      },
+      {
+        key: 'service_account_json',
+        kind: 'secret',
+        required: true,
+        multiline: true,
+        when: { provider: ['google'], google_auth: ['service_account'] },
+      },
+      // An app registration in Microsoft Entra with Files.Read.All (application).
+      {
+        key: 'tenant_id',
+        kind: 'text',
+        required: true,
+        placeholder: 'contoso.onmicrosoft.com',
+        when: { provider: ['microsoft'] },
+      },
+      { key: 'client_id', kind: 'text', required: true, when: { provider: ['microsoft'] } },
+      { key: 'client_secret', kind: 'secret', required: true, when: { provider: ['microsoft'] } },
+    ],
+    objects: [],
+    incremental: [],
+    sheets: true,
+  },
   odoo: {
     fields: [
       { key: 'url', kind: 'url', required: true, placeholder: 'https://company.odoo.com' },

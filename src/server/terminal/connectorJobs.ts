@@ -16,6 +16,7 @@ import { parseDbSource } from '@/lib/terminal/dbSource';
 import { parseRestSource } from '@/lib/terminal/restSource';
 import { parseWebSource } from '@/lib/terminal/webSource';
 import { parseMcpSource } from '@/lib/terminal/mcpSource';
+import { parseSheetSource } from '@/lib/terminal/sheetSource';
 import { ADAPTERS } from '@/server/connectors';
 import { accurateExchangeCode } from '@/server/connectors/accurate';
 import { GuardedHttp } from '@/server/connectors/http';
@@ -28,6 +29,7 @@ import {
   restRevoke,
 } from '@/server/connectors/rest';
 import { collectWeb, describeWeb } from '@/server/connectors/web';
+import { collectSheet, describeSheet } from '@/server/connectors/sheets';
 import { McpClient, describeMcp, inThousands, readMcpOnce } from '@/server/connectors/mcp';
 import type { ConnectorContext } from '@/server/connectors/types';
 import type { Executor } from '@/server/db/executor';
@@ -237,9 +239,15 @@ export async function finishOauth(env: ConnectorJobEnv, payload: any) {
 export async function describe(env: ConnectorJobEnv, payload: any) {
   const c = await connection(env, payload.connection_id);
   const def = CONNECTORS[c.kind];
-  if (!def.database && !def.rest && !def.web && !def.mcp) throw new TerminalError('invalid');
+  if (!def.database && !def.rest && !def.web && !def.mcp && !def.sheets)
+    throw new TerminalError('invalid');
   await requireUse(env, c.workspace_id);
   const ctx = contextOf(env, c);
+  if (def.sheets) {
+    const sheet = parseSheetSource(payload.source);
+    if (!sheet) throw new TerminalError('invalid');
+    return describeSheet(ctx, sheet);
+  }
   if (def.mcp) {
     // No source: the tools (kept for approval) and resources; else one call.
     if (payload.source == null) return recordMcpTools(env, c.id, ctx);
@@ -304,6 +312,7 @@ export async function runSync(env: ConnectorJobEnv, payload: any, jobId: string)
   const api = def.rest ? parseRestSource(sync.source) : null;
   const site = def.web ? parseWebSource(sync.source) : null;
   const call = def.mcp ? parseMcpSource(sync.source) : null;
+  const sheet = def.sheets ? parseSheetSource(sync.source) : null;
   if (
     def.database
       ? !db
@@ -313,7 +322,9 @@ export async function runSync(env: ConnectorJobEnv, payload: any, jobId: string)
           ? !site
           : def.mcp
             ? !call
-            : !def.objects.includes(object)
+            : def.sheets
+              ? !sheet
+              : !def.objects.includes(object)
   )
     throw new TerminalError('invalid');
   const path = '/terminal/connector/sync';
@@ -321,7 +332,8 @@ export async function runSync(env: ConnectorJobEnv, payload: any, jobId: string)
   // by its chosen columns (an API also needs its "changed since" parameter).
   // A website is read in full every time (its change detection is a hash of everything).
   // An MCP call is made in full every time too.
-  const chosen = db ?? api ?? site ?? call;
+  // A spreadsheet too (its change detection is a hash, like a website's).
+  const chosen = db ?? api ?? site ?? call ?? sheet;
   const keyed = chosen ? !!chosen.key : true;
   const changedColumn = db ? db.changed : api ? api.changed : chosen ? null : 'updated_at';
   const canIncrement = db
@@ -353,9 +365,9 @@ export async function runSync(env: ConnectorJobEnv, payload: any, jobId: string)
     const ctx = contextOf(env, c);
     const since = full ? null : sync.cursor.since;
     // A website: read everything first; when it is exactly as last time, nothing is written.
-    let collected: Awaited<ReturnType<typeof collectWeb>> | null = null;
-    if (site) {
-      collected = await collectWeb(ctx, site);
+    let collected: { rows: Record<string, unknown>[]; hash: string } | null = null;
+    if (site || sheet) {
+      collected = site ? await collectWeb(ctx, site) : await collectSheet(ctx, sheet!);
       if (sync.cursor?.hash && sync.cursor.hash === collected.hash) {
         await env.db('select ps_worker.sync_finished($1, true, $2::jsonb, $3, 0, 0, null)', [
           sync.id,

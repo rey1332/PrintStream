@@ -48,6 +48,7 @@ import { terminalConnectorMessages } from './terminalConnectors';
 import { terminalDbSourceMessages } from './terminalDbSources';
 import { terminalRestMessages } from './terminalRest';
 import { terminalWebMessages } from './terminalWeb';
+import { terminalSheetsMessages } from './terminalSheets';
 import { terminalMcpMessages } from './terminalMcp';
 import { terminalAiMessages } from './terminalAi';
 import { taxMessages } from './tax';
@@ -102,6 +103,7 @@ export const messages = {
   ...terminalDbSourceMessages,
   ...terminalRestMessages,
   ...terminalWebMessages,
+  ...terminalSheetsMessages,
   ...terminalMcpMessages,
   ...terminalAiMessages,
 } satisfies Record<string, Entry>;

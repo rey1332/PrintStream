@@ -4,17 +4,17 @@ import type { Entry } from './types';
 export const terminalConnectorMessages = {
   'ps.tab.connections': { en: 'Connections', id: 'Koneksi', zh: '连接' },
   'ps.conn.intro': {
-    en: 'Connect another ERP, a database, a web API, a website or an MCP server and copy its data into datasets, on demand or on a schedule. Passwords and keys are stored encrypted and never shown again.',
-    id: 'Hubungkan ERP lain, database, web API, situs web, atau server MCP dan salin datanya ke dataset, kapan saja atau terjadwal. Kata sandi dan kunci disimpan terenkripsi dan tidak pernah ditampilkan lagi.',
-    zh: '连接其他 ERP、数据库、Web API、网站或 MCP 服务器，并按需或按计划将其数据复制到数据集。密码和密钥加密保存，不再显示。',
+    en: 'Connect another ERP, a database, a web API, a website, an MCP server or a Google / Excel spreadsheet and copy its data into datasets, on demand or on a schedule. Passwords and keys are stored encrypted and never shown again.',
+    id: 'Hubungkan ERP lain, database, web API, situs web, server MCP, atau spreadsheet Google / Excel dan salin datanya ke dataset, kapan saja atau terjadwal. Kata sandi dan kunci disimpan terenkripsi dan tidak pernah ditampilkan lagi.',
+    zh: '连接其他 ERP、数据库、Web API、网站、MCP 服务器或 Google / Excel 表格，并按需或按计划将其数据复制到数据集。密码和密钥加密保存，不再显示。',
   },
   'ps.conn.new': { en: 'New connection', id: 'Koneksi baru', zh: '新建连接' },
   'ps.conn.editTitle': { en: 'Change “{name}”', id: 'Ubah “{name}”', zh: '修改“{name}”' },
   'ps.conn.empty': { en: 'No connections yet', id: 'Belum ada koneksi', zh: '还没有连接' },
   'ps.conn.emptyHint': {
-    en: 'Accurate Online, Jurnal, Odoo, SAP Business One, PostgreSQL, any REST API, websites and MCP servers can be connected.',
-    id: 'Accurate Online, Jurnal, Odoo, SAP Business One, PostgreSQL, REST API apa pun, situs web, dan server MCP dapat dihubungkan.',
-    zh: '可连接 Accurate Online、Jurnal、Odoo、SAP Business One、PostgreSQL、任意 REST API、网站和 MCP 服务器。',
+    en: 'Accurate Online, Jurnal, Odoo, SAP Business One, PostgreSQL, any REST API, websites, MCP servers, Google Sheets and Excel online can be connected.',
+    id: 'Accurate Online, Jurnal, Odoo, SAP Business One, PostgreSQL, REST API apa pun, situs web, server MCP, Google Sheets, dan Excel online dapat dihubungkan.',
+    zh: '可连接 Accurate Online、Jurnal、Odoo、SAP Business One、PostgreSQL、任意 REST API、网站、MCP 服务器、Google 表格和 Excel 在线版。',
   },
   'ps.conn.noAccess': {
     en: 'Your role does not use connections.',

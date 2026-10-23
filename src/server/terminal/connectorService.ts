@@ -17,6 +17,7 @@ import {
   restSourceLabel,
 } from '@/lib/terminal/restSource';
 import { parseWebSource, webSourceLabel } from '@/lib/terminal/webSource';
+import { parseSheetSource, sheetSourceLabel } from '@/lib/terminal/sheetSource';
 import { mcpSourceLabel, parseMcpSource } from '@/lib/terminal/mcpSource';
 import { nextRun, scheduleProblem, type ScheduleKind } from '@/lib/terminal/schedule';
 import { sealJson } from '@/server/vault';
@@ -261,21 +262,24 @@ export async function describeConnection(ctx: TerminalContext, body: any) {
         CONNECTORS[kind].database ||
         CONNECTORS[kind].rest ||
         CONNECTORS[kind].web ||
-        CONNECTORS[kind].mcp
+        CONNECTORS[kind].mcp ||
+        CONNECTORS[kind].sheets
       )
     )
       throw new TerminalError('notFound');
     const source =
       body.source == null
         ? null
-        : CONNECTORS[kind].mcp
-          ? parseMcpSource(body.source)
-          : CONNECTORS[kind].web
-            ? parseWebSource(body.source)
-            : CONNECTORS[kind].rest
-              ? parseRestSource(body.source)
-              : parseDbSource(body.source);
-    if ((body.source != null || CONNECTORS[kind].web) && !source)
+        : CONNECTORS[kind].sheets
+          ? parseSheetSource(body.source)
+          : CONNECTORS[kind].mcp
+            ? parseMcpSource(body.source)
+            : CONNECTORS[kind].web
+              ? parseWebSource(body.source)
+              : CONNECTORS[kind].rest
+                ? parseRestSource(body.source)
+                : parseDbSource(body.source);
+    if ((body.source != null || CONNECTORS[kind].web || CONNECTORS[kind].sheets) && !source)
       throw new TerminalError('invalid');
     const job = await tx.query(
       `SELECT public.ps_enqueue_job($1, 'connector.describe', $2::jsonb) AS id`,
@@ -328,12 +332,16 @@ export async function createSourceSync(ctx: TerminalContext, body: any) {
         ? parseWebSource(body.source)
         : body.source?.mode === 'mcp'
           ? parseMcpSource(body.source)
-          : parseDbSource(body.source);
+          : body.source?.mode === 'sheet'
+            ? parseSheetSource(body.source)
+            : parseDbSource(body.source);
   if (!source) throw new TerminalError('invalid');
   const columns = datasetColumns(
     body.columns,
     source.key,
-    source.mode === 'web' || source.mode === 'mcp' ? null : source.changed
+    source.mode === 'web' || source.mode === 'mcp' || source.mode === 'sheet'
+      ? null
+      : source.changed
   );
   if (!columns) throw new TerminalError('invalid');
   const name = typeof body.datasetName === 'string' ? body.datasetName.trim().slice(0, 120) : '';
@@ -350,7 +358,9 @@ export async function createSourceSync(ctx: TerminalContext, body: any) {
             ? webSourceLabel(source)
             : source.mode === 'mcp'
               ? mcpSourceLabel(source)
-              : dbSourceLabel(source),
+              : source.mode === 'sheet'
+                ? sheetSourceLabel(source)
+                : dbSourceLabel(source),
         name,
         JSON.stringify(columns),
       ]
