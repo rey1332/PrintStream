@@ -3,13 +3,12 @@
 // (JSON-RPC 2.0, one message per POST, answered with JSON; no server-sent
 // events, no sessions). See /api/mcp and src/server/mcp/tools.ts.
 
-import { APP_VERSION } from '@/server/app-version';
-
 export const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'] as const;
 export const SERVER_INFO = {
   name: 'printstream-terminal',
   title: 'PrintStream Terminal',
-  version: APP_VERSION,
+  // Keep in step with package.json (a JSON import does not load under node --test).
+  version: '1.0.1',
 };
 
 export interface McpTool<C> {
