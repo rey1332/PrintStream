@@ -63,42 +63,46 @@ export const PIVOT_LIMIT = 200;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const listOf = (value: unknown): string[] =>
+export const listOf = (value: unknown): string[] =>
   String(value ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 
-const isBlank = (v: unknown) =>
+export const isBlank = (v: unknown) =>
   v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
 
-function need(input: DataTable | undefined): DataTable {
+export function need(input: DataTable | undefined): DataTable {
   if (!input) throw new WorkflowError('wf.err.noInput');
   return input;
 }
 
-function column(table: DataTable, name: unknown, field: string): string {
+export function column(table: DataTable, name: unknown, field: string): string {
   const c = String(name ?? '').trim();
   if (!c) throw new WorkflowError('wf.err.missingConfig', { field });
   if (!table.columns.includes(c)) throw new WorkflowError('wf.err.unknownColumn', { column: c });
   return c;
 }
 
-function columns(table: DataTable, value: unknown, fallback: string[] = table.columns): string[] {
+export function columns(
+  table: DataTable,
+  value: unknown,
+  fallback: string[] = table.columns
+): string[] {
   const list = listOf(value);
   for (const c of list)
     if (!table.columns.includes(c)) throw new WorkflowError('wf.err.unknownColumn', { column: c });
   return list.length ? list : fallback;
 }
 
-function newName(value: unknown, field: string): string {
+export function newName(value: unknown, field: string): string {
   const name = String(value ?? '').trim();
   if (!name) throw new WorkflowError('wf.err.missingConfig', { field });
   return name;
 }
 
 /** A new table from rows, keeping the input's notes; column types are given or carried. */
-function table(
+export function table(
   input: DataTable,
   cols: string[],
   rows: Row[],
@@ -125,7 +129,7 @@ function table(
   };
 }
 
-function toNumber(v: unknown): number | null {
+export function toNumber(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
   if (isBlank(v) || typeof v === 'boolean') return null;
   const s = String(v);
@@ -133,7 +137,7 @@ function toNumber(v: unknown): number | null {
 }
 
 /** A day (UTC midnight) from a Date, ISO date or time, or dd/mm/yyyy; else null. */
-function toDay(v: unknown): Date | null {
+export function toDay(v: unknown): Date | null {
   if (v instanceof Date) return Number.isNaN(v.getTime()) ? null : v;
   if (isBlank(v)) return null;
   const s = String(v).trim();
@@ -144,9 +148,9 @@ function toDay(v: unknown): Date | null {
 }
 
 const key = (row: Row, cols: string[]) => JSON.stringify(cols.map((c) => row[c] ?? null));
-const round = (n: number, digits = 6) => Number(n.toFixed(digits));
+export const round = (n: number, digits = 6) => Number(n.toFixed(digits));
 
-function aggregate(values: unknown[], op: string): number | null {
+export function aggregate(values: unknown[], op: string): number | null {
   if (op === 'count') return values.filter((v) => !isBlank(v)).length;
   const nums = values.map(toNumber).filter((n): n is number => n !== null);
   if (!nums.length) return null;
@@ -493,6 +497,7 @@ export const UNIFY_META: UnifyMeta[] = [
       column: '',
       outlierMethod: 'iqr',
       threshold: 1.5,
+      partitionBy: '',
     }
   ),
 ];
@@ -509,7 +514,7 @@ export const UNIFY_COLUMN_KEYS: Record<string, string[]> = {
   'tf.dateParts': ['column'],
   'tf.dateDiff': ['startColumn', 'endColumn'],
   'tf.rules': ['rangeColumn', 'allowedColumn'],
-  'an.outliers': ['column'],
+  'an.outliers': ['column', 'partitionBy'],
 };
 export const UNIFY_LIST_KEYS: Record<string, string[]> = {
   'tf.dedupe': ['keyColumns'],
@@ -1063,23 +1068,38 @@ export const UNIFY_RUNTIME: Record<string, UnifyRuntime> = {
     const c = column(t, cfg.column, 'column');
     const method = cfg.outlierMethod === 'zscore' ? 'zscore' : 'iqr';
     const k = Number(cfg.threshold) > 0 ? Number(cfg.threshold) : method === 'iqr' ? 1.5 : 3;
+    // With partitionBy, each value is compared with its own group (a big order is
+    // normal for one customer and unusual for another).
+    const by = isBlank(cfg.partitionBy) ? null : column(t, cfg.partitionBy, 'partitionBy');
     const vals = t.rows.map((r) => toNumber(r[c]));
-    const nums = vals.filter((v): v is number => v !== null).sort((a, b) => a - b);
-    const q = (p: number) => {
-      if (!nums.length) return 0;
-      const pos = (nums.length - 1) * p;
-      const lo = Math.floor(pos);
-      return nums[lo] + (nums[Math.min(lo + 1, nums.length - 1)] - nums[lo]) * (pos - lo);
-    };
-    const mean = nums.reduce((s, v) => s + v, 0) / (nums.length || 1);
-    const sd = Math.sqrt(
-      nums.reduce((s, v) => s + (v - mean) ** 2, 0) / (nums.length > 1 ? nums.length - 1 : 1)
+    const groups = new Map<string, number[]>();
+    t.rows.forEach((r, i) => {
+      const g = by ? key(r, [by]) : '';
+      const list = groups.get(g) ?? [];
+      if (vals[i] !== null) list.push(vals[i] as number);
+      groups.set(g, list);
+    });
+    const stats = new Map(
+      [...groups].map(([g, list]) => {
+        const nums = list.sort((a, b) => a - b);
+        const q = (p: number) => {
+          if (!nums.length) return 0;
+          const pos = (nums.length - 1) * p;
+          const lo = Math.floor(pos);
+          return nums[lo] + (nums[Math.min(lo + 1, nums.length - 1)] - nums[lo]) * (pos - lo);
+        };
+        const mean = nums.reduce((s, v) => s + v, 0) / (nums.length || 1);
+        const sd = Math.sqrt(
+          nums.reduce((s, v) => s + (v - mean) ** 2, 0) / (nums.length > 1 ? nums.length - 1 : 1)
+        );
+        const [q1, q3] = [q(0.25), q(0.75)];
+        return [g, { mean, sd, q1, q3, iqr: q3 - q1 }];
+      })
     );
-    const [q1, q3] = [q(0.25), q(0.75)];
-    const iqr = q3 - q1;
     const rows = t.rows.map((r, i) => {
       const v = vals[i];
       if (v === null) return { ...r, is_outlier: null, outlier_score: null };
+      const { mean, sd, q1, q3, iqr } = stats.get(by ? key(r, [by]) : '')!;
       const score =
         method === 'iqr'
           ? iqr

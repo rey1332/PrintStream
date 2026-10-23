@@ -2,6 +2,7 @@
 
 import { ChartOutput } from './ChartOutput';
 import { CHART_FORMATS, CHART_KINDS, CHART_SORTS } from '@/lib/workflow/chartData';
+import { COHORT_PERIODS, PERIODS } from '@/lib/workflow/analyticsNodes';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NODE_REGISTRY } from '@/lib/workflow/registry';
 import type { WorkflowNode, DataTable } from '@/lib/workflow/types';
@@ -704,6 +705,11 @@ const COLUMN_PICKERS: Record<string, number> = {
   endColumn: 0,
   rangeColumn: 0,
   allowedColumn: 0,
+  itemColumn: 0,
+  customerColumn: 0,
+  dateColumn: 0,
+  amountColumn: 0,
+  partyColumn: 0,
 };
 const COLUMN_LISTS = new Set([
   'columns',
@@ -801,6 +807,8 @@ export default function NodeInspector({
     datePart: ['year', 'quarter', 'month', 'week', 'day', 'weekday', 'year_month'],
     diffUnit: ['days', 'weeks', 'months', 'years'],
     outlierMethod: ['iqr', 'zscore'],
+    period: [...PERIODS],
+    cohortPeriod: [...COHORT_PERIODS],
     list: ['customers', 'suppliers', 'products'],
     erpMode: ['add_new', 'add_or_update'],
     chartKind: [...CHART_KINDS],

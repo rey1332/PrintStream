@@ -24,6 +24,7 @@ import { fitDistribution } from '@/lib/stats/fitting';
 import type { ColumnLineage, DataTable, DataWarning } from './types';
 import { WorkflowError } from './errors';
 import { UNIFY_RUNTIME } from './unifyNodes';
+import { ANALYTICS_RUNTIME } from './analyticsNodes';
 import { shapeChart } from './chartData';
 
 export interface DatasetReadSpec {
@@ -812,6 +813,7 @@ export const RUNTIME: Record<string, NodeRuntime> = {
 
   // Combining, matching, reshaping and checking (./unifyNodes.ts).
   ...UNIFY_RUNTIME,
+  ...ANALYTICS_RUNTIME,
 
   'out.table': output(async (_cfg, [input]) => requireInput(input)),
   'out.psDataset': output(async (cfg, [input], ctx) => {

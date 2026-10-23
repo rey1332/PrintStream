@@ -16,6 +16,7 @@ import { workflowRunMessages } from './workflowRuns';
 import { securityMessages } from './security';
 import { accountingMessages } from './accounting';
 import { workflowAnalysisMessages } from './workflowAnalysis';
+import { workflowBusinessMessages } from './workflowBusiness';
 import { ontologyMessages } from './ontology';
 import { currencyMessages } from './currency';
 import { sidebarMessages } from './sidebar';
@@ -73,6 +74,7 @@ export const messages = {
   ...securityMessages,
   ...accountingMessages,
   ...workflowAnalysisMessages,
+  ...workflowBusinessMessages,
   ...ontologyMessages,
   ...currencyMessages,
   ...sidebarMessages,

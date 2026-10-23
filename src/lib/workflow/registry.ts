@@ -41,6 +41,7 @@ import { readScope } from '@/app/erp/lib/workspace';
 import { RUNTIME } from './runtime';
 import { CORE_NODE_INFO, type NodeInfo } from './nodeCatalog';
 import { UNIFY_COLORS, UNIFY_META } from './unifyNodes';
+import { ANALYTICS_META } from './analyticsNodes';
 import type { NodeCategory, PickerConfig } from './types';
 import { tr } from '@/lib/i18n/translate';
 
@@ -215,9 +216,9 @@ const META: Meta[] = [
     withLook
   ),
   ...UNIFY_META,
-  ...CORE_NODE_INFO.filter((m) => m.category === 'analysis' || m.category === 'output').map(
-    withLook
-  ),
+  ...CORE_NODE_INFO.filter((m) => m.category === 'analysis').map(withLook),
+  ...ANALYTICS_META,
+  ...CORE_NODE_INFO.filter((m) => m.category === 'output').map(withLook),
 ];
 
 export const NODE_DEFINITIONS: NodeDefinition[] = META.map((m) => {
