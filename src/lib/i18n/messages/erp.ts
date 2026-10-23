@@ -162,9 +162,9 @@ export const erpMessages = {
   },
   'workspace.newCode': { en: 'New access code', id: 'Kode akses baru', zh: '新访问码' },
   'workspace.shownOnce': {
-    en: 'This code is shown only now. Share it privately; the person signs in (or creates an account) and enters it under “Join a workspace”.',
-    id: 'Kode ini hanya ditampilkan sekarang. Bagikan secara pribadi; penerima masuk (atau membuat akun) lalu memasukkannya di “Gabung ke workspace”.',
-    zh: '此访问码仅显示这一次。请私下分享；对方登录（或创建账户）后在“加入工作区”中输入。',
+    en: 'This code is shown only now. Share it privately; the person signs in with their PrintStream account (created by ETNA) and enters it under “Join a workspace”.',
+    id: 'Kode ini hanya ditampilkan sekarang. Bagikan secara pribadi; penerima masuk dengan akun PrintStream-nya (dibuat oleh ETNA) lalu memasukkannya di “Gabung ke workspace”.',
+    zh: '此访问码仅显示这一次。请私下分享；对方使用其 PrintStream 账户（由 ETNA 创建）登录后在“加入工作区”中输入。',
   },
   'workspace.copyFailed': {
     en: 'Copy failed — select the code and copy it manually.',

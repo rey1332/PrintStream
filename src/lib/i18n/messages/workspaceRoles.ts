@@ -171,9 +171,9 @@ export const workspaceRoleMessages = {
     zh: '电子邮件（可选）',
   },
   'workspace.inviteEmailHint': {
-    en: 'With an e-mail address, the code is sent there; a new address also gets an account and a link to choose a password.',
-    id: 'Dengan alamat e-mail, kode dikirim ke sana; alamat baru juga mendapat akun dan tautan untuk membuat kata sandi.',
-    zh: '填写电子邮件后，代码会发送到该地址；新地址还会获得账户和设置密码的链接。',
+    en: 'With an e-mail address, the code is sent there. The address needs a PrintStream account; accounts are created by ETNA.',
+    id: 'Dengan alamat e-mail, kode dikirim ke sana. Alamat itu harus sudah punya akun PrintStream; akun dibuat oleh ETNA.',
+    zh: '填写电子邮件后，代码会发送到该地址。该地址需已有 PrintStream 账户；账户由 ETNA 创建。',
   },
   'workspace.sendInvite': { en: 'Send invitation', id: 'Kirim undangan', zh: '发送邀请' },
   'workspace.inviteSent': {
@@ -182,14 +182,14 @@ export const workspaceRoleMessages = {
     zh: '邀请已发送至 {email}。',
   },
   'workspace.inviteNotSent': {
-    en: 'The e-mail could not be sent. Pass the code (and the password link) on yourself.',
-    id: 'E-mail tidak dapat dikirim. Berikan kode (dan tautan kata sandi) secara langsung.',
-    zh: '电子邮件无法发送。请自行转交代码（以及密码链接）。',
+    en: 'The e-mail could not be sent. Pass the code on yourself.',
+    id: 'E-mail tidak dapat dikirim. Berikan kodenya secara langsung.',
+    zh: '电子邮件无法发送。请自行转交代码。',
   },
   'workspace.inviteMailOff': {
-    en: 'E-mail is not set up on this server. Pass the code (and the password link) on yourself.',
-    id: 'E-mail belum diatur di server ini. Berikan kode (dan tautan kata sandi) secara langsung.',
-    zh: '此服务器未设置电子邮件。请自行转交代码（以及密码链接）。',
+    en: 'E-mail is not set up on this server. Pass the code on yourself.',
+    id: 'E-mail belum diatur di server ini. Berikan kodenya secara langsung.',
+    zh: '此服务器未设置电子邮件。请自行转交代码。',
   },
   'workspace.passwordLink': {
     en: 'Password link for the new account (shown once):',

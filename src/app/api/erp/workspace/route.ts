@@ -165,7 +165,8 @@ export async function POST(request: NextRequest) {
       if (!EMAIL.test(email)) return fail(400, 'Give a valid e-mail address.');
       if (!Number.isInteger(hours) || hours < 1 || hours > 168)
         return fail(400, 'Choose how long the code stays valid.');
-      // The set-password token exists only here and in the e-mail; the database keeps its SHA-256.
+      // Since 20261012000062 only existing accounts are invited (ETNA creates accounts), so
+      // new_account is false; the token is kept for the function's signature.
       const token = newLinkToken();
       const { data, error } = await db.rpc('erp_invite_by_email', {
         p_workspace_id: workspaceId,
