@@ -88,6 +88,8 @@ Run PrintStream on infrastructure you manage.
 
 • Tools for backups, encrypted off site copies, restoration, and server migration.
 
+• Horizontal scaling: add application servers that share one database and the data folder, with Cloudflare Tunnel spreading visitors across them ([guide](docs/teknis/CLUSTER.md)).
+
 ## Architecture
 
 ```text
@@ -138,8 +140,6 @@ PrintStream is still evolving. Some areas we want to develop further include:
 • Ready made connectors for external ERP systems.
 
 • Machine learning for forecasting and anomaly detection.
-
-• Support for multiple application servers sharing a database.
 
 • More tools for data intelligence and business automation.
 

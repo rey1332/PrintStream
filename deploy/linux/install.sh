@@ -14,6 +14,10 @@
 #                                                     the old server or another app server
 #   sudo deploy/linux/install.sh                      later: an update (settings are kept)
 #
+#   sudo deploy/linux/install.sh --database-url <owner url> --settings-from /root/etna.env #        --shared-data 10.0.0.10:/var/lib/etna
+#                                                     an extra app server (docs/teknis/CLUSTER.md): the
+#                                                     first server's data folder over NFS (psctl cluster share)
+#
 # Other options: --yes (no questions), --no-backup (no backup before an update).
 # MIGRATION_DATABASE_URL + PGPASSWORD in the environment work as --database-url.
 #
@@ -57,6 +61,7 @@ DB_URL=${MIGRATION_DATABASE_URL:-}
 SETTINGS_FROM=
 YES=
 NO_BACKUP=
+SHARED_DATA=
 while [ $# -gt 0 ]; do
   case "$1" in
     --local-postgres) LOCAL_PG=1 ;;
@@ -64,6 +69,7 @@ while [ $# -gt 0 ]; do
     --settings-from) SETTINGS_FROM=${2:-}; shift ;;
     --yes) YES=1 ;;
     --no-backup) NO_BACKUP=1 ;;
+    --shared-data) SHARED_DATA=${2:-}; shift ;;
     -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) die "unknown option $1 (--help lists them)." ;;
   esac
@@ -89,13 +95,51 @@ NODE=$(command -v node)
 say "Node.js $(node -v) ($NODE)"
 
 # ─── 2. User and folders ─────────────────────────────────────────────────────
+# Updates of an extra app server remember its shared data folder.
+[ -n "$SHARED_DATA" ] || SHARED_DATA=$({ [ -f "$CTL_FILE" ] && tr -d '\r' <"$CTL_FILE" | sed -n 's/^ETNA_SHARED_DATA=//p' | tail -n 1; } || true)
+# An extra app server mounts the first server's data folder (NFS), and its
+# etna user gets the same uid and gid so the files stay readable everywhere.
+if [ -n "$SHARED_DATA" ]; then
+  "$NODE" --input-type=module -e "
+    import { parseSharedData } from '$SOURCE/scripts/server/lib/psctl-core.mjs';
+    try { parseSharedData(process.argv[1]); } catch (e) { console.error(e.message); process.exit(1); }
+  " "$SHARED_DATA" || die "--shared-data: give host:/path. Nothing was changed."
+  command -v mount.nfs4 >/dev/null || { say "Installing the NFS client"; apt-get install -y nfs-common >/dev/null; }
+  install -d -m 0755 "$DATA_ROOT"
+  if ! findmnt -n "$DATA_ROOT" >/dev/null; then
+    line=$("$NODE" --input-type=module -e "
+      import { fstabLine, upsertFstab } from '$SOURCE/scripts/server/lib/psctl-core.mjs';
+      import fs from 'node:fs';
+      process.stdout.write(upsertFstab(fs.readFileSync('/etc/fstab', 'utf8'), fstabLine(process.argv[1], process.argv[2]), process.argv[2]));
+    " "$SHARED_DATA" "$DATA_ROOT")
+    cp /etc/fstab /etc/fstab.etna-backup
+    printf '%s' "$line" >/etc/fstab
+    systemctl daemon-reload
+    say "Mounting $SHARED_DATA on $DATA_ROOT"
+    mount "$DATA_ROOT" || die "cannot mount $SHARED_DATA (on the first server: psctl cluster share --allow <this network>). /etc/fstab has the line; nothing else was changed."
+  fi
+  data_uid=$(stat -c %u "$DATA_ROOT")
+  data_gid=$(stat -c %g "$DATA_ROOT")
+  [ "$data_uid" != 0 ] || die "$SHARED_DATA belongs to root: it is not an ETNA data folder."
+  if id etna >/dev/null 2>&1; then
+    [ "$(id -u etna)" = "$data_uid" ] && [ "$(id -g etna)" = "$data_gid" ] ||
+      die "the user etna here is $(id -u etna):$(id -g etna), the shared data folder belongs to $data_uid:$data_gid. They must be the same (usermod -u / groupmod -g, or a fresh server)."
+  else
+    say "Creating the system user etna ($data_uid:$data_gid, as on the first server)"
+    getent group "$data_gid" >/dev/null && [ "$(getent group "$data_gid" | cut -d: -f1)" != etna ] &&
+      die "group id $data_gid is taken here by $(getent group "$data_gid" | cut -d: -f1)."
+    getent group etna >/dev/null || groupadd --system --gid "$data_gid" etna
+    useradd --system --uid "$data_uid" --gid "$data_gid" --home-dir "$DATA_ROOT" --no-create-home --shell /usr/sbin/nologin etna
+  fi
+fi
 if ! id etna >/dev/null 2>&1; then
   say "Creating the system user etna"
   useradd --system --home-dir "$DATA_ROOT" --no-create-home --shell /usr/sbin/nologin etna
 fi
 install -d -m 0755 -o root -g root "$PREFIX" "$PREFIX/releases" "$PREFIX/bin"
 install -d -m 0750 -o root -g etna "$CONFIG_DIR"
-install -d -m 0750 -o etna -g etna "$DATA_ROOT"
+# A shared data folder belongs to the first server (root here cannot change it).
+[ -n "$SHARED_DATA" ] || install -d -m 0750 -o etna -g etna "$DATA_ROOT"
 umask 077
 
 # ─── 3. The database ─────────────────────────────────────────────────────────
@@ -265,17 +309,28 @@ say "Installing packages and building (this takes a few minutes)"
   umask 022
   cd "$RELEASE"
   export NEXT_TELEMETRY_DISABLED=1 npm_config_update_notifier=false
+  # The same source gives the same build id on every app server (psctl cluster).
+  ETNA_BUILD_ID=$(cd "$SOURCE" && { git rev-parse HEAD 2>/dev/null ||
+    find package-lock.json next.config.mjs src public -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -c1-40; })
+  export ETNA_BUILD_ID
   npm ci --no-audit --no-fund
   npx --no-install next build
   npm prune --omit=dev --no-audit --no-fund
 )
 # The service only reads the app: owned by root, readable by etna. Next.js
-# keeps its image cache in .next/cache, which points into the data folder.
+# keeps its image cache in .next/cache, which points into the data folder
+# (one per app server: the folder may be shared).
 chown -R root:etna "$RELEASE"
 chmod -R u=rwX,g=rX,o= "$RELEASE"
-install -d -m 0750 -o etna -g etna "$DATA_ROOT/cache" "$DATA_ROOT/cache/next"
+CACHE_DIR=$DATA_ROOT/cache/next
+[ -z "$SHARED_DATA" ] || CACHE_DIR=$DATA_ROOT/cache/next-$(hostname -s)
+if [ -n "$SHARED_DATA" ]; then
+  runuser -u etna -- mkdir -p -m 0750 "$CACHE_DIR"
+else
+  install -d -m 0750 -o etna -g etna "$DATA_ROOT/cache" "$CACHE_DIR"
+fi
 rm -rf "$RELEASE/.next/cache"
-ln -s "$DATA_ROOT/cache/next" "$RELEASE/.next/cache"
+ln -s "$CACHE_DIR" "$RELEASE/.next/cache"
 
 if [ -n "$DB_URL" ] && [ -z "$DB_STATE" ]; then
   DB_STATE=$(db_state "$RELEASE") || die "cannot connect to the database as $(url_part "$DB_URL" user). Nothing was changed."
@@ -331,8 +386,8 @@ chmod 0640 "$ENV_FILE"
 if [ -n "$DB_URL" ]; then
   "$NODE" --input-type=module -e "
     import { writeEnvFile } from '$SOURCE/scripts/server/lib/envfile.mjs';
-    writeEnvFile(process.argv[1], { MIGRATION_DATABASE_URL: process.argv[2], ETNA_LOCAL_POSTGRES: process.argv[3] || null });
-  " "$CTL_FILE" "$DB_URL" "$LOCAL_PG"
+    writeEnvFile(process.argv[1], { MIGRATION_DATABASE_URL: process.argv[2], ETNA_LOCAL_POSTGRES: process.argv[3] || null, ETNA_SHARED_DATA: process.argv[4] || null });
+  " "$CTL_FILE" "$DB_URL" "$LOCAL_PG" "$SHARED_DATA"
   chmod 0600 "$CTL_FILE"
 fi
 RELEASE_READY=1

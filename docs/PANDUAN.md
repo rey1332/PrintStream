@@ -526,6 +526,29 @@ sudo psctl db move "postgres://etna_owner@10.0.0.20:5432/etna?sslmode=verify-ful
 Aplikasi berhenti sebentar, database disalin, lalu aplikasi pindah ke server
 database baru. Database lama tidak dihapus.
 
+### Tambah server aplikasi (horizontal scaling)
+
+Kalau satu server sudah berat, tambah server aplikasi. Semua server memakai
+database yang sama (harus sudah di VM sendiri, lihat di atas) dan folder data
+server pertama lewat NFS. Cloudflare Tunnel membagi pengunjung ke semuanya.
+
+Di server pertama:
+
+```bash
+sudo psctl cluster share --allow 10.0.0.0/24
+```
+
+Di server baru (setelah menyalin `/etc/etna/etna.env` dari server pertama ke
+`/root/etna.env`):
+
+```bash
+sudo deploy/linux/install.sh --database-url "postgres://etna_owner@10.0.0.20:5432/etna?sslmode=verify-full" --settings-from /root/etna.env --shared-data 10.0.0.10:/var/lib/etna
+```
+
+Lalu di setiap server: `sudo cloudflared service install <token tunnel>` dan
+`sudo psctl cluster tunnel`. Cek dengan `sudo psctl cluster status`.
+Langkah lengkapnya: [teknis/CLUSTER.md](teknis/CLUSTER.md).
+
 ---
 
 ## 8. Kalau ada masalah
@@ -572,5 +595,6 @@ Untuk detail yang tidak dibahas di sini (semuanya di folder [teknis/](teknis/)):
 | [CONSOLE.md](teknis/CONSOLE.md) | Konsol perintah di dalam aplikasi |
 | [WORKFLOWS.md](teknis/WORKFLOWS.md), [HOW TO WORKFLOWS.md](teknis/HOW%20TO%20WORKFLOWS.md) | Pipeline dan workflow |
 | [ONTOLOGY.md](teknis/ONTOLOGY.md) | Model data bersama dan pencarian lintas ERP (ERP → Search) |
+| [CLUSTER.md](teknis/CLUSTER.md) | Beberapa server aplikasi: NFS, Cloudflare Tunnel, update |
 | [TUNNELS.md](teknis/TUNNELS.md) | Menghubungkan sistem di jaringan perusahaan |
 | [BACKEND_MIGRATION.md](teknis/BACKEND_MIGRATION.md) | Sejarah: pindah dari Supabase ke PostgreSQL sendiri |

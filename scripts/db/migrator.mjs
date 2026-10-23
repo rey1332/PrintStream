@@ -60,7 +60,21 @@ export function plan(migrations, applied) {
   return { pending, changed, outOfOrder, lastApplied };
 }
 
-export async function migrate(client, { dryRun = false, log = () => {}, migrations = listMigrations() } = {}) {
+// Several app servers may update at once (psctl cluster): one migrates at a
+// time, the others wait and then find nothing left to apply.
+const MIGRATION_LOCK = 7428190351;
+
+export async function migrate(client, options = {}) {
+  if (options.dryRun) return migrateLocked(client, options);
+  await client.query('select pg_advisory_lock($1)', [MIGRATION_LOCK]);
+  try {
+    return await migrateLocked(client, options);
+  } finally {
+    await client.query('select pg_advisory_unlock($1)', [MIGRATION_LOCK]).catch(() => {});
+  }
+}
+
+async function migrateLocked(client, { dryRun = false, log = () => {}, migrations = listMigrations() } = {}) {
   if (await looksLikeSupabase(client)) {
     throw new Error('This database is a Supabase project. The plain-PostgreSQL bootstrap must not be applied to it.');
   }

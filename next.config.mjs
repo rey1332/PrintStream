@@ -17,6 +17,9 @@ const securityHeaders = [
 const nextConfig = {
   productionBrowserSourceMaps: process.env.NODE_ENV !== 'production',
   distDir: process.env.DIST_DIR || '.next',
+  // The same build id on every app server (deploy/linux/install.sh sets it
+  // from the source), so a page from one server loads its files from another.
+  generateBuildId: async () => process.env.ETNA_BUILD_ID || null,
 
   typescript: {
     ignoreBuildErrors: false,
