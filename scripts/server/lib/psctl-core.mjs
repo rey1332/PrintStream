@@ -201,6 +201,13 @@ export function doctorFindings(f) {
   if (f.services) for (const [name, state] of Object.entries(f.services)) add(state === 'active' ? 'ok' : 'fail', `${name}: ${state}`);
   if (f.health != null) add(f.health ? 'ok' : 'fail', f.health ? 'the app answers /api/health' : 'the app does not answer /api/health');
   if (f.database) add(f.database.ok ? 'ok' : 'fail', f.database.text);
+  if (f.sharedData)
+    add(
+      f.sharedData.mounted ? 'ok' : 'fail',
+      f.sharedData.mounted
+        ? `data folder shared from ${f.sharedData.spec}`
+        : `the data folder ${f.sharedData.spec} is not mounted on ${PATHS.dataRoot} (mount ${PATHS.dataRoot}; on the first server: psctl cluster share).`
+    );
   if (f.pendingMigrations > 0) add('warn', `${f.pendingMigrations} migration(s) not applied yet (psctl migrate).`);
 
   if (!f.backup?.configured) add('warn', 'Encrypted backups are not set up: psctl backup-setup.');
@@ -214,3 +221,85 @@ export function doctorFindings(f) {
     else if (d.freeRatio < 0.2) add('warn', `${d.path}: ${Math.round(d.freeRatio * 100)}% free.`);
   return out;
 }
+
+// ─── Several app servers (psctl cluster; docs/teknis/CLUSTER.md) ────────────
+// One database (on its own server), the data folder of the first app server
+// shared over NFS, and the same Cloudflare Tunnel run on every app server.
+
+/** Whether the app's database is on this machine: then other servers cannot use it. */
+export function databaseIsLocal(url) {
+  const u = new URL(url);
+  return isLoopback(u.searchParams.get('host') || u.hostname);
+}
+
+const IPV4_CIDR = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/;
+
+/** The network the other app servers are in, e.g. 10.0.0.0/24; never the whole internet. */
+export function checkCidr(cidr) {
+  const m = IPV4_CIDR.exec(String(cidr ?? '').trim());
+  if (!m || m.slice(1, 5).some((p) => Number(p) > 255) || Number(m[5]) > 32)
+    return 'Give the network of the other app servers as an IPv4 range, for example 10.0.0.0/24.';
+  if (Number(m[5]) < 8) return `${cidr} is too wide: give the local network of the app servers only.`;
+  return null;
+}
+
+/** The /etc/exports.d line that shares the data folder with the other app servers. */
+export function nfsExportLine(dir, cidrs) {
+  const list = [].concat(cidrs);
+  for (const c of list) {
+    const problem = checkCidr(c);
+    if (problem) throw new Error(problem);
+  }
+  // root_squash: root on another server is nobody here; the app's own user
+  // (the same uid on every server) reads and writes.
+  return `${dir} ${list.map((c) => `${c}(rw,sync,no_subtree_check,root_squash)`).join(' ')}\n`;
+}
+
+/** host:/path of a shared data folder (install.sh --shared-data). */
+export function parseSharedData(spec) {
+  const m = /^([A-Za-z0-9.-]+|\[[0-9A-Fa-f:]+\]):(\/[A-Za-z0-9._\/-]*)$/.exec(String(spec ?? '').trim());
+  if (!m) throw new Error('Give the shared data folder as host:/path, for example 10.0.0.10:/var/lib/etna.');
+  return { host: m[1], dir: m[2] };
+}
+
+/** The fstab line that mounts it. No "nofail": without its files the app must not start. */
+export function fstabLine(spec, mountpoint) {
+  const { host, dir } = parseSharedData(spec);
+  return `${host}:${dir} ${mountpoint} nfs4 rw,hard,noatime,_netdev 0 0\n`;
+}
+
+/** Adds or replaces the fstab line for mountpoint; other lines stay. */
+export function upsertFstab(text, line, mountpoint) {
+  const kept = String(text ?? '')
+    .split('\n')
+    .filter((l) => l !== '' && l.trim().split(/\s+/)[1] !== mountpoint);
+  return `${[...kept, line.trimEnd()].join('\n')}\n`;
+}
+
+/** The app servers, from the workers' heartbeats (worker id host:pid). */
+export function clusterNodes(rows, now = new Date()) {
+  const byHost = new Map();
+  for (const r of rows) {
+    const host = String(r.worker_id).replace(/:\d+$/, '');
+    const seen = new Date(r.seen_at);
+    const prev = byHost.get(host);
+    if (!prev || seen > prev.seen) byHost.set(host, { host, version: r.version ?? '?', seen, running: Number(r.running) || 0 });
+  }
+  return [...byHost.values()]
+    .map((n) => ({ ...n, ageSeconds: Math.round((now - n.seen) / 1000), alive: now - n.seen < 90_000 }))
+    .sort((a, b) => a.host.localeCompare(b.host));
+}
+
+/** Different versions (or builds) on the app servers: pages break as requests move between them. */
+export function versionMismatch(nodes) {
+  const live = nodes.filter((n) => n.alive);
+  return new Set(live.map((n) => n.version)).size > 1;
+}
+
+// cloudflared stops with the app on this server, so Cloudflare sends visitors
+// to the other servers instead of to an app that is not there.
+export const TUNNEL_DROP_IN = `# Written by psctl cluster tunnel: the tunnel runs only while the app does.
+[Unit]
+After=etna.service
+BindsTo=etna.service
+`;

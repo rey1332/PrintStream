@@ -61,6 +61,17 @@ const { startAlerts } = await import(pathToFileURL(fileURLToPath(new URL('../../
 // Error alerts by e-mail (src/server/alerts.ts); off without recipients or SMTP.
 startAlerts('worker');
 
+// The version and the Next.js build (psctl cluster status compares the app servers).
+function versionWithBuild() {
+  let build = '';
+  try {
+    build = fs.readFileSync(new URL('../../.next/BUILD_ID', import.meta.url), 'utf8').trim().slice(0, 16);
+  } catch {
+    // not built (development)
+  }
+  return build ? `${pkg.version ?? ''}+${build}` : String(pkg.version ?? '');
+}
+
 const stamp = () => `[${new Date().toISOString()}]`;
 // The worker's own trouble (its job loop, the database listener) is an error;
 // a job that fails on its data is not (the job shows why).
@@ -69,7 +80,7 @@ const INFRASTRUCTURE = /^(loop|listen):/;
 const worker = await runWorker({
   databaseUrl: url,
   workerId: `${os.hostname()}:${process.pid}`.slice(0, 100),
-  version: String(pkg.version ?? ''),
+  version: versionWithBuild(),
   concurrency: Number(process.env.ETNA_WORKER_CONCURRENCY) || 2,
   log: (line) => (INFRASTRUCTURE.test(line) ? console.error : console.log)(`${stamp()} [worker] ${line}`),
 });

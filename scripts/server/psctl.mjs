@@ -24,6 +24,10 @@
 //   psctl databases                 the ETNA databases on this server
 //   psctl users create-user --email you@example.com
 //                                   accounts (scripts/admin/users.mjs, as the schema owner)
+//   psctl cluster share --allow <network>
+//                                   shares the data folder with extra app servers (NFS)
+//   psctl cluster status [--json]   the app servers, their versions, last heartbeat
+//   psctl cluster tunnel            cloudflared runs only while the app does (failover)
 //
 // psctl never drops, empties or overwrites a database: a restore and a move
 // always fill a new or empty one, and what was there before is kept.
@@ -37,7 +41,13 @@ import { readEnvFile, writeEnvFile } from './lib/envfile.mjs';
 import { readPassphrase } from './lib/secret-input.mjs';
 import {
   PATHS,
+  checkCidr,
   classifyDatabase,
+  clusterNodes,
+  databaseIsLocal,
+  nfsExportLine,
+  TUNNEL_DROP_IN,
+  versionMismatch,
   databaseOf,
   doctorFindings,
   pgpassLine,
@@ -62,7 +72,7 @@ const option = (name) => {
   const at = argv.indexOf(name);
   return at >= 0 ? argv[at + 1] : undefined;
 };
-const positional = argv.filter((a, i) => !a.startsWith('-') && !(i > 0 && /^(--into|--copy-to|--keep|--lines|-n)$/.test(argv[i - 1])));
+const positional = argv.filter((a, i) => !a.startsWith('-') && !(i > 0 && /^(--into|--copy-to|--keep|--lines|-n|--allow)$/.test(argv[i - 1])));
 
 class Stop extends Error {
   constructor(message, code = 1) {
@@ -316,6 +326,9 @@ async function gather() {
     ownerPgpass: statOf(PATHS.ownerPgpass),
     settings,
     ownerUrl: control.MIGRATION_DATABASE_URL,
+    sharedData: control.ETNA_SHARED_DATA
+      ? { spec: control.ETNA_SHARED_DATA, mounted: run('findmnt', ['-n', PATHS.dataRoot], { allowFail: true }).status === 0 }
+      : null,
     services: Object.fromEntries(SERVICES.map((s) => [s, serviceState(s)])),
     health: await health(settings.ETNA_PORT || '4028'),
     release: currentRelease(),
@@ -406,7 +419,15 @@ async function migrateCommand() {
 
 // ─── backups ────────────────────────────────────────────────────────────────
 
+// Backups, restores and moving the database are done on the first app server,
+// the one that keeps the data folder (an extra one only mounts it).
+function firstServerOnly() {
+  const shared = ctl().ETNA_SHARED_DATA;
+  if (shared) fail(`This is an extra app server (its data folder is ${shared}): do this on the first app server.`, 2);
+}
+
 async function backupSetupCommand() {
+  firstServerOnly();
   const keyDir = PATHS.backupKeys;
   const pub = path.join(keyDir, 'offsite-key.pub.pem');
   fs.mkdirSync(keyDir, { recursive: true, mode: 0o700 });
@@ -604,6 +625,7 @@ async function switchApp({ target, urls, fromBackup, files }) {
 }
 
 async function restoreCommand() {
+  firstServerOnly();
   const file = await resolveBackupFile(positional[1]);
   const into = option('--into');
   const { url, env, settings: control } = ownerEnv();
@@ -668,6 +690,7 @@ async function restoreCommand() {
 }
 
 async function dbMoveCommand() {
+  firstServerOnly();
   const to = positional[2];
   if (!to) fail('Usage: psctl db move postgres://etna_owner@<database server>:5432/etna?sslmode=verify-full [--yes]', 2);
   const problem = tlsProblem(to);
@@ -789,6 +812,81 @@ async function rollbackCommand() {
   else fail(`${path.basename(previous)} does not answer: journalctl -u etna -n 80`);
 }
 
+// ─── cluster ────────────────────────────────────────────────────────────────
+// Several app servers on one database (docs/teknis/CLUSTER.md): the first
+// shares its data folder over NFS, the others mount it (install.sh
+// --shared-data), and Cloudflare Tunnel spreads visitors over them.
+
+async function clusterShareCommand() {
+  const cidrs = argv.flatMap((a, i) => (a === '--allow' ? [argv[i + 1]] : []));
+  if (cidrs.length === 0) fail('Usage: psctl cluster share --allow <network of the other app servers, e.g. 10.0.0.0/24>', 2);
+  for (const c of cidrs) {
+    const problem = checkCidr(c);
+    if (problem) fail(problem, 2);
+  }
+  if (ctl().ETNA_SHARED_DATA) fail(`This server uses the data folder of ${ctl().ETNA_SHARED_DATA}: run psctl cluster share there.`, 2);
+  const settings = readEnvFile(PATHS.envFile);
+  if (!settings.DATABASE_URL) fail(`${PATHS.envFile} has no DATABASE_URL.`, 2);
+  if (databaseIsLocal(settings.DATABASE_URL))
+    fail('The database runs on this server, where the other app servers cannot reach it. Move it to its own server first: psctl db move <owner url> (docs/teknis/CLUSTER.md).', 2);
+  if (!(await confirm(`Share ${PATHS.dataRoot} (documents and company files) over NFS with ${cidrs.join(', ')}?`, 'share')))
+    return console.log('Nothing was changed.');
+
+  if (!fs.existsSync('/usr/sbin/exportfs')) {
+    say('Installing the NFS server');
+    run('apt-get', ['install', '-y', 'nfs-kernel-server'], { inherit: true });
+  }
+  fs.mkdirSync('/etc/exports.d', { recursive: true });
+  fs.writeFileSync('/etc/exports.d/etna.exports', nfsExportLine(PATHS.dataRoot, cidrs), { mode: 0o644 });
+  run('systemctl', ['enable', '--now', 'nfs-server.service']);
+  run('exportfs', ['-ra']);
+  if (fs.existsSync('/usr/sbin/ufw') && run('ufw', ['status'], { allowFail: true }).stdout.includes('Status: active'))
+    for (const c of cidrs) run('ufw', ['allow', 'from', c, 'to', 'any', 'port', '2049', 'proto', 'tcp']);
+  say(`${PATHS.dataRoot} is shared with ${cidrs.join(', ')}`);
+
+  const address = run('hostname', ['-I'], { allowFail: true }).stdout.trim().split(/\s+/)[0] || '<this server>';
+  const owner = ctl().MIGRATION_DATABASE_URL ? withoutPassword(ctl().MIGRATION_DATABASE_URL) : '<owner url>';
+  console.log(`
+On each extra app server (Ubuntu, Node.js 24, the same PrintStream version as here):
+  1. Copy the settings, as root:   scp /etc/etna/etna.env root@<new server>:/root/etna.env
+  2. Allow it in the database server's pg_hba.conf (hostssl, scram-sha-256).
+  3. In its PrintStream folder:
+       sudo deploy/linux/install.sh --database-url "${owner}" \\
+         --settings-from /root/etna.env --shared-data ${address}:${PATHS.dataRoot}
+       sudo rm /root/etna.env
+  4. Cloudflare Tunnel, there and here: sudo cloudflared service install <the tunnel's token>,
+     then sudo psctl cluster tunnel
+Check with: sudo psctl cluster status`);
+}
+
+async function clusterStatusCommand() {
+  const { url, env } = ownerEnv();
+  const rows = await withClient(url, env, async (client) =>
+    (await client.query(`select worker_id, seen_at, version, running from etna_platform.worker_status where seen_at > now() - interval '7 days'`)).rows
+  );
+  const nodes = clusterNodes(rows);
+  const shared = ctl().ETNA_SHARED_DATA ?? null;
+  if (flag('--json')) return console.log(JSON.stringify({ nodes, sharedData: shared }, null, 2));
+  if (nodes.length === 0) console.log("No app server has reported yet (each one's worker reports every 30 seconds).");
+  for (const n of nodes)
+    console.log(`${n.alive ? '\x1b[32m●\x1b[0m' : '\x1b[31m○\x1b[0m'} ${n.host.padEnd(24)} ${String(n.version).padEnd(28)} ${n.alive ? `${n.running} job(s) running` : `last seen ${Math.round(n.ageSeconds / 60)} min ago`}`);
+  if (versionMismatch(nodes)) warn('The app servers run different versions or builds: upgrade them all to the same one (psctl upgrade).');
+  console.log(shared ? `This server uses the data folder ${shared}.` : 'This server keeps the data folder itself.');
+}
+
+function clusterTunnelCommand() {
+  const units = ['/etc/systemd/system/cloudflared.service', '/lib/systemd/system/cloudflared.service', '/usr/lib/systemd/system/cloudflared.service'];
+  if (!units.some((f) => fs.existsSync(f)))
+    fail("cloudflared is not installed as a service here: sudo cloudflared service install <the tunnel's token> (docs/teknis/CLUSTER.md).", 2);
+  fs.mkdirSync('/etc/systemd/system/cloudflared.service.d', { recursive: true });
+  fs.writeFileSync('/etc/systemd/system/cloudflared.service.d/etna.conf', TUNNEL_DROP_IN, { mode: 0o644 });
+  run('systemctl', ['daemon-reload']);
+  // Starting the app starts the tunnel again.
+  run('systemctl', ['add-wants', 'etna.service', 'cloudflared.service']);
+  run('systemctl', ['restart', 'cloudflared.service']);
+  say('cloudflared now runs only while the app does: when the app stops here, Cloudflare uses the other app servers.');
+}
+
 // ─── main ───────────────────────────────────────────────────────────────────
 
 const commands = {
@@ -816,6 +914,10 @@ const commands = {
     });
     process.exitCode = r.status ?? 1;
   },
+  cluster: () => {
+    const sub = { share: clusterShareCommand, status: clusterStatusCommand, tunnel: clusterTunnelCommand }[positional[1]];
+    return sub ? sub() : fail('Usage: psctl cluster share --allow <network> | status [--json] | tunnel', 2);
+  },
   version: () => console.log(JSON.parse(fs.readFileSync(path.join(APP, 'package.json'), 'utf8')).version),
 };
 
@@ -823,7 +925,7 @@ const command = positional[0];
 process.env.PGPASSFILE ||= PATHS.ownerPgpass;
 try {
   if (!commands[command]) {
-    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 27).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 33).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exitCode = command ? 2 : 0;
   } else {
     if (command !== 'version') requireRoot();

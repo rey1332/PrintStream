@@ -6,6 +6,9 @@ Description=ETNA app
 Documentation=file:///opt/etna/current/docs/teknis/INSTALL-LINUX.md
 After=network-online.target postgresql.service
 Wants=network-online.target
+# On an extra app server the data folder is the first server's, over NFS
+# (psctl cluster): never start without it.
+RequiresMountsFor=/var/lib/etna
 
 [Service]
 Type=simple
