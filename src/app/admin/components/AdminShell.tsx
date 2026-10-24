@@ -32,6 +32,8 @@ interface AdminValue {
   role: AdminRole;
   /** Asks for a fresh two-factor code; resolves true once it was accepted. */
   confirmIdentity: () => Promise<boolean>;
+  /** The panel's address ('/admin', or ETNA_ADMIN_PATH's; src/lib/adminPath.ts). */
+  base: string;
 }
 
 const AdminCtx = createContext<AdminValue | null>(null);
@@ -42,27 +44,35 @@ export function useAdmin(): AdminValue {
   return value;
 }
 
+/** A page of the panel at its address: ap('/users') is '/admin/users' or '/<address>/users'. */
+export function useAdminPath(): (path?: string) => string {
+  const { base } = useAdmin();
+  return useCallback((path = '') => base + path, [base]);
+}
+
 const NAV: { href: string; label: MessageKey; icon: React.ElementType }[] = [
-  { href: '/admin', label: 'padmin.nav.overview', icon: LayoutDashboard },
-  { href: '/admin/users', label: 'padmin.nav.users', icon: Users },
-  { href: '/admin/workspaces', label: 'padmin.nav.workspaces', icon: Building2 },
-  { href: '/admin/terms', label: 'padmin.nav.terms', icon: FileText },
-  { href: '/admin/security-log', label: 'padmin.nav.securityLog', icon: ScrollText },
-  { href: '/admin/access-log', label: 'padmin.nav.accessLog', icon: Eye },
-  { href: '/admin/governance', label: 'padmin.nav.governance', icon: Landmark },
-  { href: '/admin/admins', label: 'padmin.nav.admins', icon: UserCog },
-  { href: '/admin/announcements', label: 'padmin.nav.announcements', icon: Megaphone },
-  { href: '/admin/system', label: 'padmin.nav.system', icon: Server },
+  { href: '', label: 'padmin.nav.overview', icon: LayoutDashboard },
+  { href: '/users', label: 'padmin.nav.users', icon: Users },
+  { href: '/workspaces', label: 'padmin.nav.workspaces', icon: Building2 },
+  { href: '/terms', label: 'padmin.nav.terms', icon: FileText },
+  { href: '/security-log', label: 'padmin.nav.securityLog', icon: ScrollText },
+  { href: '/access-log', label: 'padmin.nav.accessLog', icon: Eye },
+  { href: '/governance', label: 'padmin.nav.governance', icon: Landmark },
+  { href: '/admins', label: 'padmin.nav.admins', icon: UserCog },
+  { href: '/announcements', label: 'padmin.nav.announcements', icon: Megaphone },
+  { href: '/system', label: 'padmin.nav.system', icon: Server },
 ];
 
 export function AdminShell({
   email,
   role,
+  base,
   twoFactor,
   children,
 }: {
   email: string;
   role: AdminRole;
+  base: string;
   twoFactor: boolean;
   children: React.ReactNode;
 }) {
@@ -88,7 +98,7 @@ export function AdminShell({
   };
 
   return (
-    <AdminCtx.Provider value={{ email, role, confirmIdentity }}>
+    <AdminCtx.Provider value={{ email, role, confirmIdentity, base }}>
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
@@ -99,8 +109,9 @@ export function AdminShell({
               </span>
             </div>
             <nav className="flex flex-wrap items-center gap-1">
-              {NAV.map(({ href, label, icon: Icon }) => {
-                const active = href === '/admin' ? pathname === href : pathname.startsWith(href);
+              {NAV.map(({ href: page, label, icon: Icon }) => {
+                const href = base + page;
+                const active = page === '' ? pathname === href : pathname.startsWith(href);
                 return (
                   <Link
                     key={href}

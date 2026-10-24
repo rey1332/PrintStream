@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
-import { useAdmin } from '../../components/AdminShell';
+import { useAdmin, useAdminPath } from '../../components/AdminShell';
 import { WorkspaceUsage } from '../../components/WorkspaceUsage';
 import { GovernancePanels } from '../../components/GovernancePanels';
 import { adminChange, adminGet } from '../../components/api';
@@ -62,6 +62,7 @@ interface Detail {
 type Dialog = Omit<ActionDialogProps, 'onClose'>;
 
 export default function WorkspaceDetailPage() {
+  const ap = useAdminPath();
   const { id } = useParams<{ id: string }>();
   const { t, fmt } = useI18n();
   const { email: me, role, confirmIdentity } = useAdmin();
@@ -141,7 +142,7 @@ export default function WorkspaceDetailPage() {
   return (
     <div className="space-y-5">
       <Link
-        href="/admin/workspaces"
+        href={ap('/workspaces')}
         className="inline-flex items-center gap-1 text-[0.75rem] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={12} />
@@ -255,7 +256,7 @@ export default function WorkspaceDetailPage() {
                 <tr key={m.user_id} className={rowCls}>
                   <td className="px-5 py-2">
                     <Link
-                      href={`/admin/users/${m.user_id}`}
+                      href={ap(`/users/${m.user_id}`)}
                       className="text-foreground underline-offset-2 hover:underline"
                     >
                       {m.email}

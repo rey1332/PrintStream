@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { FilePlus2, Loader2, ScrollText, UserX } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { useAdmin } from '../components/AdminShell';
+import { useAdmin, useAdminPath } from '../components/AdminShell';
 import { adminGet } from '../components/api';
 import { Badge, Pager, Section, buttonCls, rowCls, tableCls, theadCls } from '../components/ui';
 
@@ -37,6 +37,7 @@ const STATUS: Record<Version['status'], { key: MessageKey; tone: 'warn' | 'good'
 const LIMIT = 50;
 
 export default function TermsAdminPage() {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const { role } = useAdmin();
   const [versions, setVersions] = useState<Version[] | null>(null);
@@ -75,7 +76,7 @@ export default function TermsAdminPage() {
         icon={ScrollText}
         actions={
           role === 'super_admin' && (
-            <Link href="/admin/terms/new" className={buttonCls}>
+            <Link href={ap('/terms/new')} className={buttonCls}>
               <FilePlus2 size={13} />
               {t('padmin.terms.newDraft')}
             </Link>
@@ -113,7 +114,7 @@ export default function TermsAdminPage() {
                   <tr key={v.id} className={rowCls}>
                     <td className="px-5 py-2">
                       <Link
-                        href={`/admin/terms/${v.id}`}
+                        href={ap(`/terms/${v.id}`)}
                         className="text-foreground underline-offset-2 hover:underline"
                       >
                         {v.label}
@@ -163,7 +164,7 @@ export default function TermsAdminPage() {
                     <tr key={p.user_id} className={rowCls}>
                       <td className="px-5 py-2">
                         <Link
-                          href={`/admin/users/${p.user_id}`}
+                          href={ap(`/users/${p.user_id}`)}
                           className="text-foreground underline-offset-2 hover:underline"
                         >
                           {p.email}

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Loader2, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { INDUSTRIES, INDUSTRY_HELP, INDUSTRY_LABEL, type Industry } from '@/lib/industry';
-import { useAdmin } from './AdminShell';
+import { useAdmin, useAdminPath } from './AdminShell';
 import { adminChange } from './api';
 import { errorKey } from './labels';
 import { LinkReveal } from './LinkReveal';
@@ -28,6 +28,7 @@ export function CompanyDialog({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const ap = useAdminPath();
   const { t } = useI18n();
   const { confirmIdentity } = useAdmin();
   const [name, setName] = useState('');
@@ -109,7 +110,7 @@ export function CompanyDialog({
               <p className={caption}>{t('padmin.co.existingOwner')}</p>
             )}
             <Link
-              href={`/admin/workspaces/${created.result.workspace_id}`}
+              href={ap(`/workspaces/${created.result.workspace_id}`)}
               className="inline-block text-[0.8rem] text-foreground underline"
             >
               {t('padmin.co.open')}

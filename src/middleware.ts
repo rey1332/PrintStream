@@ -1,12 +1,30 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { HINT_COOKIE, SESSION_COOKIE, readHint } from '@/lib/auth/hint';
 import { isPublicPath } from '@/lib/auth/public-paths';
+import { adminBase, routeAdmin } from '@/lib/adminPath';
 import { contentSecurityPolicy, newNonce } from '@/lib/security/csp';
 import { imageHosts } from '../image-hosts.config.mjs';
 
 export async function middleware(request: NextRequest) {
-  return (await gate(request)) ?? withPolicy(request);
+  const gated = await gate(request);
+  if (gated) return gated;
+  // The admin panel at its own address (ETNA_ADMIN_PATH): /admin is a 404,
+  // the address shows the panel's pages (src/lib/adminPath.ts). After the
+  // gate, so a visitor without a session sees /admin like any unknown page.
+  const base = adminBase();
+  const admin = routeAdmin(request.nextUrl.pathname, base);
+  if (admin?.action === 'rewrite')
+    return withPolicy(request, admin.to, base ? { [ADMIN_HEADER]: base } : undefined);
+  // A rewrite reaches the middleware again, as the panel's own path: it
+  // carries the address, which only the server and whoever knows it have.
+  if (admin?.action === 'hide' && !(base && request.headers.get(ADMIN_HEADER) === base))
+    return withPolicy(request, NOT_FOUND);
+  return withPolicy(request);
 }
+
+// No page has this path: the router answers it with the ordinary 404 page.
+const NOT_FOUND = '/_etna/not-found';
+const ADMIN_HEADER = 'x-etna-admin-path';
 
 /** A redirect or refusal for a request that may not go on, else null. */
 async function gate(request: NextRequest): Promise<NextResponse | null> {
@@ -55,7 +73,11 @@ async function gate(request: NextRequest): Promise<NextResponse | null> {
  * Next.js reads the nonce from the request's CSP header and puts it on its
  * scripts; the root layout reads x-nonce for its own.
  */
-function withPolicy(request: NextRequest): NextResponse {
+function withPolicy(
+  request: NextRequest,
+  rewriteTo?: string,
+  extra?: Record<string, string>
+): NextResponse {
   if (request.nextUrl.pathname.startsWith('/api/')) return NextResponse.next({ request });
   const nonce = newNonce();
   const policy = contentSecurityPolicy(nonce, {
@@ -65,7 +87,13 @@ function withPolicy(request: NextRequest): NextResponse {
   const headers = new Headers(request.headers);
   headers.set('x-nonce', nonce);
   headers.set('content-security-policy', policy);
-  const response = NextResponse.next({ request: { headers } });
+  for (const [k, v] of Object.entries(extra ?? {})) headers.set(k, v);
+  let response: NextResponse;
+  if (rewriteTo) {
+    const url = request.nextUrl.clone();
+    url.pathname = rewriteTo;
+    response = NextResponse.rewrite(url, { request: { headers } });
+  } else response = NextResponse.next({ request: { headers } });
   response.headers.set('Content-Security-Policy', policy);
   return response;
 }

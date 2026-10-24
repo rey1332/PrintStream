@@ -4,6 +4,38 @@ The internal admin panel at `/admin` is for ETNA's own staff (platform
 admins), not for clients. Owning or administering an ERP never makes anyone a
 platform admin. To everyone else `/admin` is an ordinary 404.
 
+## Address
+
+The panel can have its own address instead of `/admin`, so nobody finds it by
+trying the usual one:
+
+```bash
+sudo psctl admin-path new          # a random address, e.g. /q3x7mzk2vb9t4wfn6hj5rc8d
+sudo psctl admin-path              # where it is now
+sudo psctl admin-path set ops-panel-2026   # an address of your own (8–64: a-z, 0-9, -)
+sudo psctl admin-path off          # back to /admin
+```
+
+This sets `ETNA_ADMIN_PATH` in `/etc/etna/etna.env` and restarts the app
+(Windows: put `ETNA_ADMIN_PATH=…` in the app's `etna.env` and restart it).
+With an address:
+
+- `/admin` and every page under it are a 404 for everyone, platform admins
+  included, in every spelling (`/ADMIN`, `/%61dmin`). Without a session
+  they lead to the sign-in page like any unknown page, so nothing tells them
+  apart.
+- The panel opens at `https://<ETNA's address>/<address>`, still only for
+  platform admins with two-factor; to anyone else it is a 404 too.
+- An address that is not valid closes the panel (`psctl doctor` says so).
+- Several app servers (docs/teknis/CLUSTER.md): every one needs the same
+  `etna.env`.
+
+The address hides the panel; it does not protect it. Signing in, the admin
+role and two-factor still decide who gets in. Keep it in a password manager,
+not in a chat or a bookmark on a shared computer. The panel's API
+(`/api/admin/platform/…`) stays where it is and answers 404 to anyone who is
+not a platform admin.
+
 The panel contains a dashboard, admin roles, the security log, accounts
 (create, disable, sessions, password links, two-factor reset), workspaces
 (suspend, reactivate, who has access) and the Terms & Conditions (versions,

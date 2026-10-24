@@ -208,6 +208,12 @@ export function doctorFindings(f) {
         ? `data folder shared from ${f.sharedData.spec}`
         : `the data folder ${f.sharedData.spec} is not mounted on ${PATHS.dataRoot} (mount ${PATHS.dataRoot}; on the first server: psctl cluster share).`
     );
+  if (f.envFile && f.settings) {
+    const address = f.settings.ETNA_ADMIN_PATH;
+    if (!address) add('warn', 'the admin panel is at /admin: give it its own address with psctl admin-path new.');
+    else if (adminPathProblem(address)) add('fail', `ETNA_ADMIN_PATH: ${adminPathProblem(address)}; the admin panel is closed until it is fixed (psctl admin-path new).`);
+    else add('ok', 'the admin panel has its own address (/admin is a 404)');
+  }
   if (f.pendingMigrations > 0) add('warn', `${f.pendingMigrations} migration(s) not applied yet (psctl migrate).`);
 
   if (!f.backup?.configured) add('warn', 'Encrypted backups are not set up: psctl backup-setup.');
@@ -303,3 +309,36 @@ export const TUNNEL_DROP_IN = `# Written by psctl cluster tunnel: the tunnel run
 After=etna.service
 BindsTo=etna.service
 `;
+
+// ─── admin panel address ────────────────────────────────────────────────────
+
+// ETNA_ADMIN_PATH, the admin panel's own address: the same rule as
+// src/lib/adminPath.ts (8–64 lower-case letters, digits and dashes, not one
+// of the app's routes).
+const ADMIN_RESERVED = new Set(['admin', 'api', 'erp', 'login', 'mfa', 'oauth', 'pipelines', 'reset-password', 'terminal', 'terms', '_next', '.well-known', 'favicon.ico']);
+
+/** Why an address cannot be used, or null. */
+export function adminPathProblem(value) {
+  const v = String(value ?? '').trim().replace(/^\/+|\/+$/g, '');
+  if (!/^[a-z0-9][a-z0-9-]{7,63}$/.test(v)) return 'it must be 8–64 lower-case letters, digits and dashes';
+  if (ADMIN_RESERVED.has(v)) return `/${v} is a page of the app`;
+  return null;
+}
+
+/** A new address from random bytes: 24 letters and digits (120 bits). */
+export function newAdminPath(bytes) {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+  let bits = 0;
+  let value = 0;
+  let out = '';
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += alphabet[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+    value &= (1 << bits) - 1;
+  }
+  return out;
+}

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { TermsText, type TermsContent, type TermsLocale } from '@/components/terms/TermsText';
-import { useAdmin } from '../../components/AdminShell';
+import { useAdmin, useAdminPath } from '../../components/AdminShell';
 import { adminChange, adminGet } from '../../components/api';
 import { ActionDialog, type ActionDialogProps } from '../../components/ActionDialog';
 import { errorKey } from '../../components/labels';
@@ -41,6 +41,7 @@ const LANGS: { code: TermsLocale; label: MessageKey }[] = [
 type Dialog = Omit<ActionDialogProps, 'onClose'>;
 
 export default function TermsVersionPage() {
+  const ap = useAdminPath();
   const { id } = useParams<{ id: string }>();
   const isNew = id === 'new';
   const router = useRouter();
@@ -104,7 +105,7 @@ export default function TermsVersionPage() {
     }
     toast.success(t('padmin.terms.saved'));
     setDirty(false);
-    if (isNew) router.replace(`/admin/terms/${result.data.id}`);
+    if (isNew) router.replace(ap(`/terms/${result.data.id}`));
     else await load();
     return result.data.id;
   }
@@ -115,7 +116,7 @@ export default function TermsVersionPage() {
     });
     if (!result.ok) return result.error === 'cancelled' ? null : t(errorKey(result.error));
     toast.success(t(action === 'publish' ? 'padmin.terms.published' : 'padmin.terms.deleted'));
-    if (action === 'delete') router.replace('/admin/terms');
+    if (action === 'delete') router.replace(ap('/terms'));
     else await load();
     return null;
   }
@@ -125,7 +126,7 @@ export default function TermsVersionPage() {
   return (
     <div className="space-y-5">
       <Link
-        href="/admin/terms"
+        href={ap('/terms')}
         className="inline-flex items-center gap-1 text-[0.75rem] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={12} />

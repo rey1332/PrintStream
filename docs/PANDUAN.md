@@ -165,6 +165,15 @@ Jadikan akun itu admin platform (opsional):
 sudo psctl users grant-admin --email kamu@contoh.com
 ```
 
+Sembunyikan panel admin di alamat rahasia (`/admin` jadi 404 untuk semua orang):
+
+```bash
+sudo psctl admin-path new
+```
+
+Alamatnya tampil sekali di layar: simpan di password manager. Lupa? Jalankan
+`sudo psctl admin-path` untuk melihatnya lagi ([ADMIN.md](teknis/ADMIN.md), *Address*).
+
 ### 3.6 Nyalakan backup otomatis
 
 ```bash

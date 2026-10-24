@@ -28,11 +28,14 @@
 //                                   shares the data folder with extra app servers (NFS)
 //   psctl cluster status [--json]   the app servers, their versions, last heartbeat
 //   psctl cluster tunnel            cloudflared runs only while the app does (failover)
+//   psctl admin-path [new | set <address> | off]
+//                                   the admin panel's own address (/admin is then a 404)
 //
 // psctl never drops, empties or overwrites a database: a restore and a move
 // always fill a new or empty one, and what was there before is kept.
 
 import { spawn, spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
@@ -41,6 +44,8 @@ import { readEnvFile, writeEnvFile } from './lib/envfile.mjs';
 import { readPassphrase } from './lib/secret-input.mjs';
 import {
   PATHS,
+  adminPathProblem,
+  newAdminPath,
   checkCidr,
   classifyDatabase,
   clusterNodes,
@@ -887,6 +892,37 @@ function clusterTunnelCommand() {
   say('cloudflared now runs only while the app does: when the app stops here, Cloudflare uses the other app servers.');
 }
 
+// ─── admin panel address ────────────────────────────────────────────────────
+
+// ETNA_ADMIN_PATH in etna.env (docs/teknis/ADMIN.md, "Address"): the panel
+// only at that address, /admin a 404 for everyone.
+async function adminPathCommand() {
+  const sub = positional[1] ?? 'show';
+  const current = readEnvFile(PATHS.envFile).ETNA_ADMIN_PATH || '';
+  if (sub === 'show') {
+    if (!current) return console.log('The admin panel is at /admin. Give it its own address: sudo psctl admin-path new');
+    const problem = adminPathProblem(current);
+    if (problem) return warn(`ETNA_ADMIN_PATH is not valid (${problem}): the admin panel is closed. Fix it with: sudo psctl admin-path new`);
+    return console.log(`The admin panel is at /${current} (on the address people use for ETNA). /admin is a 404.`);
+  }
+  let value = null;
+  if (sub === 'new') value = newAdminPath(crypto.randomBytes(15));
+  else if (sub === 'set') {
+    value = String(positional[2] ?? '').trim().replace(/^\/+|\/+$/g, '');
+    const problem = adminPathProblem(value);
+    if (problem) fail(`Not this address: ${problem}.`, 2);
+  } else if (sub !== 'off') fail('Usage: psctl admin-path [new | set <address> | off]', 2);
+  setAppEnv({ ETNA_ADMIN_PATH: value });
+  say('Restarting the app');
+  if (!(await restartAndCheck())) fail('The app does not answer after the restart: psctl logs', 1);
+  if (value) {
+    say(`The admin panel is now at /${value}, for example https://<your ETNA address>/${value}. /admin is a 404.`);
+    console.log('Keep the address to yourself (a password manager, not a chat). Signing in and two-factor are still required there.');
+  } else say('The admin panel is at /admin again.');
+  if (ctl().ETNA_SHARED_DATA || fs.existsSync('/etc/exports.d/etna.exports'))
+    warn('Other app servers of this ETNA need the same setting: copy /etc/etna/etna.env to them and run psctl restart there.');
+}
+
 // ─── main ───────────────────────────────────────────────────────────────────
 
 const commands = {
@@ -918,6 +954,7 @@ const commands = {
     const sub = { share: clusterShareCommand, status: clusterStatusCommand, tunnel: clusterTunnelCommand }[positional[1]];
     return sub ? sub() : fail('Usage: psctl cluster share --allow <network> | status [--json] | tunnel', 2);
   },
+  'admin-path': adminPathCommand,
   version: () => console.log(JSON.parse(fs.readFileSync(path.join(APP, 'package.json'), 'utf8')).version),
 };
 
@@ -925,7 +962,7 @@ const command = positional[0];
 process.env.PGPASSFILE ||= PATHS.ownerPgpass;
 try {
   if (!commands[command]) {
-    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 33).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 35).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exitCode = command ? 2 : 0;
   } else {
     if (command !== 'version') requireRoot();

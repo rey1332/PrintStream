@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,6 +10,8 @@ import {
   classifyDatabase,
   databaseOf,
   doctorFindings,
+  adminPathProblem,
+  newAdminPath,
   pgpassLine,
   previousRelease,
   releaseRoot,
@@ -129,6 +132,7 @@ test('doctor: flags readable secrets, missing keys, an unprotected remote databa
       DATABASE_URL: 'postgres://etna_app:x@localhost/etna',
       AUTH_DATABASE_URL: 'postgres://etna_auth:x@localhost/etna',
       WORKER_DATABASE_URL: 'postgres://etna_worker:x@localhost/etna',
+      ETNA_ADMIN_PATH: 'q3x7mzk2vb9t4wfn6hj5rc8d',
     },
     ownerUrl: 'postgres://etna_owner@localhost/etna',
     services: { etna: 'active', 'etna-worker': 'active' },
@@ -161,6 +165,19 @@ test('doctor: flags readable secrets, missing keys, an unprotected remote databa
   assert.match(text, /only 5% free/);
   assert.ok(bad.some((f) => f.level === 'warn' && /second place/.test(f.text)));
   assert.ok(doctorFindings({ ...good, backup: { configured: false } }).some((f) => /psctl backup-setup/.test(f.text)));
+  const panel = (ETNA_ADMIN_PATH) => doctorFindings({ ...good, settings: { ...good.settings, ETNA_ADMIN_PATH } }).find((f) => /admin panel/.test(f.text));
+  assert.equal(panel(undefined).level, 'warn');
+  assert.equal(panel('admin').level, 'fail');
+  assert.equal(panel('short').level, 'fail');
+});
+
+test('admin-path: a new address is random, valid, and the same rule as the app', async () => {
+  const { adminBase } = await import('../../src/lib/adminPath.ts');
+  const a = newAdminPath(crypto.randomBytes(15));
+  assert.match(a, /^[a-z2-7]{24}$/);
+  assert.notEqual(a, newAdminPath(crypto.randomBytes(15)));
+  for (const v of [a, 'ops-panel-01', 'short', 'terms', 'API-panel-01', 'a'.repeat(64), 'a'.repeat(65), '-leading-dash'])
+    assert.equal(adminPathProblem(v) === null, adminBase(v) !== null, v);
 });
 
 test('psctl: help without root, every other command needs root', { skip: process.platform === 'win32' || process.getuid?.() === 0 }, () => {

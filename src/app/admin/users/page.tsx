@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { useAdmin } from '../components/AdminShell';
+import { useAdmin, useAdminPath } from '../components/AdminShell';
 import { adminChange, adminGet } from '../components/api';
 import { ROLE_LABEL, errorKey, workspaceRoleKey, type AdminRole } from '../components/labels';
 import { LinkReveal } from '../components/LinkReveal';
@@ -82,6 +82,7 @@ const menuItemCls =
   'flex w-full items-center gap-2 px-3 py-2 text-left text-[0.78rem] hover:bg-muted max-lg:min-h-11';
 
 export default function UsersPage() {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const { role, email: me, confirmIdentity } = useAdmin();
   const canManage = role === 'super_admin' || role === 'support';
@@ -373,7 +374,7 @@ export default function UsersPage() {
                     <tr key={u.user_id} className={rowCls}>
                       <td className="px-5 py-2">
                         <Link
-                          href={`/admin/users/${u.user_id}`}
+                          href={ap(`/users/${u.user_id}`)}
                           className="text-foreground underline-offset-2 hover:underline"
                         >
                           {u.email}
@@ -412,7 +413,7 @@ export default function UsersPage() {
                               return (
                                 <li key={m.workspace_id} className="truncate">
                                   <Link
-                                    href={`/admin/workspaces/${m.workspace_id}`}
+                                    href={ap(`/workspaces/${m.workspace_id}`)}
                                     className="text-foreground underline-offset-2 hover:underline"
                                   >
                                     {m.name}

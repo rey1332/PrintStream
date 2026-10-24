@@ -21,7 +21,7 @@ import {
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { useAdmin } from '../../components/AdminShell';
+import { useAdmin, useAdminPath } from '../../components/AdminShell';
 import { adminChange, adminGet } from '../../components/api';
 import { ActionDialog } from '../../components/ActionDialog';
 import { accountRights, closeDialog, type Dialog } from '../../components/accountActions';
@@ -92,6 +92,7 @@ interface Issued {
 }
 
 export default function UserDetailPage() {
+  const ap = useAdminPath();
   const { id } = useParams<{ id: string }>();
   const { t, fmt } = useI18n();
   const { role, email: me, confirmIdentity } = useAdmin();
@@ -166,7 +167,7 @@ export default function UserDetailPage() {
   return (
     <div className="space-y-5">
       <Link
-        href="/admin/users"
+        href={ap('/users')}
         className="inline-flex items-center gap-1 text-[0.75rem] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={12} />
@@ -339,7 +340,7 @@ export default function UserDetailPage() {
                   <tr key={w.workspace_id} className={rowCls}>
                     <td className="px-5 py-2">
                       <Link
-                        href={`/admin/workspaces/${w.workspace_id}`}
+                        href={ap(`/workspaces/${w.workspace_id}`)}
                         className="text-foreground underline-offset-2 hover:underline"
                       >
                         {w.name}
@@ -486,7 +487,7 @@ export default function UserDetailPage() {
                   <tr key={a.version_id} className={rowCls}>
                     <td className="px-5 py-2">
                       <Link
-                        href={`/admin/terms/${a.version_id}`}
+                        href={ap(`/terms/${a.version_id}`)}
                         className="text-foreground underline-offset-2 hover:underline"
                       >
                         {a.label}

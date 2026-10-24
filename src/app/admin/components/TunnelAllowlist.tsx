@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { adminGet } from './api';
 import { buttonCls, fieldCls, rowCls, tableCls, theadCls } from './ui';
+import { useAdminPath } from './AdminShell';
 
 export interface TunnelEntry {
   id: string;
@@ -38,6 +39,7 @@ export function TunnelAllowlist({
   editable: boolean;
   onChange: (body: Record<string, unknown>) => Promise<void>;
 }) {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const [search, setSearch] = useState('');
   const [matches, setMatches] = useState<WorkspaceChoice[]>([]);
@@ -84,7 +86,7 @@ export function TunnelAllowlist({
                 <tr key={e.id} className={rowCls}>
                   <td className="px-2 py-2">
                     <Link
-                      href={`/admin/workspaces/${e.workspace_id}`}
+                      href={ap(`/workspaces/${e.workspace_id}`)}
                       className="underline-offset-2 hover:underline"
                     >
                       {e.workspace_name ?? e.workspace_id}

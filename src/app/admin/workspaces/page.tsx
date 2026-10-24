@@ -16,7 +16,7 @@ import {
   tableCls,
   theadCls,
 } from '../components/ui';
-import { useAdmin } from '../components/AdminShell';
+import { useAdmin, useAdminPath } from '../components/AdminShell';
 import { CompanyDialog } from '../components/CompanyDialog';
 import { ExportButton } from '../components/AccountPanels';
 
@@ -40,6 +40,7 @@ const FILTERS: { value: string; label: MessageKey }[] = [
 ];
 
 export default function WorkspacesPage() {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -163,7 +164,7 @@ export default function WorkspacesPage() {
                 <tr key={w.workspace_id} className={rowCls}>
                   <td className="px-5 py-2">
                     <Link
-                      href={`/admin/workspaces/${w.workspace_id}`}
+                      href={ap(`/workspaces/${w.workspace_id}`)}
                       className="text-foreground underline-offset-2 hover:underline"
                     >
                       {w.name}

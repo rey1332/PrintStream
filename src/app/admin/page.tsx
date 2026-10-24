@@ -29,7 +29,7 @@ import {
 } from 'recharts';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { useAdmin } from './components/AdminShell';
+import { useAdmin, useAdminPath } from './components/AdminShell';
 import { adminGet } from './components/api';
 import { GrantAdminDialog, GrantWorkspaceDialog } from './components/GrantDialogs';
 import { ROLE_LABEL } from './components/labels';
@@ -178,6 +178,7 @@ function bytes(n: number, number: (v: number, o?: Intl.NumberFormatOptions) => s
 }
 
 export default function AdminDashboardPage() {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const { role } = useAdmin();
   const [hours, setHours] = useState<Hours>(24);
@@ -311,7 +312,7 @@ export default function AdminDashboardPage() {
           icon={Users}
           title={t('padmin.dash.accounts')}
           value={n(accounts.total)}
-          href="/admin/users"
+          href={ap('/users')}
         >
           <Line label={t('padmin.dash.activeAccounts')} value={n(accounts.active)} />
           <Line label={t('padmin.dash.new')} value={n(accounts.new)} />
@@ -325,14 +326,14 @@ export default function AdminDashboardPage() {
             value={n(accounts.without_mfa)}
             tone={accounts.without_mfa ? 'warn' : undefined}
           />
-          <Line label={t('padmin.nav.admins')} value={n(accounts.admins)} href="/admin/admins" />
+          <Line label={t('padmin.nav.admins')} value={n(accounts.admins)} href={ap('/admins')} />
         </Stat>
 
         <Stat
           icon={Building2}
           title={t('padmin.nav.workspaces')}
           value={n(workspaces.total)}
-          href="/admin/workspaces"
+          href={ap('/workspaces')}
         >
           <Line label={t('padmin.dash.activeWorkspaces')} value={n(workspaces.active)} />
           <Line label={t('padmin.dash.new')} value={n(workspaces.new)} />
@@ -349,24 +350,24 @@ export default function AdminDashboardPage() {
             label={t('padmin.dash.failedSignIns')}
             value={n(signIn.failed)}
             tone={signIn.failed ? 'warn' : undefined}
-            href="/admin/security-log?type=LOGIN_FAILED"
+            href={ap('/security-log?type=LOGIN_FAILED')}
           />
           <Line
             label={t('padmin.dash.failedCodes')}
             value={n(signIn.mfa_failed)}
             tone={signIn.mfa_failed ? 'warn' : undefined}
-            href="/admin/security-log?type=MFA_CHALLENGE_FAILED"
+            href={ap('/security-log?type=MFA_CHALLENGE_FAILED')}
           />
           <Line
             label={t('padmin.dash.rateLimited')}
             value={n(signIn.rate_limited)}
             tone={signIn.rate_limited ? 'bad' : undefined}
-            href="/admin/security-log?type=LOGIN_RATE_LIMITED"
+            href={ap('/security-log?type=LOGIN_RATE_LIMITED')}
           />
           <Line
             label={t('padmin.dash.failedLinks')}
             value={n(signIn.reset_failed)}
-            href="/admin/security-log?type=PASSWORD_RESET_FAILED"
+            href={ap('/security-log?type=PASSWORD_RESET_FAILED')}
           />
         </Stat>
 
@@ -374,7 +375,7 @@ export default function AdminDashboardPage() {
           icon={FileText}
           title={t('padmin.dash.termsPending')}
           value={terms ? n(terms.pending) : '—'}
-          href="/admin/terms"
+          href={ap('/terms')}
         >
           {terms ? (
             <>
@@ -490,7 +491,7 @@ export default function AdminDashboardPage() {
                     <tr key={a.email} className={rowCls}>
                       <td className="max-w-[240px] truncate px-5 py-2">
                         <Link
-                          href={`/admin/security-log?q=${encodeURIComponent(a.email)}`}
+                          href={ap(`/security-log?q=${encodeURIComponent(a.email)}`)}
                           className="text-foreground underline-offset-2 hover:underline"
                         >
                           {a.email}
@@ -537,7 +538,7 @@ export default function AdminDashboardPage() {
                     <tr key={a.ip} className={rowCls}>
                       <td className="px-5 py-2 font-mono text-[0.72rem]">
                         <Link
-                          href={`/admin/security-log?q=${encodeURIComponent(a.ip)}`}
+                          href={ap(`/security-log?q=${encodeURIComponent(a.ip)}`)}
                           className="text-foreground underline-offset-2 hover:underline"
                         >
                           {a.ip}
@@ -576,7 +577,7 @@ export default function AdminDashboardPage() {
           <>
             <Badge>{t('padmin.dash.inPeriod', { count: n(signIn.admin_actions) })}</Badge>
             <Link
-              href="/admin/security-log"
+              href={ap('/security-log')}
               className="flex items-center gap-1 text-[0.75rem] text-muted-foreground hover:text-foreground"
             >
               {t('padmin.overview.viewAll')}

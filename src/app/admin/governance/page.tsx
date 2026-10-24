@@ -6,7 +6,7 @@ import { Archive, Cable, HardDrive, KeyRound, Loader2, Network } from 'lucide-re
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import type { MessageKey } from '@/lib/i18n/messages';
-import { useAdmin } from '../components/AdminShell';
+import { useAdmin, useAdminPath } from '../components/AdminShell';
 import { adminChange, adminGet } from '../components/api';
 import { errorKey } from '../components/labels';
 import { formatBytes } from '../components/GovernancePanels';
@@ -108,6 +108,7 @@ function PolicyRow({
 }
 
 export default function GovernancePage() {
+  const ap = useAdminPath();
   const { t, fmt } = useI18n();
   const { role, confirmIdentity } = useAdmin();
   const [data, setData] = useState<Data | null>(null);
@@ -306,7 +307,7 @@ export default function GovernancePage() {
                     <td className="px-5 py-2">{s.admin_email}</td>
                     <td className="px-2 py-2">
                       <Link
-                        href={`/admin/workspaces/${s.workspace_id}`}
+                        href={ap(`/workspaces/${s.workspace_id}`)}
                         className="underline-offset-2 hover:underline"
                       >
                         {s.workspace_name}
@@ -333,7 +334,7 @@ export default function GovernancePage() {
               .map((h) => (
                 <li key={h.id} className="text-[0.78rem]">
                   <Link
-                    href={`/admin/workspaces/${h.workspace_id}`}
+                    href={ap(`/workspaces/${h.workspace_id}`)}
                     className="underline-offset-2 hover:underline"
                   >
                     {h.workspace_name}
