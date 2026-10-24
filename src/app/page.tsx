@@ -12,7 +12,6 @@ import { Settings } from 'lucide-react';
 import { consoleLogger } from '@/lib/console-logger';
 import { useConsolePageContext } from '@/lib/console/bridge';
 import { ConsoleButton } from '@/components/console/ConsoleHost';
-import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { useUiMode } from '@/lib/ui/UiModeProvider';
@@ -75,6 +74,8 @@ export default function DashboardPage() {
       workspaceId = null;
     }
     try {
+      // The spreadsheet library only when someone exports (it is large).
+      const XLSX = await import('xlsx');
       const workbook = XLSX.utils.book_new();
       for (const table of tables) {
         const response = await fetch('/api/erp/export', {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, {
+  Suspense,
   createContext,
   useCallback,
   useContext,
@@ -8,6 +9,7 @@ import React, {
   useLayoutEffect,
   useMemo,
   useState,
+  use,
 } from 'react';
 import {
   DEFAULT_LOCALE,
@@ -18,6 +20,7 @@ import {
   type Locale,
 } from './config';
 import { setCurrentLocale, translate, type TranslateVars } from './translate';
+import { localeReady } from '#i18n-source';
 import type { MessageKey } from './messages';
 import {
   formatDate,
@@ -84,8 +87,29 @@ function buildValue(
   };
 }
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+/**
+ * Renders the page once its language's words are loaded (source.client.ts).
+ * While the first page hydrates, React keeps the server's HTML on screen
+ * until then; on the server the words are always there.
+ */
+function WhenLoaded({ locale, children }: { locale: Locale; children: React.ReactNode }) {
+  const pending = localeReady(locale);
+  if (pending) use(pending);
+  return <>{children}</>;
+}
+
+export function I18nProvider({
+  initialLocale = DEFAULT_LOCALE,
+  children,
+}: {
+  /** The language the server renders in (the request's cookie). */
+  initialLocale?: Locale;
+  children: React.ReactNode;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
+  // tr() outside components follows the page (in the browser only: on the
+  // server one module serves every request).
+  if (typeof window !== 'undefined') setCurrentLocale(locale);
   const [currency, setCurrencyState] = useState<string | null>(null);
 
   useIsomorphicLayoutEffect(() => {
@@ -108,11 +132,21 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // A language is shown once its words are loaded: switching never blanks the page.
+  const showLocale = useCallback((next: Locale) => {
+    const pending = localeReady(next);
+    if (!pending) return setLocaleState(next);
+    pending.then(
+      () => setLocaleState(next),
+      () => document.documentElement.removeAttribute('data-locale-pending')
+    );
+  }, []);
+
+  // The language saved in this browser, when the server rendered another one.
   useIsomorphicLayoutEffect(() => {
     const stored = readStoredLocale();
-    setCurrentLocale(stored);
-    if (stored !== DEFAULT_LOCALE) setLocaleState(stored);
-  }, []);
+    if (stored !== initialLocale) showLocale(stored);
+  }, [initialLocale, showLocale]);
 
   // Runs after the render in the saved locale is committed: reveal the page.
   useIsomorphicLayoutEffect(() => {
@@ -124,25 +158,32 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // Keep other open tabs of this browser in sync.
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === LOCALE_STORAGE_KEY && isLocale(event.newValue))
-        setLocaleState(event.newValue);
+      if (event.key === LOCALE_STORAGE_KEY && isLocale(event.newValue)) showLocale(event.newValue);
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [showLocale]);
 
-  const setLocale = useCallback((next: Locale) => {
-    const stored = writeStoredLocale(next);
-    setCurrentLocale(next);
-    setLocaleState(next);
-    return stored;
-  }, []);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      const stored = writeStoredLocale(next);
+      showLocale(next);
+      return stored;
+    },
+    [showLocale]
+  );
 
   const value = useMemo(
     () => buildValue(locale, setLocale, currency, setCurrency),
     [locale, setLocale, currency, setCurrency]
   );
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return (
+    <I18nContext.Provider value={value}>
+      <Suspense fallback={null}>
+        <WhenLoaded locale={locale}>{children}</WhenLoaded>
+      </Suspense>
+    </I18nContext.Provider>
+  );
 }
 
 export function useI18n(): I18nValue {

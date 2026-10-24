@@ -1,11 +1,9 @@
 import { DEFAULT_LOCALE, type Locale } from './config';
-import { messages, type Entry, type MessageKey } from './messages';
+import type { MessageKey } from './messages';
+// Every language on the server, the page's language in the browser.
+import { textFor } from '#i18n-source';
 
 export type TranslateVars = Record<string, string | number>;
-
-function column(locale: Locale): 'en' | 'id' | 'zh' {
-  return locale === 'zh-CN' ? 'zh' : locale;
-}
 
 function interpolate(template: string, vars?: TranslateVars): string {
   if (!vars) return template;
@@ -15,9 +13,8 @@ function interpolate(template: string, vars?: TranslateVars): string {
 }
 
 export function translate(locale: Locale, key: MessageKey, vars?: TranslateVars): string {
-  const entry = (messages as Record<string, Entry | undefined>)[key];
-  if (!entry) return key;
-  return interpolate(entry[column(locale)] || entry.en, vars);
+  const text = textFor(locale, key);
+  return text === undefined ? key : interpolate(text, vars);
 }
 
 let currentLocale: Locale = DEFAULT_LOCALE;

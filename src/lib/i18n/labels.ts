@@ -1,10 +1,11 @@
-import { messages, type MessageKey } from './messages';
+import type { MessageKey } from './messages';
+import { hasText } from '#i18n-source';
 import type { TranslateVars } from './translate';
 
 type T = (key: MessageKey, vars?: TranslateVars) => string;
 
 export function hasMessage(key: string): key is MessageKey {
-  return Object.prototype.hasOwnProperty.call(messages, key);
+  return hasText(key);
 }
 
 export function txCategoryLabel(category: string, t: T): string {

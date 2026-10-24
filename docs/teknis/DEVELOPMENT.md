@@ -91,6 +91,7 @@ another device; use a tunnel or a reverse proxy as in INSTALL-SERVER.md.
 | `npm run test:unit` | Unit tests (`tests/unit`) |
 | `npm run test:db` | Database tests against in-memory PostgreSQL (`tests/db`): every migration, RLS, functions, auth |
 | `node tests/i18n/scan.mjs` | Finds UI text that is not translated |
+| `npm run i18n:tables` | After editing `src/lib/i18n/messages`: writes the browser's per-language tables (`src/lib/i18n/tables`). A page loads only its language's table (`src/lib/i18n/source.client.ts`); the server reads the messages themselves. `npm run test:unit` fails while the tables are out of date |
 | `npm run format:check` | Prettier on `src/` |
 | `npm run lint` | ESLint (Next.js rules) |
 | `npm run check` | Type-check, all tests, i18n scan and format check together |

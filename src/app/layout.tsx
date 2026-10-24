@@ -1,12 +1,12 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import '../styles/tailwind.css';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { I18nProvider } from '@/lib/i18n/I18nProvider';
-import { LOCALE_BOOT_SCRIPT } from '@/lib/i18n/config';
+import { LOCALE_BOOT_SCRIPT, LOCALE_COOKIE, localeFromCookie } from '@/lib/i18n/config';
 import { UI_BOOT_SCRIPT } from '@/lib/ui/mode';
 import { UiModeProvider } from '@/lib/ui/UiModeProvider';
 import { ConsoleProvider } from '@/components/console/ConsoleHost';
@@ -31,8 +31,10 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // This request's script nonce (src/middleware.ts): inline scripts run only with it.
   const nonce = (await headers()).get('x-nonce') ?? undefined;
+  // Rendered in the language this browser chose (src/lib/i18n/config.ts).
+  const locale = localeFromCookie((await cookies()).get(LOCALE_COOKIE)?.value);
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/* Browsers hide a nonce from the page once loaded (nonce=""), so React
             would report a mismatch here on every load. */}
@@ -56,7 +58,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           disableTransitionOnChange
           storageKey="etna-theme"
         >
-          <I18nProvider>
+          <I18nProvider initialLocale={locale}>
             <AuthProvider>
               <UiModeProvider>
                 <TermsGate />

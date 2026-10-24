@@ -3,3 +3,5 @@ build
 coverage
 node_modules
 public
+# Made by scripts/i18n/tables.mjs (npm run i18n:tables)
+src/lib/i18n/tables
