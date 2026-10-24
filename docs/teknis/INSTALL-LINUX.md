@@ -39,7 +39,9 @@ luar) yang gagal sampai koneksi kembali.
   `nvm` di folder home: layanan tidak bisa membaca `/home` (`ProtectHome=yes`).
 - `git`, `tar`, dan akses root (`sudo`).
 - PostgreSQL: **tidak perlu disiapkan** bila memilih "di server ini"
-  (installer memasang PostgreSQL 18 dari apt.postgresql.org). Untuk server
+  (installer memasang PostgreSQL 18: dari paket distribusi bila ada, else
+  apt.postgresql.org; di rilis yang belum didukung apt.postgresql.org,
+  misalnya Ubuntu 26.04, PostgreSQL bawaan distribusi). Untuk server
   database tersendiri, lihat A2.
 - Untuk HTTPS: Caddy (`apt install caddy`) atau Cloudflare Tunnel.
 

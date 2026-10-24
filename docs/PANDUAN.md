@@ -589,6 +589,7 @@ Untuk detail yang tidak dibahas di sini (semuanya di folder [teknis/](teknis/)):
 
 | File | Isinya |
 |---|---|
+| [installation-update.md](installation-update.md) | Instalasi & update langkah demi langkah: Ubuntu, Windows + pgAdmin, cluster multi-node, troubleshooting |
 | [INSTALL-LINUX.md](teknis/INSTALL-LINUX.md) | Instalasi Linux lengkap, psctl, Docker Compose |
 | [INSTALL-SERVER.md](teknis/INSTALL-SERVER.md) | Instalasi server Windows (aplikasi & database terpisah) |
 | [HOW TO ETNA.md](teknis/HOW%20TO%20ETNA.md) | Panduan server Windows dengan server manager |

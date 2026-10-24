@@ -114,6 +114,7 @@ The application checks user permissions before allowing access to resources. Pos
 
 | Environment | Guide |
 |---|---|
+| Step by step, everything | [Installation & update guide](docs/installation-update.md): Ubuntu, Windows with pgAdmin, multi-node cluster, updates, troubleshooting |
 | Ubuntu Server | [Production installation](docs/PANDUAN.md#3-pasang-di-ubuntu-server-untuk-dipakai-kantor) |
 | Windows | [Development setup](docs/PANDUAN.md#4-pasang-di-windows-pc-development) |
 | Updating PrintStream | [Update guide](docs/PANDUAN.md#6-update-ke-versi-baru) |
