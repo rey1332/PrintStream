@@ -17,6 +17,12 @@ import {
 } from './runtime';
 import type { ColumnLineage, WorkflowGraph } from './types';
 import { UNIFY_COLUMN_KEYS, UNIFY_LIST_KEYS, UNIFY_REQUIRED_KEYS, unifySchema } from './unifyNodes';
+import {
+  ANALYTICS_COLUMN_KEYS,
+  ANALYTICS_LIST_KEYS,
+  ANALYTICS_REQUIRED_KEYS,
+  analyticsSchema,
+} from './analyticsNodes';
 
 export interface SchemaColumn {
   name: string;
@@ -65,6 +71,7 @@ const COLUMN_KEYS: Record<string, string[]> = {
   'out.kpi': ['column'],
   'out.chart': ['xColumn', 'seriesColumn'],
   ...UNIFY_COLUMN_KEYS,
+  ...ANALYTICS_COLUMN_KEYS,
 };
 
 const LIST_KEYS: Record<string, string[]> = {
@@ -72,6 +79,7 @@ const LIST_KEYS: Record<string, string[]> = {
   'tf.validate': ['requiredColumns', 'numericColumns', 'dateColumns', 'uniqueKey'],
   'out.chart': ['measures'],
   ...UNIFY_LIST_KEYS,
+  ...ANALYTICS_LIST_KEYS,
 };
 
 const NUMERIC_KEYS: Record<string, string[]> = {
@@ -95,6 +103,7 @@ const REQUIRED_KEYS: Record<string, string[]> = {
   'an.describe': ['column'],
   'out.kpi': ['column'],
   ...UNIFY_REQUIRED_KEYS,
+  ...ANALYTICS_REQUIRED_KEYS,
 };
 
 function outputSchema(
@@ -176,7 +185,7 @@ function outputSchema(
     };
   }
 
-  const unified = unifySchema(type, cfg, inputs);
+  const unified = unifySchema(type, cfg, inputs) ?? analyticsSchema(type, cfg, inputs);
   if (unified) return unified;
 
   switch (type) {

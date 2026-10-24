@@ -51,6 +51,37 @@ the catalog.
   colour-blind separation on the light and dark surfaces; every chart has a
   legend (two or more series), a table view and an *Open large* view.
 
+- **Business analysis** (`src/lib/workflow/analyticsNodes.ts`), rows in and
+  rows out like the other steps, so their results feed charts and datasets:
+  - *Pareto (ABC)*: one row per item, summed, largest first, with `rank`,
+    `share_pct`, `cumulative_pct` and `abc_class`. An item is A while the
+    share before it is under the A line (80 % by default), B under the B line
+    (95 %), else C.
+  - *RFM Segments*: one row per customer (each input row is one order) with
+    `recency_days`, `frequency`, `monetary`, scores 1–5 by fifths, and a
+    segment: Champions, Loyal, New, At risk, Lost, Needs attention. *As of*
+    empty: the newest date in the data, so an old export reads sensibly.
+  - *Aging*: from a due date (terms 0) or an invoice date plus payment terms,
+    `days_overdue` and `aging_bucket` (`current`, `d1_30`, `d31_60`, `d61_90`,
+    `d90_plus`) per row, or with *Per party* one row per customer/supplier with
+    the amounts per bucket, `total` and `oldest_days`. *As of* empty: today.
+  - *Cohort Retention*: customers by their first week, month or quarter, and
+    how many are active in each later period (`retention_pct`).
+  - *Compare Periods*: sum, average, count, minimum or maximum per day, week
+    (from Monday), month, quarter or year, optionally per group. Every period
+    from the first to the last is present (a month without sales is 0), with
+    `previous`, `change`, `change_pct`, `last_year`, `yoy_pct`, `moving_avg`
+    and `running_total`. Dates may be days or `YYYY-MM` months. At most
+    100,000 rows.
+  - *Correlation*: Pearson correlation of every pair of numeric columns (all
+    of them, up to 30, when none are listed), with the number of pairs and a
+    strength label. A strong correlation does not show cause.
+  - *Quantiles*: the quantile group (1 = smallest values) and percentile of
+    each row's value.
+  - *Find Outliers* compares each value with its own group when *Group by*
+    (`partitionBy`) is set, e.g. a large order is normal for one customer and
+    unusual for another.
+
 - **JavaScript** (`tf.code`, `db/migrations/20261012000061_pipeline_code.sql`):
   a step whose code a member writes, as the body of a function of `rows`,
   `columns` and `h` (helpers: `num`, `round`, `sum`, `avg`, `groupBy`, `date`,

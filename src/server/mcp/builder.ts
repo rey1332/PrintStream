@@ -20,6 +20,7 @@ import {
 import { GRAPH_LIMITS, analyzeGraph, topoOrder, type GraphAnalysis } from '@/lib/workflow/schema';
 import type { DataTable, WorkflowGraph } from '@/lib/workflow/types';
 import { UNIFY_META } from '@/lib/workflow/unifyNodes';
+import { ANALYTICS_META } from '@/lib/workflow/analyticsNodes';
 import type { Executor, SqlTx } from '@/server/db/executor';
 import { FIELD_TYPES, loadDataset } from '@/server/terminal/datasets';
 import { readingContext } from '@/server/terminal/pipelines';
@@ -42,7 +43,9 @@ export const NODE_INFO: NodeInfo[] = [
     (m) => (m.category === 'source' || m.category === 'transform') && m.type !== 'tf.code'
   ),
   ...UNIFY_META.map(strip),
-  ...CORE_NODE_INFO.filter((m) => m.category === 'analysis' || m.category === 'output'),
+  ...CORE_NODE_INFO.filter((m) => m.category === 'analysis'),
+  ...ANALYTICS_META.map(strip),
+  ...CORE_NODE_INFO.filter((m) => m.category === 'output'),
 ];
 const INFO = new Map(NODE_INFO.map((n) => [n.type, n]));
 
@@ -67,6 +70,21 @@ const NOTES: Record<string, string> = {
   'out.psDataset': `datasetId from list_datasets; mode: ${DATASET_WRITE_MODES.join(', ')}. Writes only in background runs of a published version; test runs show what would be written.`,
   'out.erpList':
     'list: customers, suppliers or products; erpMode: add_new or add_or_update; needs a "name" column. Writes only in background runs of a published version.',
+  'an.pareto':
+    'One row per item (summed), largest first: rank, share_pct, cumulative_pct, abc_class (A while the running share before the item is under aThreshold %, B under bThreshold %).',
+  'an.rfm':
+    'One row per customer: last_date, recency_days, frequency (rows), monetary (sum of amountColumn), r/f/m_score 1–5, rfm, segment (Champions, Loyal, New, At risk, Lost, Needs attention). asOf: YYYY-MM-DD, empty = the newest date in the data.',
+  'an.aging':
+    'dateColumn: due date (termsDays 0) or invoice date plus termsDays. Without partyColumn adds days_overdue and aging_bucket (current, d1_30, d31_60, d61_90, d90_plus) per row; with it one row per party with those buckets summed, total, oldest_days. asOf: YYYY-MM-DD, empty = today.',
+  'an.cohort':
+    'cohortPeriod: weekly, monthly or quarterly. Rows: cohort (first period), period_index (0 = first), period, cohort_size, active_customers, retention_pct.',
+  'an.periodCompare':
+    'period: daily, weekly, monthly, quarterly, yearly; operation: sum, avg, count (valueColumn optional), min, max; groupBy optional. Every period between the first and last is present (sum/count 0). Columns: period, period_start, value, previous, change, change_pct, last_year, yoy_pct, moving_avg (movingWindow periods), running_total.',
+  'an.correlation': `columns: ${LIST} empty = every numeric column (at most 30). One row per pair: column_a, column_b, correlation (Pearson, -1 to 1), pairs, strength.`,
+  'an.quantiles':
+    'Adds newColumn (1..buckets, higher = larger values) and newColumn_percentile (0–100).',
+  'an.outliers':
+    'outlierMethod: iqr or zscore; threshold (1.5 for IQR, 3 for z-score); partitionBy: optional column, compares each value with its own group only. Adds is_outlier and outlier_score.',
 };
 
 export function nodeTypes(category?: string) {
