@@ -182,10 +182,25 @@ ensure_local_postgres() {
     [ -n "$(pg_lsclusters -h | awk '$4 == "online"')" ] || die "PostgreSQL is installed but no cluster is running (pg_lsclusters). Start it, then run again."
   else
     command -v apt-get >/dev/null || die "--local-postgres installs PostgreSQL with apt (Ubuntu, Debian). Install PostgreSQL $PG_MAJOR yourself, then use --database-url."
-    say "Installing PostgreSQL $PG_MAJOR (packages from apt.postgresql.org)"
+    apt-get update -qq >/dev/null || true
     apt-get install -y -qq postgresql-common >/dev/null
-    /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
-    apt-get install -y -qq "postgresql-$PG_MAJOR" >/dev/null
+    local package="postgresql-$PG_MAJOR"
+    if apt-cache show "$package" >/dev/null 2>&1; then
+      say "Installing PostgreSQL $PG_MAJOR (the distribution's packages)"
+    else
+      say "Installing PostgreSQL $PG_MAJOR (packages from apt.postgresql.org)"
+      if ! /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null; then
+        # A release apt.postgresql.org has no packages for yet (a new Ubuntu):
+        # its list comes out again, or every apt update fails, and the
+        # distribution's own PostgreSQL is used (16 or newer is checked below).
+        rm -f /etc/apt/sources.list.d/pgdg.list /etc/apt/sources.list.d/pgdg.sources
+        apt-get update -qq >/dev/null || true
+        apt-cache show postgresql >/dev/null 2>&1 || die "Neither apt.postgresql.org nor this distribution has PostgreSQL packages for $(. /etc/os-release; echo "$PRETTY_NAME"). Install PostgreSQL 16 or newer yourself, then run again."
+        warn "apt.postgresql.org has no packages for $(. /etc/os-release; echo "$PRETTY_NAME") yet: installing the distribution's PostgreSQL instead."
+        package=postgresql
+      fi
+    fi
+    apt-get install -y -qq "$package" >/dev/null
   fi
   local port major
   read -r major port < <(pg_lsclusters -h | awk '$4 == "online" { print $1, $3; exit }')
