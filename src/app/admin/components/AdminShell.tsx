@@ -77,7 +77,10 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const { t } = useI18n();
-  const pathname = usePathname();
+  // The page within the panel ('' or '/users/…'): the server sees the
+  // panel's own folder (/admin/…), the browser its address.
+  const at = usePathname();
+  const here = at.startsWith(base) ? at.slice(base.length) : at.replace(/^\/admin/, '');
   const [reauthOpen, setReauthOpen] = useState(false);
   const pending = useRef<((ok: boolean) => void) | null>(null);
 
@@ -111,7 +114,7 @@ export function AdminShell({
             <nav className="flex flex-wrap items-center gap-1">
               {NAV.map(({ href: page, label, icon: Icon }) => {
                 const href = base + page;
-                const active = page === '' ? pathname === href : pathname.startsWith(href);
+                const active = page === '' ? here === '' || here === '/' : here.startsWith(page);
                 return (
                   <Link
                     key={href}
