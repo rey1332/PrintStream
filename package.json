@@ -18,6 +18,7 @@
     "test": "npm run test:unit && npm run test:db",
     "test:unit": "node --import ./tests/register-ts.mjs --test \"tests/unit/*.test.mjs\"",
     "test:db": "node --import ./tests/register-ts.mjs --test \"tests/db/*.test.mjs\"",
+    "i18n:tables": "node --import ./tests/register-ts.mjs scripts/i18n/tables.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:new": "node scripts/db/new-migration.mjs",
     "db:backup": "node scripts/db/backup.mjs",
@@ -77,6 +78,12 @@
   "author": "Rayhan Akmal",
   "license": "Proprietary Notice",
   "type": "commonjs",
+  "imports": {
+    "#i18n-source": {
+      "browser": "./src/lib/i18n/source.client.ts",
+      "default": "./src/lib/i18n/source.server.ts"
+    }
+  },
   "overrides": {
     "next": {
       "postcss": "$postcss"

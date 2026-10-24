@@ -69,6 +69,23 @@ import { nodeDisplayLabel } from '@/lib/workflow/i18n';
 
 const nodeTypes = { workflowNode: WorkflowNodeView };
 
+/**
+ * The graph without positions, the same object while only positions change:
+ * dragging a step (a change every frame) does not check the whole pipeline
+ * again or draw every other step again.
+ */
+function useStructure(nodes: any[], edges: any[]): WorkflowGraph {
+  const last = useRef<WorkflowGraph | null>(null);
+  const prev = last.current;
+  const same =
+    prev !== null &&
+    prev.edges === edges &&
+    prev.nodes.length === nodes.length &&
+    prev.nodes.every((n, i) => n.id === nodes[i].id && n.data === nodes[i].data);
+  if (!same) last.current = { nodes, edges } as WorkflowGraph;
+  return last.current!;
+}
+
 let nodeIdCounter = 0;
 const nextId = () => `n_${Date.now()}_${++nodeIdCounter}`;
 
@@ -121,7 +138,8 @@ function EditorInner() {
   const canEdit = detail?.canEdit ?? false;
   const graph = useMemo(() => ({ nodes, edges }) as WorkflowGraph, [nodes, edges]);
   const dirty = !loading && canEdit && snapshot(graph, name) !== savedSnapshot;
-  const analysis = useMemo(() => analyzeGraph(graph), [graph]);
+  const structure = useStructure(nodes, edges);
+  const analysis = useMemo(() => analyzeGraph(structure), [structure]);
   const blockingIssues = analysis.issues.filter((i) => i.severity === 'error');
 
   // ─── LOAD ───────────────────────────────────────────────────────────────
@@ -567,24 +585,35 @@ function EditorInner() {
     }
   };
 
-  const viewNodes = useMemo(
-    () =>
-      nodes.map((n) => {
-        const info = analysis.nodes[n.id];
-        const errors = (info?.issues ?? []).filter((i) => i.severity === 'error');
-        const out = info?.outputs.out;
-        return {
-          ...n,
-          data: {
-            ...n.data,
-            issueCount: errors.length,
-            issueText: errors[0] ? issueText(errors[0], t) : undefined,
-            fieldCount: out ? out.length : undefined,
-          },
-        };
-      }),
-    [nodes, analysis, t]
-  );
+  // A step keeps its drawn object while it and its check are unchanged, so
+  // only the steps that changed are drawn again.
+  const viewCache = useRef(new Map<string, { n: any; info: unknown; t: unknown; view: any }>());
+  const viewNodes = useMemo(() => {
+    const cache = viewCache.current;
+    const next = nodes.map((n) => {
+      const info = analysis.nodes[n.id];
+      const hit = cache.get(n.id);
+      if (hit && hit.n === n && hit.info === info && hit.t === t) return hit.view;
+      const errors = (info?.issues ?? []).filter((i) => i.severity === 'error');
+      const out = info?.outputs.out;
+      // The same data while only the position changed (the step's view is memoized on it).
+      const data =
+        hit && hit.n.data === n.data && hit.info === info && hit.t === t
+          ? hit.view.data
+          : {
+              ...n.data,
+              issueCount: errors.length,
+              issueText: errors[0] ? issueText(errors[0], t) : undefined,
+              fieldCount: out ? out.length : undefined,
+            };
+      const view = { ...n, data };
+      cache.set(n.id, { n, info, t, view });
+      return view;
+    });
+    if (cache.size > nodes.length * 2)
+      for (const id of [...cache.keys()]) if (!nodes.some((n) => n.id === id)) cache.delete(id);
+    return next;
+  }, [nodes, analysis, t]);
 
   const viewEdges = useMemo(
     () =>

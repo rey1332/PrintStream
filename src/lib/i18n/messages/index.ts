@@ -111,7 +111,7 @@ export const messages = {
 } satisfies Record<string, Entry>;
 
 // The admin panel's words are not sent to every browser: only admin pages
-// load them (./admin.ts, addMessages). Their keys are still known here, so
+// load them (./admin.ts, addEntries). Their keys are still known here, so
 // the panel's code is checked like the rest.
 type AdminOnly = typeof platformAdminMessages &
   typeof platformAdminManageMessages &
@@ -123,8 +123,4 @@ type AdminOnly = typeof platformAdminMessages &
 
 export type MessageKey = keyof typeof messages | keyof AdminOnly;
 
-/** Adds messages loaded later (the admin panel's). */
-export function addMessages(extra: Record<string, Entry>) {
-  Object.assign(messages, extra);
-}
 export type { Entry };
