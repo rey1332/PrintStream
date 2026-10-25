@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { dataDirs, restoredSettings } from '../../scripts/db/pc-move-core.mjs';
+import { dataDirs, restoredSettings, sameServerLogins } from '../../scripts/db/pc-move-core.mjs';
 import { retargetSettings } from '../../scripts/server/lib/psctl-core.mjs';
 
 // Moving ETNA between PCs (scripts/db/pc-move.mjs): what a .etnabak carries
@@ -85,4 +85,20 @@ test('a PC’s backup restored on a server: the PC’s backup folders do not rea
   });
   assert.equal(changes.MFA_ENCRYPTION_KEY, 'k');
   for (const key of ['ETNA_OFFSITE_DIR', 'ETNA_OFFSITE_KEY', 'ETNA_BACKUP_DATABASE_URL']) assert.ok(!(key in changes), key);
+});
+
+test('a restore on a PostgreSQL server this PC already uses keeps its logins (shared by every database there)', () => {
+  const current = {
+    DATABASE_URL: 'postgres://etna_app:p1@localhost:5432/etna',
+    AUTH_DATABASE_URL: 'postgres://etna_auth:p2@localhost:5432/etna',
+    WORKER_DATABASE_URL: 'postgres://etna_worker:p3@localhost:5432/etna',
+  };
+  assert.deepEqual(sameServerLogins(current, 'postgres://etna_owner@localhost:5432/etna_restore'), {
+    DATABASE_URL: 'postgres://etna_app:p1@localhost:5432/etna_restore',
+    AUTH_DATABASE_URL: 'postgres://etna_auth:p2@localhost:5432/etna_restore',
+    WORKER_DATABASE_URL: 'postgres://etna_worker:p3@localhost:5432/etna_restore',
+  });
+  // A new PC (no logins yet) or another server: new passwords.
+  assert.equal(sameServerLogins({}, 'postgres://etna_owner@localhost:5432/etna'), null);
+  assert.equal(sameServerLogins(current, 'postgres://etna_owner@localhost:5433/etna'), null);
 });

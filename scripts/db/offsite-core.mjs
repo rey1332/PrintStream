@@ -101,10 +101,19 @@ export async function writeBundle(target, entries, { publicKey, privateKeyEncryp
   );
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
   const out = fs.createWriteStream(target, { flags: 'wx', mode: 0o600 });
+  // A file that cannot be made (no write permission, a full or read-only
+  // disk) is an error of this call, not an unhandled stream error.
+  let failed = null;
+  out.on('error', (e) => (failed ??= e));
   const write = (chunk) =>
     new Promise((resolve, reject) => (out.write(chunk, (e) => (e ? reject(e) : resolve())), undefined));
   const files = [];
   try {
+    await new Promise((resolve, reject) => {
+      if (failed) return reject(failed);
+      out.once('open', resolve);
+      out.once('error', reject);
+    });
     const lengthBytes = Buffer.alloc(4);
     lengthBytes.writeUInt32BE(header.length);
     await write(Buffer.concat([MAGIC, lengthBytes, header]));

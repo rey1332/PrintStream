@@ -166,6 +166,8 @@ async function runCommand() {
     fs.rmSync(partial, { force: true });
     // The log line the error alerts pick up (src/server/alerts.ts).
     console.error('[offsite] backup failed:', error instanceof Error ? error.message.slice(0, 200) : 'error');
+    if (error?.code === 'EPERM' || error?.code === 'EACCES')
+      console.error(`This Windows account may not write to ${dir}. Give it write permission there, or choose another folder (ETNA_OFFSITE_DIR in the settings).`);
     process.exitCode = 1;
   } finally {
     fs.rmSync(work, { recursive: true, force: true });

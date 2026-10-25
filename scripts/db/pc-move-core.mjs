@@ -3,7 +3,19 @@
 // documents, which settings come from a backup and which stay this PC's.
 
 import path from 'node:path';
-import { LOCAL_SETTINGS } from '../server/lib/psctl-core.mjs';
+import { APP_URLS, LOCAL_SETTINGS, sameServer, withDatabase } from '../server/lib/psctl-core.mjs';
+
+/**
+ * This PC's app logins pointed at the restored database, when they are on
+ * the same PostgreSQL server (login roles and their passwords belong to the
+ * server, not to a database: new passwords there would cut off every other
+ * ETNA database using them). Null on a new PC, or another server.
+ */
+export function sameServerLogins(current, target) {
+  if (!APP_URLS.every((key) => current[key] && sameServer(current[key], target))) return null;
+  const database = decodeURIComponent(new URL(target).pathname.replace(/^\//, ''));
+  return Object.fromEntries(APP_URLS.map((key) => [key, withDatabase(current[key], database)]));
+}
 
 /**
  * Where the documents and company folders are (as src/server/documents/storage.ts

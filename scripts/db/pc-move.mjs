@@ -25,7 +25,7 @@ import { ROOT, findTool, parseUrl, restoreList } from './backup-core.mjs';
 import { listMigrations, migrate } from './migrator.mjs';
 import { readBundle } from './offsite-core.mjs';
 import { saveOwnerPassword } from './owner.mjs';
-import { dataDirs, restoredSettings } from './pc-move-core.mjs';
+import { dataDirs, restoredSettings, sameServerLogins } from './pc-move-core.mjs';
 import { newAppKeys, newLogin } from './provision.mjs';
 import { readEnvFile, updateEnv } from '../server/lib/envfile.mjs';
 import { restorePlan, stamp } from '../server/lib/psctl-core.mjs';
@@ -254,7 +254,9 @@ async function restoreCommand() {
         '',
         'This will:',
         `  - fill the empty database ${database} with the backup (and this version's newer migrations);`,
-        `  - give the app's login roles new passwords;`,
+        sameServerLogins(current, target)
+          ? `  - keep this PC's database logins (the same PostgreSQL server);`
+          : `  - give the app's login roles new passwords;`,
         `  - put the backup's documents in ${dirs.documents} and ${dirs.companies}${filled(dirs.documents) || filled(dirs.companies) ? ` (this PC's move to ${aside})` : ''};`,
         fs.existsSync(ENV_FILE)
           ? `  - write a new .env.local (this PC's is kept as .env.local.before-restore-${tag}).`
@@ -284,7 +286,10 @@ async function restoreCommand() {
     const { applied, users, urls } = await withClient(target, password, async (client) => {
       const applied = await migrate(adapter(client), { log: (l) => console.log(l) });
       const users = (await client.query('select count(*)::int as n from auth.users')).rows[0].n;
-      const urls = {
+      // The login roles are the PostgreSQL server's, shared by its every ETNA
+      // database: on a server this PC already uses, its logins are kept (only
+      // the database changes), so nothing else on it loses its connection.
+      const urls = sameServerLogins(current, target) ?? {
         DATABASE_URL: await newLogin(client, target, 'etna_app'),
         AUTH_DATABASE_URL: await newLogin(client, target, 'etna_auth'),
         WORKER_DATABASE_URL: await newLogin(client, target, 'etna_worker'),
