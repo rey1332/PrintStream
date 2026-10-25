@@ -1,7 +1,8 @@
 'use client';
 
 // The workbench's object browser (pgAdmin's Object Explorer): this
-// Terminal's datasets and their columns, its PostgreSQL connections and their
+// Terminal's datasets and their columns, its ERPs and the lists the member
+// may query there, its PostgreSQL connections and their
 // tables (asked of the worker when opened), its pipelines, and the
 // Terminal's other screens. Double-click a table to see its first rows.
 
@@ -10,6 +11,7 @@ import Link from 'next/link';
 import {
   Activity,
   BrainCircuit,
+  Building2,
   ChevronDown,
   ChevronRight,
   Columns3,
@@ -25,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { TerminalApiError } from '@/lib/terminal/client';
+import { erpTargetId } from '@/lib/terminal/erpTables';
 import type { SqlTargets } from '@/lib/terminal/sql';
 import { askWorker } from '../components/connectorAsk';
 import { errorMessage } from '../components/shared';
@@ -238,6 +241,94 @@ export function ObjectExplorer({
               {t('ps.wb.noDatasets')}
             </p>
           )}
+
+          {/* ERPs: the Terminal's own and the linked ones, with the lists the member may read */}
+          {!!targets?.erps.length && (
+            <Branch
+              depth={1}
+              icon={Building2}
+              label={t('ps.qt.erpGroup')}
+              count={targets.erps.length}
+              open={open.erps}
+              onToggle={() => toggle('erps')}
+            />
+          )}
+          {open.erps &&
+            (targets?.erps ?? []).map((e) => (
+              <React.Fragment key={e.id}>
+                <Branch
+                  depth={2}
+                  icon={Building2}
+                  label={e.own ? t('ps.qt.erpOwn', { name: e.name }) : e.name}
+                  count={e.tables.length}
+                  open={open[`erp:${e.id}`]}
+                  onToggle={() => toggle(`erp:${e.id}`)}
+                />
+                {open[`erp:${e.id}`] &&
+                  (!e.member || !e.tables.length ? (
+                    <p
+                      style={{ paddingLeft: 4 + 3 * 14 + 16 }}
+                      className="py-0.5 text-[11px] text-[var(--wb-muted)]"
+                    >
+                      {t(e.member ? 'ps.qt.erpNoTables' : 'ps.qt.erpNotMember')}
+                    </p>
+                  ) : (
+                    e.tables.map((tb) => (
+                      <React.Fragment key={tb.name}>
+                        <Branch
+                          depth={3}
+                          icon={TableIcon}
+                          label={tb.name}
+                          open={open[`erp:${e.id}:${tb.name}`]}
+                          onToggle={() => toggle(`erp:${e.id}:${tb.name}`)}
+                          onOpen={() =>
+                            onQuery(erpTargetId(e.id), `select *\nfrom ${tb.name}\nlimit 100;`)
+                          }
+                          title={t('ps.wb.erpTableHint')}
+                        />
+                        {open[`erp:${e.id}:${tb.name}`] && (
+                          <>
+                            <div
+                              style={{ paddingLeft: 4 + 4 * 14 }}
+                              className="flex gap-2 py-0.5 text-[11px]"
+                            >
+                              <button
+                                type="button"
+                                className="text-[var(--wb-accent)] hover:underline"
+                                onClick={() =>
+                                  onQuery(
+                                    erpTargetId(e.id),
+                                    `select *\nfrom ${tb.name}\nlimit 100;`
+                                  )
+                                }
+                              >
+                                {t('ps.wb.viewData')}
+                              </button>
+                              <button
+                                type="button"
+                                className="text-[var(--wb-accent)] hover:underline"
+                                onClick={() => onInsert(tb.name)}
+                              >
+                                {t('ps.wb.insertName')}
+                              </button>
+                            </div>
+                            {tb.columns.map((c) => (
+                              <Branch
+                                key={c.name}
+                                depth={4}
+                                icon={Columns3}
+                                label={c.name}
+                                onOpen={() => onInsert(quoteName(c.name))}
+                                title={`${c.name} · ${c.type}`}
+                              />
+                            ))}
+                          </>
+                        )}
+                      </React.Fragment>
+                    ))
+                  ))}
+              </React.Fragment>
+            ))}
 
           {/* PostgreSQL connections */}
           <Branch

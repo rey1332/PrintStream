@@ -1,8 +1,8 @@
 'use client';
 
 // The Query Tool's SQL editor (CodeMirror 6): line numbers, SQL highlighting
-// with the workbench's colours, search, undo, comment toggling and the
-// Query Tool's keys. The text lives in the editor, not in React state, so
+// with the workbench's colours, search, undo, comment toggling, Format and
+// the Query Tool's keys. The text lives in the editor, not in React state, so
 // typing re-renders nothing; the parent asks for it through the handle.
 
 import React, { useEffect, useImperativeHandle, useRef } from 'react';
@@ -52,6 +52,7 @@ import {
   completionKeymap,
 } from '@codemirror/autocomplete';
 import { tags } from '@lezer/highlight';
+import { formatSql } from '@/lib/terminal/sqlText';
 
 export interface SqlEditorHandle {
   getText: () => string;
@@ -63,6 +64,8 @@ export interface SqlEditorHandle {
   focus: () => void;
   toggleComment: () => void;
   openSearch: () => void;
+  /** Lays out the selection, or the whole query (one undo step). */
+  format: () => void;
   /** Marks [from, to) as the error (or clears it). */
   markError: (range: { from: number; to: number } | null) => void;
 }
@@ -86,6 +89,25 @@ interface Props {
   onSave: () => void;
   /** Table and column names to complete (optional). */
   schema?: Record<string, string[]>;
+}
+
+/** Format: the selection, or the whole query, laid out in one change (one undo step). */
+function formatIn(v: EditorView) {
+  const r = v.state.selection.main;
+  const from = r.empty ? 0 : r.from;
+  const to = r.empty ? v.state.doc.length : r.to;
+  const before = v.state.sliceDoc(from, to);
+  if (!before.trim()) return;
+  const after = formatSql(before);
+  if (after === before.trim()) return;
+  v.dispatch({
+    changes: { from, to, insert: after },
+    selection: r.empty
+      ? { anchor: Math.min(r.head, after.length) }
+      : { anchor: from, head: from + after.length },
+    scrollIntoView: true,
+  });
+  v.focus();
 }
 
 const setError = StateEffect.define<{ from: number; to: number } | null>();
@@ -208,6 +230,7 @@ export default function SqlEditor(props: Props) {
         { key: 'F5', run: () => (latest.current.onRun(), true), preventDefault: true },
         { key: 'F7', run: () => (latest.current.onExplain(), true), preventDefault: true },
         { key: 'Mod-s', run: () => (latest.current.onSave(), true), preventDefault: true },
+        { key: 'Shift-Alt-f', run: (v) => (formatIn(v), true), preventDefault: true },
       ])
     );
     const keys = keymap.of([
@@ -295,6 +318,9 @@ export default function SqlEditor(props: Props) {
     },
     openSearch: () => {
       if (view.current) openSearchPanel(view.current);
+    },
+    format: () => {
+      if (view.current) formatIn(view.current);
     },
     markError: (range) => {
       const v = view.current;

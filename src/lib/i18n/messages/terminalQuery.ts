@@ -152,9 +152,9 @@ export const terminalQueryMessages = {
     zh: '复制所选单元格（整行时含列名）',
   },
   'ps.qt.helpLimits': {
-    en: 'At most 2,000 rows are shown; a query may run 60 seconds. Datasets: up to 100,000 rows each (500,000 in all) are copied for a query, and the Messages tab says when a dataset was larger. Results are kept for an hour, the SQL in your Query History.',
-    id: 'Paling banyak 2.000 baris ditampilkan; kueri boleh berjalan 60 detik. Dataset: hingga 100.000 baris per dataset (500.000 total) disalin untuk satu kueri, dan tab Pesan memberi tahu bila dataset lebih besar. Hasil disimpan satu jam, SQL-nya di Riwayat Kueri Anda.',
-    zh: '最多显示 2,000 行；查询最长运行 60 秒。数据集：每次查询每个数据集最多复制 100,000 行（总计 500,000 行），数据集更大时“消息”选项卡会提示。结果保留一小时，SQL 保存在您的查询历史中。',
+    en: 'At most 2,000 rows are shown; a query may run 60 seconds. Datasets and ERP lists: up to 100,000 rows each (500,000 in all) are copied for a query, as you may see them, and the Messages tab says when one was larger. Results are kept for an hour, the SQL in your Query History.',
+    id: 'Paling banyak 2.000 baris ditampilkan; kueri boleh berjalan 60 detik. Dataset dan daftar ERP: hingga 100.000 baris per tabel (500.000 total) disalin untuk satu kueri, sesuai hak lihat Anda, dan tab Pesan memberi tahu bila ada yang lebih besar. Hasil disimpan satu jam, SQL-nya di Riwayat Kueri Anda.',
+    zh: '最多显示 2,000 行；查询最长运行 60 秒。数据集和 ERP 列表：每次查询每个表最多复制 100,000 行（总计 500,000 行），按您的查看权限复制，超出时“消息”选项卡会提示。结果保留一小时，SQL 保存在您的查询历史中。',
   },
   'ps.qt.editor': { en: 'SQL editor', id: 'Editor SQL', zh: 'SQL 编辑器' },
   'ps.qt.placeholder': {
@@ -262,6 +262,114 @@ export const terminalQueryMessages = {
     en: '{command} completed ({rows} rows).',
     id: '{command} selesai ({rows} baris).',
     zh: '{command} 已完成（{rows} 行）。',
+  },
+  'ps.qt.msg.erpLoaded': {
+    en: 'ERP list "{name}": {rows} rows copied for this query.',
+    id: 'Daftar ERP "{name}": {rows} baris disalin untuk kueri ini.',
+    zh: 'ERP 列表“{name}”：已为本次查询复制 {rows} 行。',
+  },
+  'ps.qt.msg.erpPartial': {
+    en: 'ERP list "{name}" has more rows: only the first {rows} were copied, so the result covers those rows only.',
+    id: 'Daftar ERP "{name}" punya lebih banyak baris: hanya {rows} pertama yang disalin, jadi hasil hanya mencakup baris tersebut.',
+    zh: 'ERP 列表“{name}”的行数更多：仅复制了前 {rows} 行，结果只覆盖这些行。',
+  },
+  'ps.qt.msg.noErpTables': {
+    en: "The query names none of this ERP's lists you may read (see them under ERPs in the Object Explorer, e.g. customers, invoices, journal_lines).",
+    id: 'Kueri tidak menyebut daftar ERP ini yang boleh Anda baca (lihat di bawah ERP pada Penjelajah Objek, mis. customers, invoices, journal_lines).',
+    zh: '查询未引用此 ERP 中您可读取的任何列表（见对象浏览器中的 ERP，例如 customers、invoices、journal_lines）。',
+  },
+
+  // ─── ERPs as a target ──────────────────────────────────────────────────────
+  'ps.qt.erpGroup': { en: 'ERPs', id: 'ERP', zh: 'ERP' },
+  'ps.qt.connectionGroup': {
+    en: 'PostgreSQL connections',
+    id: 'Koneksi PostgreSQL',
+    zh: 'PostgreSQL 连接',
+  },
+  'ps.qt.erpOwn': { en: '{name} (this ERP)', id: '{name} (ERP ini)', zh: '{name}（本 ERP）' },
+  'ps.qt.erpReady': {
+    en: 'Sandbox copy of the ERP · {n} lists you may read',
+    id: 'Salinan sandbox ERP · {n} daftar yang boleh Anda baca',
+    zh: 'ERP 的沙箱副本 · 您可读取 {n} 个列表',
+  },
+  'ps.qt.erpNotMember': {
+    en: 'You are not a member of this ERP',
+    id: 'Anda bukan anggota ERP ini',
+    zh: '您不是此 ERP 的成员',
+  },
+  'ps.qt.erpNoTables': {
+    en: 'Your role in this ERP may not read its lists',
+    id: 'Peran Anda di ERP ini tidak boleh membaca daftarnya',
+    zh: '您在此 ERP 中的角色无权读取其列表',
+  },
+  'ps.wb.erpTableHint': {
+    en: 'An ERP list, as you see it there · double-click to see the first 100',
+    id: 'Daftar ERP, seperti yang Anda lihat di sana · klik dua kali untuk melihat 100 pertama',
+    zh: 'ERP 列表（按您在该 ERP 中的权限）· 双击查看前 100 行',
+  },
+
+  // ─── Data Output: search, sort, a cell's value ─────────────────────────────
+  'ps.qt.gridFilter': {
+    en: 'Search the result…',
+    id: 'Cari di hasil…',
+    zh: '在结果中搜索…',
+  },
+  'ps.qt.gridShown': { en: '{n} of {total}', id: '{n} dari {total}', zh: '{total} 中的 {n}' },
+  'ps.qt.gridSort': { en: 'Sort by {col}', id: 'Urutkan menurut {col}', zh: '按 {col} 排序' },
+  'ps.qt.gridSortedAsc': {
+    en: 'sorted by {col} ↑',
+    id: 'diurutkan menurut {col} ↑',
+    zh: '按 {col} 升序',
+  },
+  'ps.qt.gridSortedDesc': {
+    en: 'sorted by {col} ↓',
+    id: 'diurutkan menurut {col} ↓',
+    zh: '按 {col} 降序',
+  },
+  'ps.qt.gridUnsort': { en: 'Original order', id: 'Urutan asli', zh: '原始顺序' },
+  'ps.qt.gridNoMatch': {
+    en: 'No rows contain that text.',
+    id: 'Tidak ada baris yang berisi teks itu.',
+    zh: '没有包含该文本的行。',
+  },
+  'ps.qt.cellTitle': {
+    en: '{col} · row {row}',
+    id: '{col} · baris {row}',
+    zh: '{col} · 第 {row} 行',
+  },
+  'ps.qt.cellCopy': { en: 'Copy', id: 'Salin', zh: '复制' },
+  'ps.qt.cellCopied': { en: 'Copied', id: 'Tersalin', zh: '已复制' },
+
+  // ─── Format and history ────────────────────────────────────────────────────
+  'ps.qt.format': {
+    en: 'Format the query (or the selection) (Shift+Alt+F)',
+    id: 'Rapikan kueri (atau pilihan) (Shift+Alt+F)',
+    zh: '格式化查询（或所选内容）(Shift+Alt+F)',
+  },
+  'ps.qt.helpFormat': { en: 'Format the query', id: 'Rapikan kueri', zh: '格式化查询' },
+  'ps.qt.helpCellKey': {
+    en: 'Double-click / Enter',
+    id: 'Klik dua kali / Enter',
+    zh: '双击 / Enter',
+  },
+  'ps.qt.helpCell': {
+    en: "A cell's whole value (JSON laid out)",
+    id: 'Isi lengkap sel (JSON dirapikan)',
+    zh: '单元格的完整值（JSON 已格式化）',
+  },
+  'ps.qt.historySearch': {
+    en: 'Search the SQL…',
+    id: 'Cari di SQL…',
+    zh: '搜索 SQL…',
+  },
+  'ps.qt.historyStatus': { en: 'Status', id: 'Status', zh: '状态' },
+  'ps.qt.historyAllStatus': { en: 'Any status', id: 'Semua status', zh: '所有状态' },
+  'ps.qt.historyTarget': { en: 'Ran on', id: 'Dijalankan pada', zh: '运行于' },
+  'ps.qt.historyAllTargets': { en: 'Anywhere', id: 'Di mana saja', zh: '全部' },
+  'ps.qt.historyNoMatch': {
+    en: 'No queries match.',
+    id: 'Tidak ada kueri yang cocok.',
+    zh: '没有匹配的查询。',
   },
 
   // ─── Status bar and state ──────────────────────────────────────────────────

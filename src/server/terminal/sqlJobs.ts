@@ -6,17 +6,24 @@
 //    (sqlSandboxThread.ts), which runs the query read-only and is ended.
 //  * sql.connection: a PostgreSQL connection, in a read-only transaction with
 //    a time limit; NOTICEs come back as messages.
+//  * an ERP (20261025084448, a sql.datasets job): the ERP lists the query
+//    names are read as the member, through the analytics catalog (its
+//    fields, the member's rights in that ERP), into the same sandbox.
 //
 // A query's own error (a typo, a missing column) is the run's answer, not a
 // failed job: it is kept with the run, for the member only, for an hour.
 
 import { Worker } from 'node:worker_threads';
 import type pg from 'pg';
+import { QueryExecutionError, executeQuery, resolveScopeFor } from '@/lib/analytics/server';
 import { cleanQuery } from '@/lib/terminal/dbSource';
+import { ERP_TABLES } from '@/lib/terminal/erpTables';
 import { DATASET_READ_LIMIT } from '@/lib/workflow/runtime';
 import { openPg } from '@/server/connectors/postgres';
 import { connection, contextOf, type ConnectorJobEnv } from './connectorJobs';
 import { listDatasets, readRows, visibleColumns, type DatasetInfo } from './datasets';
+import { erpWorkspaceFor } from './erpLinks';
+import { userClient } from './pipelines';
 import { TerminalError, asUser } from './session';
 import { CURSOR_PREFIX, CURSOR_RE, EXPLAIN_PREFIX, errorOf, shift } from './sqlSandbox.mjs';
 
@@ -32,6 +39,7 @@ interface Run {
   workspace_id: string;
   user_id: string;
   connection_id: string | null;
+  erp_workspace_id: string | null;
   sql: string;
   mode: Mode;
 }
@@ -73,7 +81,11 @@ export async function runSqlJob(env: ConnectorJobEnv, job: { id: string; payload
   const started = Date.now();
   let outcome: Outcome;
   try {
-    outcome = run.connection_id ? await onConnection(env, run) : await onDatasets(env, run);
+    outcome = run.connection_id
+      ? await onConnection(env, run)
+      : run.erp_workspace_id
+        ? await onErp(env, run, run.erp_workspace_id)
+        : await onDatasets(env, run);
   } catch (e) {
     outcome = {
       status: e instanceof TerminalError && e.code === 'cancelled' ? 'cancelled' : 'failed',
@@ -160,7 +172,16 @@ async function onDatasets(env: ConnectorJobEnv, run: Run): Promise<Outcome> {
     return out;
   });
   if (!tables.length) messages.push({ severity: 'INFO', key: 'noDatasets' });
+  return inSandbox(env, run, tables, messages);
+}
 
+/** The loaded tables and the query in the sandbox thread, as a run's outcome. */
+async function inSandbox(
+  env: ConnectorJobEnv,
+  run: Run,
+  tables: { name: string; columns: { name: string; type: string }[]; rows: any[] }[],
+  messages: Message[]
+): Promise<Outcome> {
   const answer: any = await inThread(
     { tables, sql: run.sql, mode: run.mode, maxRows: MAX_RESULT_ROWS },
     env.beat
@@ -180,6 +201,78 @@ async function onDatasets(env: ConnectorJobEnv, run: Run): Promise<Outcome> {
     messages: [...messages, ...answer.messages],
     ms: answer.ms,
   };
+}
+
+// ─── An ERP ──────────────────────────────────────────────────────────────────
+
+async function onErp(env: ConnectorJobEnv, run: Run, erp: string): Promise<Outcome> {
+  const db = userClient(env.executor, env.identity) as any;
+  // Still the Terminal's own or linked (the run was checked when it started).
+  try {
+    await erpWorkspaceFor(db, run.workspace_id, erp);
+  } catch {
+    throw new TerminalError('notFound');
+  }
+  const messages: Message[] = [];
+  const tables: { name: string; columns: { name: string; type: string }[]; rows: any[] }[] = [];
+  const deadline = Date.now() + QUERY_MS;
+  let loaded = 0;
+  for (const tb of ERP_TABLES.filter((x) => mentions(run.sql, x.name))) {
+    let scope;
+    try {
+      scope = await resolveScopeFor(db, env.identity.userId, erp, [tb.entity]);
+    } catch (e) {
+      if (e instanceof QueryExecutionError && e.code === 'forbidden') {
+        messages.push({ severity: 'WARNING', key: 'noAccess', vars: { name: tb.name } });
+        continue;
+      }
+      throw new TerminalError(e instanceof QueryExecutionError ? 'forbidden' : 'failed');
+    }
+    const limit = Math.min(DATASET_READ_LIMIT, MAX_LOADED_ROWS - loaded);
+    if (limit <= 0) {
+      messages.push({
+        severity: 'WARNING',
+        key: 'notLoaded',
+        vars: { name: tb.name, max: MAX_LOADED_ROWS },
+      });
+      continue;
+    }
+    let page;
+    try {
+      page = await executeQuery(
+        db,
+        { entity: tb.entity, fields: tb.columns.map((c) => c.name), limit },
+        scope,
+        deadline
+      );
+    } catch (e) {
+      throw new TerminalError(
+        e instanceof QueryExecutionError && e.code === 'timeout' ? 'timeout' : 'failed'
+      );
+    }
+    loaded += page.rows.length;
+    messages.push({
+      severity: page.meta.truncated ? 'WARNING' : 'INFO',
+      key: page.meta.truncated ? 'erpPartial' : 'erpLoaded',
+      vars: { name: tb.name, rows: page.rows.length },
+    });
+    tables.push({ name: tb.name, columns: tb.columns, rows: page.rows });
+  }
+  if (!tables.length) messages.push({ severity: 'INFO', key: 'noErpTables' });
+  else
+    await asUser(env.executor, env.identity, PATH, async (tx) => {
+      for (const t of tables)
+        await tx.query(
+          `SELECT public.erp_log_data_access($1::uuid, 'erp_list', $2, 'query', $3, '{}'::text[], null, $4::jsonb)`,
+          [
+            erp,
+            t.name,
+            t.rows.length,
+            JSON.stringify({ via: 'query_tool', terminal: run.workspace_id }),
+          ]
+        );
+    });
+  return inSandbox(env, run, tables, messages);
 }
 
 /** The sandbox thread's answer; ended on cancel and at the time limit. */

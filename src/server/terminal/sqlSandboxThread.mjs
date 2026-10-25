@@ -20,6 +20,8 @@ const PG_TYPES = {
   date: 'date',
   timestamp: 'timestamptz',
   json: 'jsonb',
+  // An ERP list's ids (src/lib/terminal/erpTables.ts).
+  uuid: 'uuid',
 };
 // Dates and times as PostgreSQL writes them (as pgAdmin shows them), not as
 // JavaScript dates: date, time, timestamp, timestamptz, timetz, interval.

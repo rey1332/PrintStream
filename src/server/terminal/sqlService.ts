@@ -1,8 +1,12 @@
-// The Query Tool for the app's routes (db/migrations/20261012000058_terminal_query_tool.sql):
+// The Query Tool for the app's routes (db/migrations/20261012000058_terminal_query_tool.sql,
+// 20261025084448_terminal_query_erp.sql):
 // what it can query, starting a run, its answer and the history. Runs are
 // done by the worker (sqlJobs.ts); everything here is the member's own
 // transaction, and the database decides who may run what.
 
+import { can, isPermission } from '@/app/erp/lib/erpRules';
+import { CATALOG } from '@/lib/analytics/catalog';
+import { ERP_TABLES } from '@/lib/terminal/erpTables';
 import type { SqlTx } from '@/server/db/executor';
 import { listDatasets } from './datasets';
 import { TerminalError, asUser, isUuid } from './session';
@@ -54,6 +58,39 @@ export async function sqlTargets(ctx: TerminalContext, body: any) {
       twoFactor: perm.two_factor === true,
       datasets,
       connections,
+      erps: await erpTargets(tx, ws),
+    };
+  });
+}
+
+/**
+ * The ERPs a run may name: the Terminal's own (a Terminal inside an ERP) and
+ * the ERPs it is linked to, each with the tables the member may read there.
+ */
+async function erpTargets(tx: SqlTx, ws: string) {
+  const { rows } = await tx.query(
+    `WITH t AS (
+       SELECT w.id, w.name, true AS own FROM public.erp_workspaces w WHERE w.id = $1 AND w.kind = 'erp'
+       UNION ALL
+       SELECT l.erp_workspace_id, l.erp_name, false FROM public.ps_erp_links l WHERE l.workspace_id = $1
+     )
+     SELECT t.id, t.name, t.own, public.erp_workspace_role(t.id) IS NOT NULL AS member,
+            -- The ERP's two-factor rule (a member sees its workspace row).
+            COALESCE((SELECT NOT w.require_mfa OR public.erp_session_aal() = 'aal2'
+                        FROM public.erp_workspaces w WHERE w.id = t.id), false) AS mfa_ok,
+            CASE WHEN public.erp_workspace_role(t.id) IS NOT NULL THEN public.erp_my_permissions(t.id) END AS permissions
+       FROM t ORDER BY t.own DESC, lower(t.name)`,
+    [ws]
+  );
+  return rows.map((r: any) => {
+    const permissions = Array.isArray(r.permissions) ? r.permissions.filter(isPermission) : [];
+    return {
+      id: r.id as string,
+      name: r.name as string,
+      own: r.own === true,
+      member: r.member === true,
+      twoFactorOk: r.mfa_ok === true,
+      tables: ERP_TABLES.filter((tb) => can(permissions, CATALOG[tb.entity].permission)),
     };
   });
 }
@@ -62,15 +99,17 @@ export async function sqlTargets(ctx: TerminalContext, body: any) {
 export async function sqlRun(ctx: TerminalContext, body: any) {
   const ws = uuid(body.workspaceId);
   const connectionId = body.connectionId == null ? null : uuid(body.connectionId);
+  const erpId = body.erpWorkspaceId == null ? null : uuid(body.erpWorkspaceId);
   const mode = MODES.includes(body.mode) ? body.mode : 'run';
   if (typeof body.sql !== 'string') throw new TerminalError('invalid');
   return run(ctx, async (tx) => {
     const [{ id }] = (
-      await tx.query('SELECT public.ps_sql_run_start($1, $2, $3, $4) AS id', [
+      await tx.query('SELECT public.ps_sql_run_start($1, $2, $3, $4, $5) AS id', [
         ws,
         connectionId,
         body.sql,
         mode,
+        erpId,
       ])
     ).rows;
     const [r] = (await tx.query('SELECT job_id FROM public.ps_sql_runs WHERE id = $1', [id])).rows;
@@ -83,7 +122,7 @@ export async function sqlResult(ctx: TerminalContext, body: any) {
   const id = uuid(body.id);
   return run(ctx, async (tx) => {
     const { rows } = await tx.query(
-      `SELECT r.id, r.status, r.mode, r.connection_id, r.target_name, r.columns, r.rows, r.row_count, r.truncated,
+      `SELECT r.id, r.status, r.mode, r.connection_id, r.erp_workspace_id, r.target_name, r.columns, r.rows, r.row_count, r.truncated,
               r.messages, r.notifications, r.error, r.duration_ms, r.created_at, r.started_at, r.finished_at,
               j.status AS job_status, j.error_key AS job_error
          FROM public.ps_sql_runs r LEFT JOIN public.ps_jobs j ON j.id = r.job_id
@@ -104,6 +143,7 @@ export async function sqlResult(ctx: TerminalContext, body: any) {
       status,
       mode: r.mode,
       connectionId: r.connection_id,
+      erpWorkspaceId: r.erp_workspace_id,
       targetName: r.target_name,
       columns: r.columns,
       rows: r.rows,
@@ -127,7 +167,7 @@ export async function sqlHistory(ctx: TerminalContext, body: any) {
   return run(ctx, async (tx) =>
     (
       await tx.query(
-        `SELECT id, sql, mode, status, connection_id, target_name, row_count, duration_ms, created_at
+        `SELECT id, sql, mode, status, connection_id, erp_workspace_id, target_name, row_count, duration_ms, created_at
            FROM public.ps_sql_runs WHERE workspace_id = $1 AND user_id = auth.uid()
           ORDER BY created_at DESC LIMIT 200`,
         [ws]
@@ -138,6 +178,7 @@ export async function sqlHistory(ctx: TerminalContext, body: any) {
       mode: r.mode as string,
       status: r.status as string,
       connectionId: r.connection_id as string | null,
+      erpWorkspaceId: r.erp_workspace_id as string | null,
       targetName: r.target_name as string,
       rowCount: r.row_count as number | null,
       durationMs: r.duration_ms as number | null,

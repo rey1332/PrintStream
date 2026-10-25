@@ -385,16 +385,18 @@ Not yet verified against live AI providers: tested with simulated providers.
 ## Query Tool (read-only SQL)
 
 The Terminal opens as a database workbench laid out like pgAdmin 4's Query
-Tool: the Object Explorer on the left (datasets and their columns, PostgreSQL
-connections and their tables, pipelines, the Terminal's other screens), the
+Tool: the Object Explorer on the left (datasets and their columns, ERPs and
+the lists the member may read there, PostgreSQL connections and their tables,
+pipelines, the Terminal's other screens), the
 Query Tool in the middle, and the Terminal's other screens as tabs beside it.
 The colours follow the app's light or dark theme.
 
 - **Layout**: the connection bar (what to query, its state, test again),
-  Query / Query History, the editor's tools (open and save a .sql file, find,
-  comment, execute, explain, explain analyze, stop, save results as CSV,
-  Scratch Pad, help), the SQL editor (CodeMirror 6: line numbers, PostgreSQL
-  highlighting, completion of dataset and column names, search) with the
+  Query / Query History (searchable, filtered by status and by what a run was
+  on), the editor's tools (open and save a .sql file, find, comment, format,
+  execute, explain, explain analyze, stop, save results as CSV, Scratch Pad,
+  help), the SQL editor (CodeMirror 6: line numbers, PostgreSQL highlighting,
+  completion of the target's table and column names, search) with the
   Scratch Pad beside it, and Data Output / Messages / Notifications below,
   then the status bar (rows, time, line and column, line endings). The
   dividers are dragged (or moved with the arrow keys when focused) and
@@ -403,9 +405,15 @@ The colours follow the app's light or dark theme.
 - **Keys**: Ctrl+Enter or F5 runs the selection, or the statement at the
   cursor (statements are split at semicolons outside quotes, comments and
   dollar quotes); F7 explains; Ctrl+S saves the editor as a .sql file; Ctrl+F
-  finds; Ctrl+/ comments lines. In the results: click, Shift+click, arrows,
-  Ctrl+A; Ctrl+C copies as tab-separated text (whole rows with the column
-  names). NULL is shown as [null], apart from an empty text.
+  finds; Ctrl+/ comments lines; Shift+Alt+F formats the selection or the
+  whole query (clauses, lists and conditions on their own lines, subqueries
+  indented, keywords in capitals; quoted text, names and comments untouched;
+  one undo step). In the results: click, Shift+click, arrows, Ctrl+A; Ctrl+C
+  copies as tab-separated text (whole rows with the column names);
+  double-click or Enter opens a cell's whole value (JSON laid out). The
+  result can be searched and sorted by a column (numbers as numbers, NULL
+  last) in the browser, on the rows kept. NULL is shown as [null], apart from
+  an empty text.
 - **What a query runs on** — never PrintStream's own database: row-level
   security there relies on session settings that SQL could change.
   - **This Terminal's datasets** (`datasets.query`): the worker copies the
@@ -416,6 +424,19 @@ The colours follow the app's light or dark theme.
     own thread, runs the query read-only there and ends the thread. Up to
     100,000 rows per dataset and 500,000 in all are copied; Messages says when
     a dataset was larger (the result then covers the copied rows only).
+  - **An ERP** (`datasets.query` in the Terminal, a member of the ERP, its
+    two-factor rule): the Terminal's own ERP (a Terminal inside an ERP) or one
+    it is linked to. Its lists are the analytics catalog's
+    (`src/lib/analytics/catalog.ts`) under snake_case names — `customers`,
+    `suppliers`, `products`, `sales_orders`, `sales_order_items`,
+    `purchase_orders`, `purchase_order_items`, `invoices`, `payments`,
+    `transactions`, `stock_movements`, `gl_accounts`, `journal_entries`,
+    `journal_lines` — with the catalog's fields only (no owner, actor or
+    personal tax columns). The worker reads the lists the query names as the
+    member, with their rights in that ERP (the role's permission per list,
+    row-level security), into the same sandbox, with the same limits; each
+    list read is in the ERP's data-access log (`erp_list`). The selector and
+    the Object Explorer show only the lists the member's role may read.
   - **A PostgreSQL connection** (`integrations.manage`, two-factor session):
     the connection's own database, in a read-only transaction (the session is
     read-only too) with a 60-second statement limit, through the same network
@@ -604,6 +625,7 @@ company's quota.
 | `20261012000056_mcp_oauth`                | Signing in to MCP with OAuth: clients, codes, connections (grants)                                       |
 | `20261012000057_mcp_pipeline_builder`     | MCP connections that may build pipelines (drafts only)                                                   |
 | `20261012000058_terminal_query_tool`      | The Query Tool: runs and history (`ps_sql_runs`), its jobs                                               |
+| `20261025084448_terminal_query_erp`       | The Query Tool on an ERP: a run's ERP (`erp_workspace_id`), starting one checks the link and membership  |
 
 Each has a rollback in `db/rollback/` (apply them newest first; rolling back
 036 drops every dataset).

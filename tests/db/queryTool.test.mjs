@@ -247,6 +247,90 @@ test('who may run what; runs and history are the member’s own', async () => {
   );
 });
 
+test('an ERP as the target (20261025084448): linked, read as the member sees it, logged', async () => {
+  const [{ workspace_id: erp }] = await run(
+    db,
+    owner,
+    `select workspace_id from erp_my_workspaces() where is_personal`
+  );
+  await admin(
+    db,
+    `insert into erp_customers (workspace_id, user_id, name, city) values ($1, $2, 'PT Satu', 'Bekasi'), ($1, $2, 'PT Dua', '')`,
+    [erp, owner.id]
+  );
+  const onErp = (user, sql) =>
+    sqlRun(ctxOf(user), { workspaceId: ws, erpWorkspaceId: erp, sql, mode: 'run' });
+
+  // Not linked yet: refused, and not offered.
+  await expectError(onErp(owner, 'select 1'), /notFound/);
+  assert.deepEqual((await sqlTargets(ctxOf(owner), { workspaceId: ws })).erps, []);
+
+  await run(db, owner, `select ps_link_erp($1, $2)`, [ws, erp]);
+  const [mine] = (await sqlTargets(ctxOf(owner), { workspaceId: ws })).erps;
+  assert.equal(mine.id, erp);
+  assert.equal(mine.member, true);
+  assert.ok(mine.tables.some((tb) => tb.name === 'customers'));
+  assert.ok(mine.tables.some((tb) => tb.name === 'journal_lines'));
+  // Finance of the Terminal is no member of the ERP: shown so, and refused.
+  const [theirs] = (await sqlTargets(ctxOf(finance), { workspaceId: ws })).erps;
+  assert.equal(theirs.member, false);
+  assert.deepEqual(theirs.tables, []);
+  await expectError(onErp(finance, 'select 1'), /forbidden/);
+
+  const { runId, jobId } = await onErp(
+    owner,
+    'select name, city from customers order by name'
+  );
+  const [job] = await admin(db, `select kind from ps_jobs where id = $1`, [jobId]);
+  assert.equal(job.kind, 'sql.datasets');
+  await runSqlJob(
+    {
+      db: (q, p = []) => asWorker(q, p),
+      executor: executor(),
+      identity: { userId: owner.id, email: owner.email, aal: 'aal2' },
+      beat: async () => false,
+    },
+    { id: jobId, payload: { run_id: runId } }
+  );
+  const r = await sqlResult(ctxOf(owner), { id: runId });
+  assert.equal(r.status, 'succeeded', JSON.stringify(r.error));
+  assert.equal(r.erpWorkspaceId, erp);
+  assert.deepEqual(r.rows, [
+    ['PT Dua', ''],
+    ['PT Satu', 'Bekasi'],
+  ]);
+  assert.ok(r.messages.some((m) => m.key === 'erpLoaded' && m.vars.name === 'customers'));
+  const [logged] = await admin(
+    db,
+    `select count(*)::int n from etna_platform.data_access_log where workspace_id = $1 and object_kind = 'erp_list' and object_id = 'customers'`,
+    [erp]
+  );
+  assert.equal(logged.n, 1);
+  const [h] = await sqlHistory(ctxOf(owner), { workspaceId: ws });
+  assert.equal(h.erpWorkspaceId, erp);
+});
+
+test('rollback removes Query Tool runs on an ERP', async () => {
+  const d = await createDb();
+  await d.exec(
+    readFileSync(
+      new URL('../../db/rollback/rollback_20261025084448_terminal_query_erp.sql', import.meta.url),
+      'utf8'
+    )
+  );
+  const [{ c }] = await admin(
+    d,
+    `select count(*)::int c from information_schema.columns where table_name = 'ps_sql_runs' and column_name = 'erp_workspace_id'`
+  );
+  assert.equal(c, 0);
+  const [{ n }] = await admin(
+    d,
+    `select count(*)::int n from pg_proc where proname = 'ps_sql_run_start'`
+  );
+  assert.equal(n, 1);
+  await d.close();
+});
+
 test('rollback removes the Query Tool', async () => {
   const d = await createDb();
   await d.exec(

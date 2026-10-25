@@ -4,8 +4,8 @@
 // Query / Query History, the editor's tools, the SQL editor with the Scratch
 // Pad beside it, Data Output / Messages / Notifications below, and a status
 // bar. Queries are read-only and run by the worker (src/lib/terminal/sql.ts):
-// on this Terminal's datasets (a sandbox copy, as the member sees them) or on
-// one of its PostgreSQL connections.
+// on this Terminal's datasets or an ERP's lists (a sandbox copy, as the
+// member sees them) or on one of its PostgreSQL connections.
 
 import React, {
   forwardRef,
@@ -34,6 +34,7 @@ import {
   Search,
   Square,
   Unplug,
+  WandSparkles,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { hasMessage } from '@/lib/i18n/labels';
@@ -49,6 +50,7 @@ import {
   type SqlResult,
   type SqlTargets,
 } from '@/lib/terminal/sql';
+import { erpOfTarget, erpTargetId } from '@/lib/terminal/erpTables';
 import { statementAt, toCsv } from '@/lib/terminal/sqlText';
 import type { SqlEditorHandle } from './SqlEditor';
 import { ResultGrid } from './ResultGrid';
@@ -232,10 +234,14 @@ export const QueryTool = forwardRef<
     void loadTargets();
   }, [loadTargets]);
 
-  // A connection that is gone: back to the datasets.
+  // A connection or an ERP that is gone: back to the datasets.
   useEffect(() => {
-    if (targets && target !== DATASETS_TARGET && !targets.connections.some((c) => c.id === target))
-      setTarget(DATASETS_TARGET);
+    if (!targets || target === DATASETS_TARGET) return;
+    const erpId = erpOfTarget(target);
+    const known = erpId
+      ? targets.erps.some((e) => e.id === erpId)
+      : targets.connections.some((c) => c.id === target);
+    if (!known) setTarget(DATASETS_TARGET);
   }, [targets, target]);
   useEffect(() => write(targetKey, target), [targetKey, target]);
   useEffect(() => write('ps.wb.scratch', scratchWide ? '1' : '0'), [scratchWide]);
@@ -250,28 +256,40 @@ export const QueryTool = forwardRef<
   }, [queryTab, historyStale, workspaceId]);
 
   const connection = targets?.connections.find((c) => c.id === target) ?? null;
+  const erpId = erpOfTarget(target);
+  const erp = (erpId && targets?.erps.find((e) => e.id === erpId)) || null;
   const allowedFor = useCallback(
-    (id: string) =>
-      !!targets &&
-      (id === DATASETS_TARGET
-        ? targets.canQueryDatasets
-        : targets.connections.some((c) => c.id === id) &&
-          targets.canQueryConnections &&
-          targets.twoFactor),
+    (id: string) => {
+      if (!targets) return false;
+      if (id === DATASETS_TARGET) return targets.canQueryDatasets;
+      const e = erpOfTarget(id);
+      if (e) {
+        const x = targets.erps.find((y) => y.id === e);
+        // A sandbox run like the datasets', with the member's rights in that ERP.
+        return !!x && targets.canQueryDatasets && x.member && x.twoFactorOk && x.tables.length > 0;
+      }
+      return (
+        targets.connections.some((c) => c.id === id) &&
+        targets.canQueryConnections &&
+        targets.twoFactor
+      );
+    },
     [targets]
   );
   const allowed = allowedFor(target);
 
-  // Table and column names for completion (the datasets').
+  // Table and column names for completion (the datasets', or the ERP's lists).
   const schema = useMemo(
     () =>
       Object.fromEntries(
-        (targets?.datasets ?? []).map((d) => [
-          /^[a-z_][a-z0-9_]*$/.test(d.name) ? d.name : `"${d.name.replace(/"/g, '""')}"`,
-          d.columns.map((c) => c.name),
-        ])
+        erp
+          ? erp.tables.map((tb) => [tb.name, tb.columns.map((c) => c.name)])
+          : (targets?.datasets ?? []).map((d) => [
+              /^[a-z_][a-z0-9_]*$/.test(d.name) ? d.name : `"${d.name.replace(/"/g, '""')}"`,
+              d.columns.map((c) => c.name),
+            ])
       ),
-    [targets]
+    [targets, erp]
   );
 
   // Draft saved while typing, a moment after the last key.
@@ -321,7 +339,8 @@ export const QueryTool = forwardRef<
         const r = await runSql(
           {
             workspaceId,
-            connectionId: on === DATASETS_TARGET ? null : on,
+            connectionId: on === DATASETS_TARGET || erpOfTarget(on) ? null : on,
+            erpWorkspaceId: erpOfTarget(on),
             sql: stmt.text,
             mode,
           },
@@ -432,8 +451,7 @@ export const QueryTool = forwardRef<
   const rows = result?.rows ?? null;
   const columns = result?.columns ?? null;
   const canDownload = !!rows && !!columns && rows.length > 0;
-  const connected =
-    target === DATASETS_TARGET ? !!targets?.canQueryDatasets : connection?.status === 'ok';
+  const connected = target === DATASETS_TARGET || erp ? allowed : connection?.status === 'ok';
 
   return (
     <div
@@ -456,13 +474,26 @@ export const QueryTool = forwardRef<
           <option value={DATASETS_TARGET}>
             {t('ps.qt.datasetsTarget', { n: targets?.datasets.length ?? 0 })}
           </option>
-          {(targets?.connections ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.database ? ` · ${c.database}` : ''}
-              {c.host ? `@${c.host}` : ''}
-            </option>
-          ))}
+          {!!targets?.erps.length && (
+            <optgroup label={t('ps.qt.erpGroup')}>
+              {targets.erps.map((e) => (
+                <option key={e.id} value={erpTargetId(e.id)}>
+                  {e.own ? t('ps.qt.erpOwn', { name: e.name }) : e.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          {!!targets?.connections.length && (
+            <optgroup label={t('ps.qt.connectionGroup')}>
+              {targets.connections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.database ? ` · ${c.database}` : ''}
+                  {c.host ? `@${c.host}` : ''}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
         <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--wb-text-2)]">
           <span
@@ -486,17 +517,27 @@ export const QueryTool = forwardRef<
                 ? targets.canQueryDatasets
                   ? t('ps.qt.sandboxReady')
                   : t('ps.qt.noDatasetRight')
-                : !targets.canQueryConnections
-                  ? t('ps.qt.noConnectionRight')
-                  : !targets.twoFactor
-                    ? t('ps.qt.needsTwoFactor')
-                    : connection?.status === 'ok'
-                      ? t('ps.qt.connectionOk', {
-                          when: connection.last_tested_at
-                            ? fmt.dateTime(connection.last_tested_at)
-                            : '—',
-                        })
-                      : t('ps.qt.connectionState', { status: connection?.status ?? '—' })}
+                : erp
+                  ? !targets.canQueryDatasets
+                    ? t('ps.qt.noDatasetRight')
+                    : !erp.member
+                      ? t('ps.qt.erpNotMember')
+                      : !erp.twoFactorOk
+                        ? t('ps.qt.needsTwoFactor')
+                        : !erp.tables.length
+                          ? t('ps.qt.erpNoTables')
+                          : t('ps.qt.erpReady', { n: erp.tables.length })
+                  : !targets.canQueryConnections
+                    ? t('ps.qt.noConnectionRight')
+                    : !targets.twoFactor
+                      ? t('ps.qt.needsTwoFactor')
+                      : connection?.status === 'ok'
+                        ? t('ps.qt.connectionOk', {
+                            when: connection.last_tested_at
+                              ? fmt.dateTime(connection.last_tested_at)
+                              : '—',
+                          })
+                        : t('ps.qt.connectionState', { status: connection?.status ?? '—' })}
           </span>
         </span>
         <button
@@ -594,6 +635,18 @@ export const QueryTool = forwardRef<
           aria-label={t('ps.qt.comment')}
         >
           <MessageSquareCode size={14} />
+        </button>
+        <button
+          type="button"
+          className={icon()}
+          onClick={() => {
+            setQueryTab('query');
+            editor.current?.format();
+          }}
+          title={t('ps.qt.format')}
+          aria-label={t('ps.qt.format')}
+        >
+          <WandSparkles size={14} />
         </button>
         <Sep />
         <button
@@ -702,7 +755,9 @@ export const QueryTool = forwardRef<
                   write(draftKey, h.sql);
                   if (h.connectionId && targets?.connections.some((c) => c.id === h.connectionId))
                     setTarget(h.connectionId);
-                  else if (!h.connectionId) setTarget(DATASETS_TARGET);
+                  else if (h.erpWorkspaceId && targets?.erps.some((e) => e.id === h.erpWorkspaceId))
+                    setTarget(erpTargetId(h.erpWorkspaceId));
+                  else if (!h.connectionId && !h.erpWorkspaceId) setTarget(DATASETS_TARGET);
                 }}
               />
             )}
@@ -921,6 +976,10 @@ function Messages({
   );
 }
 
+/** Where a run in the history was made, for its filter. */
+const where = (h: SqlHistoryEntry) =>
+  h.connectionId ? `c:${h.connectionId}` : h.erpWorkspaceId ? `e:${h.erpWorkspaceId}` : 'datasets';
+
 function HistoryList({
   entries,
   onPick,
@@ -929,50 +988,123 @@ function HistoryList({
   onPick: (h: SqlHistoryEntry) => void;
 }) {
   const { t, fmt } = useI18n();
+  const [text, setText] = useState('');
+  const [status, setStatus] = useState('');
+  const [on, setOn] = useState('');
+  // The targets in the history, for its filter (named as when the runs were made).
+  const places = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const h of entries ?? [])
+      if (!seen.has(where(h)))
+        seen.set(where(h), where(h) === 'datasets' ? t('ps.qt.datasetsShort') : h.targetName);
+    return [...seen];
+  }, [entries, t]);
+  const shown = useMemo(() => {
+    const needle = text.trim().toLowerCase();
+    return (entries ?? []).filter(
+      (h) =>
+        (!status || h.status === status) &&
+        (!on || where(h) === on) &&
+        (!needle ||
+          h.sql.toLowerCase().includes(needle) ||
+          h.targetName.toLowerCase().includes(needle))
+    );
+  }, [entries, text, status, on]);
   if (entries === null)
     return <p className="p-3 text-[12px] text-[var(--wb-muted)]">{t('common.loading')}</p>;
   if (!entries.length)
     return <p className="p-3 text-[12px] text-[var(--wb-muted)]">{t('ps.qt.historyEmpty')}</p>;
+  const field =
+    'h-[22px] rounded-[2px] border border-[var(--wb-border)] bg-[var(--wb-editor)] px-1.5 text-[12px] text-[var(--wb-text)] outline-none focus:border-[var(--wb-accent)]';
   return (
-    <ul className="h-full overflow-auto bg-[var(--wb-editor)] text-[12px]">
-      {entries.map((h) => (
-        <li key={h.id} className="border-b border-[var(--wb-border)]">
-          <button
-            type="button"
-            onClick={() => onPick(h)}
-            className="block w-full px-2 py-1.5 text-left hover:bg-[var(--wb-hover)]"
-            title={t('ps.qt.historyLoad')}
+    <div className="flex h-full flex-col bg-[var(--wb-editor)]">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--wb-border)] bg-[var(--wb-toolbar)] px-2 py-1">
+        <Search size={12} aria-hidden className="text-[var(--wb-text-2)]" />
+        <input
+          type="search"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t('ps.qt.historySearch')}
+          aria-label={t('ps.qt.historySearch')}
+          className={`${field} min-w-[140px] flex-1`}
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          aria-label={t('ps.qt.historyStatus')}
+          className={field}
+          style={{ colorScheme: 'light dark' }}
+        >
+          <option value="">{t('ps.qt.historyAllStatus')}</option>
+          {(['succeeded', 'failed', 'cancelled'] as const).map((s) => (
+            <option key={s} value={s}>
+              {t(`ps.qt.status.${s}` as any)}
+            </option>
+          ))}
+        </select>
+        {places.length > 1 && (
+          <select
+            value={on}
+            onChange={(e) => setOn(e.target.value)}
+            aria-label={t('ps.qt.historyTarget')}
+            className={`${field} max-w-[200px]`}
+            style={{ colorScheme: 'light dark' }}
           >
-            <div className="flex items-center gap-2 text-[11px] text-[var(--wb-text-2)]">
-              <span
-                className={
-                  h.status === 'succeeded'
-                    ? 'text-[var(--wb-ok)]'
-                    : h.status === 'failed'
-                      ? 'text-[var(--wb-error)]'
-                      : 'text-[var(--wb-warn)]'
-                }
-              >
-                {t(`ps.qt.status.${h.status}` as any)}
-              </span>
-              <span>{h.createdAt ? fmt.dateTime(h.createdAt) : ''}</span>
-              <span className="truncate">
-                {h.connectionId ? h.targetName : t('ps.qt.datasetsShort')}
-              </span>
-              {h.mode !== 'run' && <span>{t(`ps.qt.mode.${h.mode}` as any)}</span>}
-              <span className="ml-auto whitespace-nowrap">
-                {h.rowCount !== null && t('ps.qt.rowsShort', { n: fmt.number(h.rowCount) })}
-                {h.durationMs !== null &&
-                  ` · ${t('ps.qt.msShort', { n: fmt.number(h.durationMs) })}`}
-              </span>
-            </div>
-            <pre className="mt-0.5 max-h-[3.2em] overflow-hidden whitespace-pre-wrap font-mono text-[12px] text-[var(--wb-text)]">
-              {h.sql}
-            </pre>
-          </button>
-        </li>
-      ))}
-    </ul>
+            <option value="">{t('ps.qt.historyAllTargets')}</option>
+            {places.map(([id, name]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+        )}
+        <span className="text-[11px] text-[var(--wb-muted)]">
+          {t('ps.qt.gridShown', { n: fmt.number(shown.length), total: fmt.number(entries.length) })}
+        </span>
+      </div>
+      {!shown.length && (
+        <p className="p-3 text-[12px] text-[var(--wb-muted)]">{t('ps.qt.historyNoMatch')}</p>
+      )}
+      <ul className="min-h-0 flex-1 overflow-auto text-[12px]">
+        {shown.map((h) => (
+          <li key={h.id} className="border-b border-[var(--wb-border)]">
+            <button
+              type="button"
+              onClick={() => onPick(h)}
+              className="block w-full px-2 py-1.5 text-left hover:bg-[var(--wb-hover)]"
+              title={t('ps.qt.historyLoad')}
+            >
+              <div className="flex items-center gap-2 text-[11px] text-[var(--wb-text-2)]">
+                <span
+                  className={
+                    h.status === 'succeeded'
+                      ? 'text-[var(--wb-ok)]'
+                      : h.status === 'failed'
+                        ? 'text-[var(--wb-error)]'
+                        : 'text-[var(--wb-warn)]'
+                  }
+                >
+                  {t(`ps.qt.status.${h.status}` as any)}
+                </span>
+                <span>{h.createdAt ? fmt.dateTime(h.createdAt) : ''}</span>
+                <span className="truncate">
+                  {h.connectionId || h.erpWorkspaceId ? h.targetName : t('ps.qt.datasetsShort')}
+                </span>
+                {h.mode !== 'run' && <span>{t(`ps.qt.mode.${h.mode}` as any)}</span>}
+                <span className="ml-auto whitespace-nowrap">
+                  {h.rowCount !== null && t('ps.qt.rowsShort', { n: fmt.number(h.rowCount) })}
+                  {h.durationMs !== null &&
+                    ` · ${t('ps.qt.msShort', { n: fmt.number(h.durationMs) })}`}
+                </span>
+              </div>
+              <pre className="mt-0.5 max-h-[3.2em] overflow-hidden whitespace-pre-wrap font-mono text-[12px] text-[var(--wb-text)]">
+                {h.sql}
+              </pre>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -997,6 +1129,8 @@ function HelpButton() {
     ['Ctrl+S', t('ps.qt.helpSave')],
     ['Ctrl+F', t('ps.qt.helpFind')],
     ['Ctrl+/', t('ps.qt.helpComment')],
+    ['Shift+Alt+F', t('ps.qt.helpFormat')],
+    [t('ps.qt.helpCellKey'), t('ps.qt.helpCell')],
     ['Ctrl+C', t('ps.qt.helpCopy')],
   ];
   return (

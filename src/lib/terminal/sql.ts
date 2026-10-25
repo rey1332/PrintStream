@@ -3,6 +3,7 @@
 // the browser starts one and waits for its answer.
 
 import { TerminalApiError, terminalApi } from './client';
+import type { ErpTable } from './erpTables';
 
 export type SqlMode = 'run' | 'explain' | 'analyze';
 
@@ -25,6 +26,16 @@ export interface SqlTargets {
     database: string | null;
     last_tested_at: string | null;
     last_error_key: string | null;
+  }[];
+  /** The Terminal's own ERP and the ERPs it is linked to (src/lib/terminal/erpTables.ts). */
+  erps: {
+    id: string;
+    name: string;
+    own: boolean;
+    member: boolean;
+    twoFactorOk: boolean;
+    /** The ERP's lists the member may read there. */
+    tables: ErpTable[];
   }[];
 }
 
@@ -50,6 +61,7 @@ export interface SqlResult {
   status: 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';
   mode: SqlMode;
   connectionId: string | null;
+  erpWorkspaceId: string | null;
   targetName: string;
   columns: { name: string; type: string }[] | null;
   rows: unknown[][] | null;
@@ -71,6 +83,7 @@ export interface SqlHistoryEntry {
   mode: SqlMode;
   status: string;
   connectionId: string | null;
+  erpWorkspaceId: string | null;
   targetName: string;
   rowCount: number | null;
   durationMs: number | null;
@@ -92,7 +105,13 @@ const done = (r: SqlResult) => r.status !== 'queued' && r.status !== 'running';
  * it); `signal` stops waiting (the run itself is cancelled with the job).
  */
 export async function runSql(
-  args: { workspaceId: string; connectionId: string | null; sql: string; mode: SqlMode },
+  args: {
+    workspaceId: string;
+    connectionId: string | null;
+    erpWorkspaceId?: string | null;
+    sql: string;
+    mode: SqlMode;
+  },
   options: {
     onStarted?: (ids: { runId: string; jobId: string }) => void;
     onState?: (status: SqlResult['status']) => void;
