@@ -517,16 +517,32 @@ npm run worker
 | `npm run lint` | ESLint |
 | `npm run verify` | Semua di atas + build produksi + audit paket (sebelum rilis) |
 
-### B8. Backup di Windows
+### B8. Backup di Windows dan pindah PC
+
+Satu file `.etnabak` terenkripsi berisi database, folder `storage` (dokumen,
+upload), dan `.env.local` (kunci two-factor):
 
 ```bat
-npm run db:backup -- setup
-```
-```bat
-npm run db:backup -- backup
+npm run pc:backup
 ```
 
-Salin juga folder `C:\PrintStream\storage` dan `.env.local` ke tempat aman.
+Pertama kali ditanya folder backup (pakai disk lain: flashdisk, NAS) dan
+passphrase (simpan di password manager). Cek file-nya:
+
+```bat
+npm run pc:verify -- E:\ETNA-backup\etna-offsite-<waktu>.etnabak
+```
+
+Di PC baru, setelah B1–B3 dan B2 (owner + database **kosong**, tanpa B4/B5):
+
+```bat
+npm run pc:restore -- E:\etna-offsite-<waktu>.etnabak
+```
+
+Akun, two-factor, perusahaan, data, dan dokumen ikut semua. Restore hanya
+mengisi database kosong dan menyimpan `.env.local` / dokumen lama ke samping
+dulu. Langkah lengkapnya: [PANDUAN.md bagian 4.7 dan 4.8](PANDUAN.md#47-backup-di-windows-wajib-kalau-ada-data-asli).
+File yang sama bisa dipulihkan di Ubuntu dengan `sudo psctl restore`.
 
 ---
 

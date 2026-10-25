@@ -19,15 +19,18 @@
 //                         (offsite-key.enc.pem) goes into every backup
 //   ETNA_OFFSITE_KEEP     backups kept in ETNA_OFFSITE_DIR (default 14)
 //   ETNA_DATA_ROOT, ETNA_DOCUMENTS_DIR   where the documents and company folders are
+//                         (neither: storage/ in the app folder, as on a PC)
 //
 // With --settings, that file is included in the backup (it holds the
 // two-factor key: without it, a restore makes everyone enroll again).
+// On a PC, scripts/db/pc-move.mjs runs this with --settings .env.local.
 
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { findTool, parseUrl, restoreList } from './backup-core.mjs';
+import { ROOT, findTool, parseUrl, restoreList } from './backup-core.mjs';
+import { dataDirs } from './pc-move-core.mjs';
 import { bundleName, bundlesToPrune, filesUnder, listBundles, readBundle, readHeader, writeBundle } from './offsite-core.mjs';
 import { readEnvFile } from '../server/lib/envfile.mjs';
 import { MIN_PASSPHRASE, newBackupKeys } from '../server/lib/sealed.mjs';
@@ -122,9 +125,8 @@ async function runCommand() {
   const pgDump = findTool('pg_dump');
   if (!pgDump) fail('pg_dump was not found. Install the PostgreSQL command-line tools.', 2);
 
-  const root = env.ETNA_DATA_ROOT ? path.resolve(env.ETNA_DATA_ROOT) : null;
-  const documents = env.ETNA_DOCUMENTS_DIR ? path.resolve(env.ETNA_DOCUMENTS_DIR) : root && path.join(root, 'documents');
-  const companies = root && path.join(root, 'companies');
+  // As the app finds them: without ETNA_DATA_ROOT (a PC), storage/ in the app folder.
+  const { documents, companies } = dataDirs(env, ROOT);
 
   fs.mkdirSync(dir, { recursive: true });
   const work = fs.mkdtempSync(path.join(os.tmpdir(), 'etna-offsite-'));

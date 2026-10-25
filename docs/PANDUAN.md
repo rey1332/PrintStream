@@ -360,20 +360,81 @@ cd /d C:\PrintStream
 npm run worker
 ```
 
-### 4.7 Backup di Windows (disarankan)
+### 4.7 Backup di Windows (wajib kalau ada data asli)
+
+Data PrintStream di Windows ada di **tiga tempat**: database PostgreSQL,
+folder `C:\PrintStream\storage` (dokumen dan file upload), dan file
+`.env.local` (kunci two-factor). Satu perintah ini membungkus **ketiganya**
+dalam satu file `.etnabak` terenkripsi:
 
 ```bat
-npm run db:backup -- setup
+npm run pc:backup
 ```
 
-Ditanya password owner, folder backup, dan e-mail admin. Setelah itu:
+Pertama kali, ditanya:
+
+1. **Folder backup**: pilih disk lain (flashdisk, NAS, share jaringan),
+   misalnya `E:\ETNA-backup`. Backup di disk yang sama ikut hilang kalau
+   disk itu rusak.
+2. **Passphrase** (minimal 12 karakter, diketik dua kali). **Simpan di
+   password manager.** Tanpa passphrase, backup tidak bisa dibuka oleh siapa
+   pun, termasuk ETNA.
+
+Setelah itu `npm run pc:backup` tidak bertanya apa-apa lagi. Cek sesekali
+bahwa file backup bisa dibuka:
 
 ```bat
-npm run db:backup -- backup
+npm run pc:verify -- E:\ETNA-backup\etna-offsite-20261025-170000.etnabak
 ```
 
-Lakukan sesekali, terutama sebelum mengubah hal besar. Salin juga folder
-`C:\PrintStream\storage` dan file `.env.local` ke tempat aman.
+Supaya otomatis setiap hari: **Task Scheduler** → Create Basic Task → Daily
+→ Start a program: `cmd.exe`, argumen
+`/c cd /d C:\PrintStream && npm run pc:backup`. 14 backup terbaru disimpan,
+yang lebih lama dihapus.
+
+File `.etnabak` yang sama juga bisa dipulihkan di server Ubuntu dengan
+`sudo psctl restore` (bagian 7).
+
+> `npm run db:backup` yang lama hanya menyimpan database (tanpa dokumen dan
+> kunci). Untuk pindah PC, pakai `npm run pc:backup`.
+
+### 4.8 Pindah ke PC baru
+
+Di **PC lama**: `npm run pc:backup`, lalu salin file `.etnabak` terbaru ke
+flashdisk (atau ambil dari NAS).
+
+Di **PC baru**:
+
+1. Pasang Node.js, PostgreSQL, dan Git, ambil kode, lalu `npm ci`
+   (bagian 4.1 dan 4.2).
+2. Buat owner dan database **kosong** di pgAdmin (bagian 4.3). **Jangan**
+   jalankan `setup-local` dan jangan buat akun.
+3. Pulihkan:
+
+   ```bat
+   npm run pc:restore -- E:\etna-offsite-20261025-170000.etnabak
+   ```
+
+   Ditanya koneksi owner (tekan Enter kalau port 5432), password
+   `etna_owner`, dan passphrase backup. Ringkasan isi backup ditampilkan;
+   ketik `restore` untuk lanjut.
+4. Jalankan seperti biasa (`npm run dev` dan `npm run worker`), lalu
+   `npm run pc:backup` untuk menyiapkan backup di PC ini.
+
+Semua ikut: akun, password, two-factor (tidak perlu daftar ulang
+authenticator), perusahaan, data, setting, dokumen, dan file upload.
+
+Restore **tidak pernah menimpa data**:
+
+- Data hanya diisi ke database yang **kosong**. Kalau database `etna` sudah
+  berisi, restore berhenti dan memberi tahu cara membuat database kosong
+  baru (`CREATE DATABASE etna_restore OWNER etna_owner;` lalu tambahkan
+  `--into etna_restore`).
+- `.env.local` yang sudah ada disimpan dulu sebagai
+  `.env.local.before-restore-<waktu>`, dan dokumen yang sudah ada dipindah ke
+  `storage\before-restore-<waktu>\`.
+- Isi backup yang dibuka sementara selalu dihapus setelahnya, berhasil atau
+  gagal.
 
 ---
 
@@ -406,7 +467,9 @@ Lakukan sesekali, terutama sebelum mengubah hal besar. Salin juga folder
 | Buat akun | `node scripts\admin\users.mjs create-user --email …` |
 | Daftar akun | `node scripts\admin\users.mjs list` |
 | Reset password | `node scripts\admin\users.mjs set-password --email …` |
-| Backup | `npm run db:backup -- backup` |
+| Backup (database + dokumen + kunci) | `npm run pc:backup` |
+| Cek backup bisa dibuka | `npm run pc:verify -- <file>` |
+| Pulihkan di PC baru | `npm run pc:restore -- <file>` |
 
 ---
 

@@ -21,7 +21,9 @@ export const PATHS = Object.freeze({
 });
 
 // The connection settings a restored etna.env keeps from this server: the
-// rest (keys, public URL, mail…) comes from the backup.
+// rest (keys, public URL, mail…) comes from the backup. A PC's backup
+// (scripts/db/pc-move.mjs) also holds where that PC put its backups and its
+// in-app backup's owner connection: those stay the PC's too.
 export const LOCAL_SETTINGS = Object.freeze([
   'DATABASE_URL',
   'AUTH_DATABASE_URL',
@@ -31,6 +33,11 @@ export const LOCAL_SETTINGS = Object.freeze([
   'ETNA_DOCUMENTS_DIR',
   'ETNA_HOST',
   'ETNA_PORT',
+  'ETNA_OFFSITE_DIR',
+  'ETNA_OFFSITE_KEY',
+  'ETNA_OFFSITE_KEEP',
+  'ETNA_BACKUP_DIR',
+  'ETNA_BACKUP_DATABASE_URL',
 ]);
 export const APP_URLS = Object.freeze(['DATABASE_URL', 'AUTH_DATABASE_URL', 'WORKER_DATABASE_URL']);
 

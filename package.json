@@ -22,6 +22,9 @@
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:new": "node scripts/db/new-migration.mjs",
     "db:backup": "node scripts/db/backup.mjs",
+    "pc:backup": "node scripts/db/pc-move.mjs backup",
+    "pc:restore": "node scripts/db/pc-move.mjs restore",
+    "pc:verify": "node scripts/db/pc-move.mjs verify",
     "package": "node scripts/server/package.mjs"
   },
   "dependencies": {
