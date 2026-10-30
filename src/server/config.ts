@@ -16,9 +16,15 @@ const cache = globalThis as typeof globalThis & {
 };
 cache.__etnaExecutors ??= {};
 
+/** DB_POOL_MAX: connections per app server process (default 10, 1–100). */
+export function appPoolMax(value = process.env.DB_POOL_MAX): number {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= 100 ? n : 10;
+}
+
 export function getAppExecutor(): Executor {
   cache.__etnaExecutors!.app ??= poolExecutor(required('DATABASE_URL'), {
-    max: 10,
+    max: appPoolMax(),
     application_name: 'etna-app',
   });
   return cache.__etnaExecutors!.app;

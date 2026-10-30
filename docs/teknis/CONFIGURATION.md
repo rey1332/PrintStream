@@ -35,6 +35,7 @@ passwords.
 | Variable | Purpose | Required? | Example format | Where used | Secret? |
 |---|---|---|---|---|---|
 | `DATABASE_URL` | Connection of the app server role `etna_app`; every request runs as the signed-in user under row-level security | **Yes** | `postgres://etna_app:PW@10.0.0.20:5432/etna?sslmode=verify-full&sslrootcert=C:/ETNA-certs/db-ca.crt` | `src/server/config.ts` | **Yes** (password) |
+| `DB_POOL_MAX` | Database connections each app server process keeps for requests (1–100). Raise it on a server with spare CPU on the database; keep every process's pools together below PostgreSQL's `max_connections`. With 100 000 customers in one ERP, 10 → 20 raised list throughput about 15% on a 16-thread machine; the database's CPU, not the pool, is then the limit | No | `10` (default) | `src/server/config.ts` | No |
 | `AUTH_DATABASE_URL` | Connection of the sign-in role `etna_auth` (users, sessions, two-factor) | **Yes** | as above, user `etna_auth` | `src/server/config.ts` | **Yes** |
 | `WORKER_DATABASE_URL` | Connection of the Terminal worker's role `etna_worker` (job queue, dataset tables, imports, schedules). Written by the server manager (also on update) and `scripts/setup-local.mjs` | Yes, for Terminal (without it the worker does not start and background jobs wait) | as above, user `etna_worker` | `scripts/server/worker.mjs`, `scripts/server/run.mjs` | **Yes** |
 | `ETNA_WORKER_CONCURRENCY` | Jobs the worker runs at once (1–8; one per company at a time) | No (default 2) | `3` | `scripts/server/worker.mjs` | No |
