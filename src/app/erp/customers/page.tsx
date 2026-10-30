@@ -207,7 +207,6 @@ export default function CustomersPage() {
     });
   }
 
-  // ✅ FIX: pakai remove() loop, gak pake bulkRemove yang gak ada
   async function handleBulkDelete() {
     if (!user || selectedIds.size === 0) return;
     setBulkDeleting(true);
@@ -215,15 +214,7 @@ export default function CustomersPage() {
     const ids = Array.from(selectedIds);
 
     try {
-      const results = await Promise.allSettled(
-        ids.map((id) => customerService.remove(user.id, id))
-      );
-
-      const successIds: string[] = [];
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') successIds.push(ids[i]);
-        else console.error('[bulkDelete] failed for', ids[i], r.reason);
-      });
+      const { deleted: successIds } = await customerService.removeMany(user.id, ids);
 
       if (successIds.length > 0) {
         list.reload();
@@ -265,15 +256,7 @@ export default function CustomersPage() {
     try {
       // Every customer, not only the page shown.
       const ids = await customerService.allIds(user.id);
-      const results = await Promise.allSettled(
-        ids.map((id) => customerService.remove(user.id, id))
-      );
-
-      const successIds: string[] = [];
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') successIds.push(ids[i]);
-        else console.error('[deleteAll] failed for', ids[i], r.reason);
-      });
+      const { deleted: successIds } = await customerService.removeMany(user.id, ids);
 
       list.reload();
       setSelectedIds(new Set());

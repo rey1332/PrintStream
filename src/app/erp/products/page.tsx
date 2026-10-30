@@ -168,10 +168,12 @@ export default function ProductsPage() {
     setDeletingAll(true);
     try {
       // Every product, not only the page shown.
-      for (const id of await productService.allIds(user.id)) {
-        await productService.remove(user.id, id);
-      }
+      const { failed } = await productService.removeMany(
+        user.id,
+        await productService.allIds(user.id)
+      );
       list.reload();
+      if (failed.length > 0) alert(t('prod.deleteAllFailed'));
     } catch (err) {
       console.error(err);
       alert(t('prod.deleteAllFailed'));

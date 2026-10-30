@@ -176,6 +176,45 @@ function scoped<Q extends { eq: (column: string, value: string) => Q }>(
   return query.eq(scope.column, scope.value);
 }
 
+const DELETE_CHUNK = 500;
+const DELETE_ONE_BY_ONE = 6;
+
+/**
+ * Deletes many rows a chunk per request, not a request per row: "delete all"
+ * on 10 000 customers was 10 000 requests at once. A chunk the database
+ * refuses (one row still referenced) is retried row by row, a few at a time,
+ * so the others still go and the failed ones are named, as before.
+ */
+async function removeMany(
+  table: string,
+  userId: string,
+  ids: string[],
+  label: string
+): Promise<{ deleted: string[]; failed: string[] }> {
+  const db = createClient();
+  const deleted: string[] = [];
+  const failed: string[] = [];
+  const removeOne = async (id: string) => {
+    const { error } = await scoped(db.from(table).delete().eq('id', id), userId);
+    if (error) {
+      logError(label, error);
+      failed.push(id);
+    } else deleted.push(id);
+  };
+  const unique = [...new Set(ids.filter(Boolean))];
+  for (let i = 0; i < unique.length; i += DELETE_CHUNK) {
+    const chunk = unique.slice(i, i + DELETE_CHUNK);
+    const { error } = await scoped(db.from(table).delete().in('id', chunk), userId);
+    if (!error) {
+      deleted.push(...chunk);
+      continue;
+    }
+    for (let j = 0; j < chunk.length; j += DELETE_ONE_BY_ONE)
+      await Promise.all(chunk.slice(j, j + DELETE_ONE_BY_ONE).map(removeOne));
+  }
+  return { deleted, failed };
+}
+
 // ─── Customers ────────────────────────────────────────────────────────────────
 
 async function getCustomerWriteUserId(db: Db, expectedUserId: string) {
@@ -341,6 +380,9 @@ export const customerService = {
       throw safeERPError('delete customer', error);
     }
   },
+  removeMany(userId: string, ids: string[]) {
+    return removeMany('erp_customers', userId, ids, 'delete customers');
+  },
   async bulkInsert(userId: string, records: any[]) {
     const db = createClient();
     const authenticatedUserId = await getCustomerWriteUserId(db, userId);
@@ -436,6 +478,9 @@ export const supplierService = {
     const db = createClient();
     const { error } = await scoped(db.from('erp_suppliers').delete().eq('id', id), userId);
     if (error) throw safeERPError('delete supplier', error);
+  },
+  removeMany(userId: string, ids: string[]) {
+    return removeMany('erp_suppliers', userId, ids, 'delete suppliers');
   },
   async bulkInsert(userId: string, records: any[]) {
     const db = createClient();
@@ -591,6 +636,9 @@ export const productService = {
     const db = createClient();
     const { error } = await scoped(db.from('erp_products').delete().eq('id', id), userId);
     if (error) throw safeERPError('delete product', error);
+  },
+  removeMany(userId: string, ids: string[]) {
+    return removeMany('erp_products', userId, ids, 'delete products');
   },
   async bulkInsert(userId: string, records: any[]) {
     const db = createClient();

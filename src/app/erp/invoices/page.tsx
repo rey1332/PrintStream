@@ -4,7 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { accountingService } from '../lib/accountingService';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { invoiceService, customerService, listSummary } from '../lib/erpService';
+import { invoiceService, listSummary } from '../lib/erpService';
+import { RecordPicker } from '../components/RecordPicker';
+import { useRecordSearch } from '../lib/pickers';
 import type { InvoicePaymentState } from '../lib/erpRules';
 import { useI18n } from '@/lib/i18n/I18nProvider';
 import { tr } from '@/lib/i18n/translate';
@@ -89,7 +91,8 @@ export default function InvoicesPage() {
   const { user } = useAuth();
   const { can } = useWorkspace();
   const { t, fmt } = useI18n();
-  const [customers, setCustomers] = useState<any[]>([]);
+  // The customer is searched by the database, not loaded with every customer.
+  const pickers = useRecordSearch();
   const [filter, setFilter] = useState<Filter>('all');
   // One page at a time, filtered and searched by the database.
   const list = useServerPage<Invoice>(
@@ -126,13 +129,6 @@ export default function InvoicesPage() {
   useEffect(() => {
     if (!user) return;
     loadFigures();
-    customerService
-      .getAll(user.id)
-      .then(setCustomers)
-      .catch((err: unknown) => {
-        // tr(): see customers/page.tsx — the effect stays keyed on the user only.
-        setError((err instanceof Error && err.message) || tr('invoice.loadFailed'));
-      });
   }, [user, loadFigures]);
 
   useEffect(() => {
@@ -174,11 +170,6 @@ export default function InvoicesPage() {
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleCustomerChange(customerId: string) {
-    const cust = customers.find((c) => c.id === customerId);
-    setForm((f) => ({ ...f, customerId, customerName: cust?.name || '' }));
   }
 
   const num = (key: string) => Number(figures?.[key] ?? 0);
@@ -556,20 +547,23 @@ export default function InvoicesPage() {
                 <label className="block text-[0.7rem] text-muted-foreground mb-1.5">
                   {t('invoice.customerRequired')}
                 </label>
-                <select
+                <RecordPicker
                   className={inputCls}
                   style={inputStyle}
+                  ariaLabel={t('invoice.customerRequired')}
+                  placeholder={t('invoice.selectCustomerOption')}
                   value={form.customerId}
-                  onChange={(e) => handleCustomerChange(e.target.value)}
+                  valueLabel={form.customerName}
                   required
-                >
-                  <option value="">{t('invoice.selectCustomerOption')}</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  search={pickers.customers}
+                  onChange={(c) =>
+                    setForm((f) => ({
+                      ...f,
+                      customerId: c?.id ?? '',
+                      customerName: c?.label ?? '',
+                    }))
+                  }
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
