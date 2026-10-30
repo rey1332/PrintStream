@@ -5,6 +5,7 @@
 // to, and deleting it (its Owner, with the password).
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { Building2, Link2, Loader2, Trash2, Users } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/I18nProvider';
@@ -31,6 +32,11 @@ export function SpaceBar({
   const [members, setMembers] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [linking, setLinking] = useState(false);
+  const closeMembers = () => {
+    setMembers(false);
+    // Renamed, or left: the list changes.
+    onGone();
+  };
   // An ERP's members are managed in the ERP.
   if (space.kind !== 'terminal' || !active) return null;
   return (
@@ -67,36 +73,47 @@ export function SpaceBar({
           <Trash2 size={12} /> {t('settings.deleteTerminal')}
         </button>
       )}
-      {members && (
-        <WorkspacePanel
-          onClose={() => {
-            setMembers(false);
-            // Renamed, or left: the list changes.
-            onGone();
-          }}
-        />
-      )}
-      {linking && (
-        <ErpLinksDialog
-          workspaceId={space.id}
-          canManage={space.canManage}
-          onClose={() => setLinking(false)}
-        />
-      )}
-      {deleting && (
-        <Dialog title={t('settings.deleteTerminal')} onClose={() => setDeleting(false)}>
-          <DeleteErpSection
-            workspaceId={space.id}
-            name={space.name}
-            noun="terminal"
-            inputClassName={inputCls}
-            onDeleted={() => {
-              setDeleting(false);
-              onGone();
-            }}
-          />
-        </Dialog>
-      )}
+      {/* Outside the bar: the compact bar styles every button inside it, and
+          the members panel is a page column on wide screens, not an overlay. */}
+      {(members || linking || deleting) &&
+        createPortal(
+          <>
+            {members && (
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-black/50"
+                  onClick={closeMembers}
+                  aria-hidden
+                />
+                <div className="ui-refined fixed inset-y-0 right-0 z-50 flex h-[100dvh] text-foreground">
+                  <WorkspacePanel onClose={closeMembers} />
+                </div>
+              </>
+            )}
+            {linking && (
+              <ErpLinksDialog
+                workspaceId={space.id}
+                canManage={space.canManage}
+                onClose={() => setLinking(false)}
+              />
+            )}
+            {deleting && (
+              <Dialog title={t('settings.deleteTerminal')} onClose={() => setDeleting(false)}>
+                <DeleteErpSection
+                  workspaceId={space.id}
+                  name={space.name}
+                  noun="terminal"
+                  inputClassName={inputCls}
+                  onDeleted={() => {
+                    setDeleting(false);
+                    onGone();
+                  }}
+                />
+              </Dialog>
+            )}
+          </>,
+          document.body
+        )}
     </div>
   );
 }
