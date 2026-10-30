@@ -566,9 +566,17 @@ function InsightDialog({
               <ResponsiveContainer>
                 <ComposedChart data={chart} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="p" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} width={60} />
-                  <Tooltip />
+                  <XAxis dataKey="p" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} width={60} />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 6,
+                      fontSize: 11,
+                      color: 'var(--foreground)',
+                    }}
+                  />
                   <Area
                     dataKey="band"
                     stroke="none"
