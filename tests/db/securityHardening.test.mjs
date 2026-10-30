@@ -5,7 +5,7 @@ import { createDb, createUser, run, runOnPath, admin, expectError } from './harn
 
 const CALLABLE = [
   'api_rate_limit_hit', 'erp_accounting_settings_get', 'erp_accounting_settings_set', 'erp_add_exchange_rate',
-  'erp_adjust_stock', 'erp_can_read', 'erp_cancel_purchase_order', 'erp_cancel_sales_order', 'erp_check_request',
+  'erp_adjust_stock', 'erp_can_read', 'erp_readable_workspace_ids', 'erp_permitted_workspace_ids', 'erp_cancel_purchase_order', 'erp_cancel_sales_order', 'erp_check_request',
   'erp_company_profile_get', 'erp_company_profile_set', 'erp_confirm_base_currency','erp_create_gl_account', 'erp_create_invoice_v5', 'erp_create_invoice_v6', 'erp_create_purchase_order_v3',
   'erp_create_erp', 'erp_create_erp_v2', 'erp_create_sales_order_v3', 'erp_create_warehouse',
   'erp_create_workspace_invitation', 'erp_currency_preview', 'erp_currency_settings_get', 'erp_dashboard_metrics', 'erp_dashboard_insights', 'erp_decide_po_approval',
